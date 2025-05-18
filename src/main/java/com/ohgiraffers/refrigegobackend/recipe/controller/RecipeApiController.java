@@ -2,6 +2,7 @@ package com.ohgiraffers.refrigegobackend.recipe.controller;
 
 import com.ohgiraffers.refrigegobackend.recipe.service.RecipeApiService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -28,7 +29,7 @@ public class RecipeApiController {
      */
     @GetMapping("/api/recipes/fetch")
     public String fetchRecipes() {
-        return recipeApiService.fetchRecipes();
+        return recipeApiService.fetchRecipes(1, 10); // 1~10개 호출
     }
 
     /**
@@ -38,8 +39,16 @@ public class RecipeApiController {
      * @return 저장 완료 메시지
      */
     @GetMapping("/api/recipes/save")
-    public String saveRecipes() {
-        recipeApiService.saveRecipes();
+    public String saveRecipes(@RequestParam int start, @RequestParam int end) {
+        recipeApiService.saveRecipes(start, end);
         return "레시피 저장 완료";
+    }
+
+    @GetMapping("/api/recipes/saveAll")
+    public String saveAllRecipes() {
+        int totalCount = 1000; // 전체 예상 개수, 실제 API에서 받아와도 됨
+        int batchSize = 100;   // 한 번에 처리할 개수
+        recipeApiService.saveAllRecipes(totalCount, batchSize);
+        return "레시피 100개씩 저장 완료";
     }
 }
