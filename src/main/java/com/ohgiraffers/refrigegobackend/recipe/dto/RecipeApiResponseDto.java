@@ -44,6 +44,9 @@ public class RecipeApiResponseDto {
         @JsonProperty("RCP_PARTS_DTLS")
         private String rcpPartsDtls;    // 재료 상세 설명
 
+        @JsonProperty("RCP_PAT2")
+        private String cuisineType;    // 요리 종류 (예: 밥, 반찬 등)
+
         @JsonProperty("MANUAL01")
         private String manual01;        // 조리 방법 1
 
