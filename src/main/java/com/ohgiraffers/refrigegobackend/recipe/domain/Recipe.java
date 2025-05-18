@@ -39,7 +39,11 @@ public class Recipe {
     @Lob
     @Column(name = "manual02")
     private String manual02;        // 조리 방법 2
+
+    @Column(name = "cuisine_type", columnDefinition = "TEXT")
     private String cuisineType;    // 요리 종류 (예: 밥, 반찬 등)
+
+    @Column(name = "rcp_way2", columnDefinition = "TEXT")
     private String rcpWay2;         // 조리 방법 상세 (예: 찌기, 굽기 등)
 
 

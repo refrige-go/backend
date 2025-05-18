@@ -114,6 +114,8 @@ public class RecipeApiService {
                     recipe.setRcpPartsDtls(dto.getRcpPartsDtls());
                     recipe.setManual01(dto.getManual01());
                     recipe.setManual02(dto.getManual02());
+                    recipe.setCuisineType(dto.getCuisineType());
+                    recipe.setRcpWay2(dto.getRcpWay2());
                     recipeRepository.save(recipe); // DB 저장
                 });
             }
