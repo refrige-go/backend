@@ -63,6 +63,8 @@ public class RecipeApiService {
                 recipe.setRcpPartsDtls(dto.getRcpPartsDtls());   // 재료 상세
                 recipe.setManual01(dto.getManual01());           // 조리 방법 1
                 recipe.setManual02(dto.getManual02());           // 조리 방법 2
+                recipe.setCuisineType(dto.getCuisineType());     // 요리 종류
+                recipe.setRcpWay2(dto.getRcpWay2());             // 조리 방법 상세
                 recipeRepository.save(recipe);                    // DB 저장
             });
         }
