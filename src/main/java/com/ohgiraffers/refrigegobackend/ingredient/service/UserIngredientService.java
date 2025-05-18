@@ -1,10 +1,10 @@
-package com.ohgiraffers.refrigegobackend.ingredients.service;
+package com.ohgiraffers.refrigegobackend.ingredient.service;
 
-import com.ohgiraffers.refrigegobackend.ingredients.domain.UserIngredient;
-import com.ohgiraffers.refrigegobackend.ingredients.dto.UserIngredientRequestDto;
-import com.ohgiraffers.refrigegobackend.ingredients.dto.UserIngredientResponseDto;
-import com.ohgiraffers.refrigegobackend.ingredients.infrastructure.repository.IngredientRepository;
-import com.ohgiraffers.refrigegobackend.ingredients.infrastructure.repository.UserIngredientRepository;
+import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
+import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientRequestDto;
+import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientResponseDto;
+import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
+import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.UserIngredientRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

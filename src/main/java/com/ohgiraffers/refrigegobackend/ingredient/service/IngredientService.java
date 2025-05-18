@@ -1,8 +1,7 @@
-package com.ohgiraffers.refrigegobackend.ingredients.service;
+package com.ohgiraffers.refrigegobackend.ingredient.service;
 
-import com.ohgiraffers.refrigegobackend.ingredients.domain.Ingredient;
-import com.ohgiraffers.refrigegobackend.ingredients.dto.IngredientResponseDto;
-import com.ohgiraffers.refrigegobackend.ingredients.infrastructure.repository.IngredientRepository;
+import com.ohgiraffers.refrigegobackend.ingredient.dto.IngredientResponseDto;
+import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

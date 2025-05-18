@@ -1,6 +1,6 @@
-package com.ohgiraffers.refrigegobackend.ingredients.infrastructure.repository;
+package com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository;
 
-import com.ohgiraffers.refrigegobackend.ingredients.domain.UserIngredient;
+import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

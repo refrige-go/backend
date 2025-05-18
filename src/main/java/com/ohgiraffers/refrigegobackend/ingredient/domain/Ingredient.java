@@ -1,4 +1,4 @@
-package com.ohgiraffers.refrigegobackend.ingredients.domain;
+package com.ohgiraffers.refrigegobackend.ingredient.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
