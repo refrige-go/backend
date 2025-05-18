@@ -1,4 +1,4 @@
-package com.ohgiraffers.refrigegobackend.ingredients.dto;
+package com.ohgiraffers.refrigegobackend.ingredient.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

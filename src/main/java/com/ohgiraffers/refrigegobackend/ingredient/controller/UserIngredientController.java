@@ -1,8 +1,8 @@
-package com.ohgiraffers.refrigegobackend.ingredients.controller;
+package com.ohgiraffers.refrigegobackend.ingredient.controller;
 
-import com.ohgiraffers.refrigegobackend.ingredients.dto.UserIngredientRequestDto;
-import com.ohgiraffers.refrigegobackend.ingredients.dto.UserIngredientResponseDto;
-import com.ohgiraffers.refrigegobackend.ingredients.service.UserIngredientService;
+import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientRequestDto;
+import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientResponseDto;
+import com.ohgiraffers.refrigegobackend.ingredient.service.UserIngredientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,6 +1,6 @@
-package com.ohgiraffers.refrigegobackend.ingredients.dto;
+package com.ohgiraffers.refrigegobackend.ingredient.dto;
 
-import com.ohgiraffers.refrigegobackend.ingredients.domain.Ingredient;
+import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
 import lombok.Getter;
 
 /**
