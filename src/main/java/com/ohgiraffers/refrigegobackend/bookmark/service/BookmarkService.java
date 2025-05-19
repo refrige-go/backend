@@ -54,6 +54,11 @@ public class BookmarkService {
         }
     }
 
+    // 찜한 레시피 목록 조회
+    public List<Recipe> getBookmarkedRecipes(Long userId) {
+        return bookmarkRepository.findRecipesByUserId(userId);
+    }
+
     // 찜한 레시피 밑에 비슷한 재료로 만든 레시피 목록 - 레시피 화면 (재료 기준)
 
     // 찜한 레시피와 비슷한 레시피 목록 - 메인화면 (요리 종류 기준)
