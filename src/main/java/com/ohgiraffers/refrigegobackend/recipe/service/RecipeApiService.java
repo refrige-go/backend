@@ -72,7 +72,7 @@ public class RecipeApiService {
                 recipe.setManual02(dto.getManual02());           // 조리 방법 2
                 recipe.setCuisineType(dto.getCuisineType());     // 요리 종류
                 recipe.setRcpWay2(dto.getRcpWay2());             // 조리 방법 상세
-                recipe.setImage(dto.getImage());                 // 이미지
+                recipe.setImage(dto.getAttFileNoMain());                // 이미지
                 recipeRepository.save(recipe);                   // DB 저장
             });
         }
@@ -118,7 +118,7 @@ public class RecipeApiService {
                     recipe.setManual02(dto.getManual02());
                     recipe.setCuisineType(dto.getCuisineType());
                     recipe.setRcpWay2(dto.getRcpWay2());
-                    recipe.setImage(dto.getImage());
+                    recipe.setImage(dto.getAttFileNoMain());
                     recipeRepository.save(recipe); // DB 저장
                 });
             }
