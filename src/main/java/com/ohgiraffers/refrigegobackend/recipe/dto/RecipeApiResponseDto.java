@@ -44,6 +44,9 @@ public class RecipeApiResponseDto {
         @JsonProperty("RCP_PARTS_DTLS")
         private String rcpPartsDtls;    // 재료 상세 설명
 
+        @JsonProperty("RCP_PAT2")
+        private String cuisineType;    // 요리 종류 (예: 밥, 반찬 등)
+
         @JsonProperty("MANUAL01")
         private String manual01;        // 조리 방법 1
 
@@ -52,6 +55,9 @@ public class RecipeApiResponseDto {
 
         @JsonProperty("RCP_WAY2")
         private String rcpWay2;         // 조리 방법 상세 (예: 찌기, 굽기 등)
+
+        @JsonProperty("ATT_FILE_NO_MAIN")
+        private String image;         // 이미지 경로(소)
 
         // 필요한 필드만 선언, 나머지는 무시됨
     }

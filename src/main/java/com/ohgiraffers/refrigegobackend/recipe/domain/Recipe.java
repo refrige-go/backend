@@ -29,7 +29,7 @@ public class Recipe {
     private String rcpNm;           // 레시피 이름
 
     @Lob  // 이 어노테이션으로 길이 큰 텍스트 저장 가능
-    @Column(name = "rcp_parts_dtls")
+    @Column(name = "rcp_parts_dtls", columnDefinition = "TEXT")
     private String rcpPartsDtls;    // 재료 상세
 
     @Lob
@@ -39,4 +39,16 @@ public class Recipe {
     @Lob
     @Column(name = "manual02")
     private String manual02;        // 조리 방법 2
+
+    @Column(name = "cuisine_type", columnDefinition = "TEXT")
+    private String cuisineType;    // 요리 종류 (예: 밥, 반찬 등)
+
+    @Column(name = "rcp_way2", columnDefinition = "TEXT")
+    private String rcpWay2;         // 조리 방법 상세 (예: 찌기, 굽기 등)
+
+    @Column(name = "rcp_image", columnDefinition = "TEXT")
+    private String image;         // 조리 방법 상세 (예: 찌기, 굽기 등)
+
+
+    // 필요한 경우 생성자, equals, hashCode, toString 추가 가능
 }
