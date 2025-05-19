@@ -1,6 +1,8 @@
 package com.ohgiraffers.refrigegobackend.recommendation.controller;
 
-import com.ohgiraffers.refrigegobackend.recommendation.dto.*;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationRequestDto;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationResponseDto;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecommendedRecipeDto;
 import com.ohgiraffers.refrigegobackend.recommendation.service.RecipeRecommendationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,8 +14,6 @@ import java.util.List;
 /**
  * 레시피 추천 관련 API 컨트롤러
  * - 재료 기반 레시피 추천
- * - 레시피 찜하기/취소
- * - 찜한 레시피 조회
  * - 레시피 상세 조회
  */
 @RestController
@@ -53,58 +53,19 @@ public class RecipeRecommendationController {
     }
 
     /**
-     * 레시피 찜하기/찜하기 취소 API
-     * POST /api/recommendations/favorites/toggle
-     * 
-     * @param requestDto 찜하기 요청 정보 (사용자 ID, 레시피 ID)
-     * @return 성공 메시지
-     */
-    @PostMapping("/favorites/toggle")
-    public ResponseEntity<String> toggleRecipeFavorite(
-            @RequestBody RecipeFavoriteRequestDto requestDto) {
-        
-        log.info("레시피 찜하기 토글 요청 - 사용자: {}, 레시피: {}", 
-                requestDto.getUserId(), requestDto.getRecipeId());
-
-        recommendationService.toggleRecipeFavorite(requestDto);
-        
-        return ResponseEntity.ok("찜하기 상태가 변경되었습니다.");
-    }
-
-    /**
-     * 사용자가 찜한 레시피 목록 조회 API
-     * GET /api/recommendations/favorites/{userId}
-     * 
-     * @param userId 사용자 ID
-     * @return 찜한 레시피 목록
-     */
-    @GetMapping("/favorites/{userId}")
-    public ResponseEntity<List<RecommendedRecipeDto>> getFavoriteRecipes(
-            @PathVariable String userId) {
-        
-        log.info("찜한 레시피 조회 요청 - 사용자: {}", userId);
-
-        List<RecommendedRecipeDto> favoriteRecipes = recommendationService.getFavoriteRecipes(userId);
-        
-        return ResponseEntity.ok(favoriteRecipes);
-    }
-
-    /**
      * 레시피 상세 정보 조회 API
      * GET /api/recommendations/recipes/{recipeId}
      * 
      * @param recipeId 레시피 ID
-     * @param userId 사용자 ID (찜하기 여부 확인용)
      * @return 레시피 상세 정보
      */
     @GetMapping("/recipes/{recipeId}")
     public ResponseEntity<RecommendedRecipeDto> getRecipeDetail(
-            @PathVariable String recipeId,
-            @RequestParam String userId) {
+            @PathVariable String recipeId) {
         
-        log.info("레시피 상세 조회 요청 - 레시피: {}, 사용자: {}", recipeId, userId);
+        log.info("레시피 상세 조회 요청 - 레시피: {}", recipeId);
 
-        RecommendedRecipeDto recipeDetail = recommendationService.getRecipeDetail(recipeId, userId);
+        RecommendedRecipeDto recipeDetail = recommendationService.getRecipeDetail(recipeId);
         
         return ResponseEntity.ok(recipeDetail);
     }
