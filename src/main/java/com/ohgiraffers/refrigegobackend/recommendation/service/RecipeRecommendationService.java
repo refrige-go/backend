@@ -2,25 +2,22 @@ package com.ohgiraffers.refrigegobackend.recommendation.service;
 
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
-import com.ohgiraffers.refrigegobackend.recommendation.domain.RecipeFavorite;
-import com.ohgiraffers.refrigegobackend.recommendation.dto.*;
-import com.ohgiraffers.refrigegobackend.recommendation.infrastructure.repository.RecipeFavoriteRepository;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationRequestDto;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationResponseDto;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecommendedRecipeDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * 레시피 추천 서비스
  * - 사용자가 선택한 재료를 기반으로 레시피를 추천
- * - 레시피 찜하기 기능 제공
  */
 @Service
 @RequiredArgsConstructor
@@ -29,7 +26,6 @@ import java.util.stream.Collectors;
 public class RecipeRecommendationService {
 
     private final RecipeRepository recipeRepository;
-    private final RecipeFavoriteRepository recipeFavoriteRepository;
 
     /**
      * 사용자가 선택한 재료를 기반으로 레시피 추천
@@ -41,18 +37,12 @@ public class RecipeRecommendationService {
         log.info("레시피 추천 시작 - 사용자: {}, 선택한 재료: {}", 
                 requestDto.getUserId(), requestDto.getSelectedIngredients());
 
-        // 1. 사용자가 찜한 레시피 ID 목록 조회
-        Set<String> favoriteRecipeIds = recipeFavoriteRepository
-                .findRecipeIdsByUserId(requestDto.getUserId())
-                .stream()
-                .collect(Collectors.toSet());
-
-        // 2. 모든 레시피 조회
+        // 1. 모든 레시피 조회
         List<Recipe> allRecipes = recipeRepository.findAll();
 
-        // 3. 각 레시피에 대해 매칭 점수 계산 및 추천 레시피 생성
+        // 2. 각 레시피에 대해 매칭 점수 계산 및 추천 레시피 생성
         List<RecommendedRecipeDto> recommendedRecipes = allRecipes.stream()
-                .map(recipe -> calculateMatchScore(recipe, requestDto.getSelectedIngredients(), favoriteRecipeIds))
+                .map(recipe -> calculateMatchScore(recipe, requestDto.getSelectedIngredients()))
                 .filter(dto -> dto.getMatchedIngredientCount() > 0) // 최소 1개 이상 매칭된 레시피만
                 .sorted(Comparator
                         .comparingDouble(RecommendedRecipeDto::getMatchScore).reversed() // 매칭 점수 높은 순
@@ -74,12 +64,9 @@ public class RecipeRecommendationService {
      * 
      * @param recipe 레시피
      * @param selectedIngredients 선택된 재료들
-     * @param favoriteRecipeIds 찜한 레시피 ID 목록
      * @return 추천 레시피 DTO
      */
-    private RecommendedRecipeDto calculateMatchScore(Recipe recipe, 
-                                                   List<String> selectedIngredients,
-                                                   Set<String> favoriteRecipeIds) {
+    private RecommendedRecipeDto calculateMatchScore(Recipe recipe, List<String> selectedIngredients) {
         
         // final로 선언하여 람다 표현식에서 사용 가능하게 함
         final String ingredients = recipe.getRcpPartsDtls() != null ? recipe.getRcpPartsDtls() : "";
@@ -90,13 +77,12 @@ public class RecipeRecommendationService {
                 .collect(Collectors.toList());
 
         int matchedCount = matchedIngredients.size();
-        boolean isFavorite = favoriteRecipeIds.contains(recipe.getRcpSeq());
 
         return RecommendedRecipeDto.fromEntity(
                 recipe, 
                 matchedCount, 
                 matchedIngredients, 
-                isFavorite,
+                false, // recipe_bookmarks를 사용하므로 기본값 false
                 selectedIngredients.size()
         );
     }
@@ -122,102 +108,27 @@ public class RecipeRecommendationService {
     }
 
     /**
-     * 레시피 찜하기/찜하기 취소
-     * 
-     * @param requestDto 찜하기 요청 정보
-     */
-    @Transactional
-    public void toggleRecipeFavorite(RecipeFavoriteRequestDto requestDto) {
-        log.info("레시피 찜하기 토글 - 사용자: {}, 레시피: {}", 
-                requestDto.getUserId(), requestDto.getRecipeId());
-
-        // 이미 찜했는지 확인
-        boolean alreadyFavorite = recipeFavoriteRepository
-                .existsByUserIdAndRecipeId(requestDto.getUserId(), requestDto.getRecipeId());
-
-        if (alreadyFavorite) {
-            // 찜하기 취소
-            RecipeFavorite favorite = recipeFavoriteRepository
-                    .findByUserIdAndRecipeId(requestDto.getUserId(), requestDto.getRecipeId())
-                    .orElseThrow(() -> new RuntimeException("찜하기 정보를 찾을 수 없습니다."));
-            
-            recipeFavoriteRepository.delete(favorite);
-            log.info("레시피 찜하기 취소 완료");
-        } else {
-            // 찜하기 추가
-            RecipeFavorite newFavorite = RecipeFavorite.builder()
-                    .userId(requestDto.getUserId())
-                    .recipeId(requestDto.getRecipeId())
-                    .build();
-            
-            recipeFavoriteRepository.save(newFavorite);
-            log.info("레시피 찜하기 추가 완료");
-        }
-    }
-
-    /**
-     * 특정 사용자가 찜한 모든 레시피 조회
-     * 
-     * @param userId 사용자 ID
-     * @return 찜한 레시피 목록
-     */
-    public List<RecommendedRecipeDto> getFavoriteRecipes(String userId) {
-        log.info("찜한 레시피 조회 - 사용자: {}", userId);
-
-        List<RecipeFavorite> favorites = recipeFavoriteRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        
-        List<RecommendedRecipeDto> favoriteRecipes = new ArrayList<>();
-        
-        for (RecipeFavorite favorite : favorites) {
-            Optional<Recipe> recipeOpt = recipeRepository.findById(favorite.getRecipeId());
-            if (recipeOpt.isPresent()) {
-                Recipe recipe = recipeOpt.get();
-                RecommendedRecipeDto dto = new RecommendedRecipeDto(
-                        recipe.getRcpSeq(),
-                        recipe.getRcpNm(),
-                        recipe.getRcpPartsDtls(),
-                        recipe.getManual01(),
-                        recipe.getManual02(),
-                        0, // 찜한 레시피 조회에서는 매칭 점수는 의미없음
-                        new ArrayList<>(),
-                        true, // 찜한 레시피이므로 true
-                        0.0
-                );
-                favoriteRecipes.add(dto);
-            } else {
-                log.warn("찜한 레시피를 찾을 수 없습니다. 레시피 ID: {}", favorite.getRecipeId());
-            }
-        }
-
-        log.info("찜한 레시피 조회 완료 - 찜한 레시피 수: {}", favoriteRecipes.size());
-        return favoriteRecipes;
-    }
-
-    /**
      * 특정 레시피 상세 정보 조회
      * 
      * @param recipeId 레시피 ID
-     * @param userId 사용자 ID (찜하기 여부 확인용)
      * @return 레시피 상세 정보
      */
-    public RecommendedRecipeDto getRecipeDetail(String recipeId, String userId) {
-        log.info("레시피 상세 조회 - 레시피: {}, 사용자: {}", recipeId, userId);
+    public RecommendedRecipeDto getRecipeDetail(String recipeId) {
+        log.info("레시피 상세 조회 - 레시피: {}", recipeId);
 
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new RuntimeException("레시피를 찾을 수 없습니다. ID: " + recipeId));
 
-        boolean isFavorite = recipeFavoriteRepository.existsByUserIdAndRecipeId(userId, recipeId);
-
-        return new RecommendedRecipeDto(
-                recipe.getRcpSeq(),
-                recipe.getRcpNm(),
-                recipe.getRcpPartsDtls(),
-                recipe.getManual01(),
-                recipe.getManual02(),
-                0, // 상세 조회에서는 매칭 수는 의미없음
-                new ArrayList<>(),
-                isFavorite,
-                0.0
-        );
+        return RecommendedRecipeDto.builder()
+                .recipeId(recipe.getRcpSeq())
+                .recipeName(recipe.getRcpNm())
+                .ingredients(recipe.getRcpPartsDtls())
+                .cookingMethod1(recipe.getManual01())
+                .cookingMethod2(recipe.getManual02())
+                .matchedIngredientCount(0) // 상세 조회에서는 의미없음
+                .matchedIngredients(List.of())
+                .isFavorite(false) // recipe_bookmarks에서 관리
+                .matchScore(0.0)
+                .build();
     }
 }
