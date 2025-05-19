@@ -56,6 +56,9 @@ public class RecipeApiResponseDto {
         @JsonProperty("RCP_WAY2")
         private String rcpWay2;         // 조리 방법 상세 (예: 찌기, 굽기 등)
 
+        @JsonProperty("ATT_FILE_NO_MAIN")
+        private String image;         // 이미지 경로(소)
+
         // 필요한 필드만 선언, 나머지는 무시됨
     }
 }
