@@ -191,7 +191,6 @@ recipe_favorites (id, user_id, recipe_id, created_at)
 - 알림 기능 (소비기한 임박 등)
 - 자동 레시피 추천 (사용자 보유 재료 기반)
 - 레시피 평점 및 리뷰 시스템
-- 영양 정보 기반 추천
 
 ## 🛠️ 로컬 개발 환경 설정
 
