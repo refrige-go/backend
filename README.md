@@ -63,13 +63,11 @@ src/main/java/com/ohgiraffers/refrigegobackend/
 ├── recommendation/                    # 레시피 추천 도메인 ✅ ⭐
 │   ├── controller/RecipeRecommendationController.java
 │   ├── service/RecipeRecommendationService.java
-│   ├── domain/RecipeFavorite.java      # 찜하기 엔티티
 │   ├── dto/
 │   │   ├── RecipeRecommendationRequestDto.java
 │   │   ├── RecipeRecommendationResponseDto.java
-│   │   ├── RecommendedRecipeDto.java
-│   │   └── RecipeFavoriteRequestDto.java
-│   └── infrastructure/repository/RecipeFavoriteRepository.java
+│   │   └── RecommendedRecipeDto.java
+│   └── infrastructure/repository/
 ├── notification/                      # 알림 도메인 (예정)
 └── user/                             # 사용자 관리 도메인 (예정)
 ```
@@ -93,9 +91,9 @@ src/main/java/com/ohgiraffers/refrigegobackend/
 - **스마트 매칭**: 대소문자 무시, 공백 제거한 정확한 재료 매칭
 - **매칭 점수 시스템**: (매칭된 재료 수 / 선택한 총 재료 수) 기반 점수 계산
 - **우선순위 정렬**: 매칭 점수 → 매칭된 재료 개수 순 정렬
-- **찜하기 기능**: 레시피 찜하기/찜하기 취소 토글 기능
-- **찜한 레시피 조회**: 사용자별 찜한 레시피 목록 관리
-- **레시피 상세 조회**: 찜하기 여부 포함한 상세 정보 제공
+- **레시피 상세 조회**: 레시피 상세 정보 제공
+  
+**참고**: 찜하기 기능은 별도 모듈(recipe_bookmarks)에서 구현됩니다.
 
 ### 4. 전역 설정 및 보안 ✅
 - **Spring Security**: MVP 테스트용 모든 요청 허용 설정
@@ -120,8 +118,6 @@ GET    /api/recipes/saveAll      # 전체 레시피 배치 저장 (100개씩)
 ### 레시피 추천 API ✅ ⭐
 ```http
 POST   /api/recommendations/recipes              # 재료 기반 레시피 추천
-POST   /api/recommendations/favorites/toggle     # 레시피 찜하기/취소
-GET    /api/recommendations/favorites/{userId}   # 찜한 레시피 조회
 GET    /api/recommendations/recipes/{recipeId}   # 레시피 상세 조회
 ```
 
@@ -146,13 +142,8 @@ GET    /api/recommendations/recipes/{recipeId}   # 레시피 상세 조회
    ↓
 4. 추천된 레시피 중 하나 선택하여 상세 정보 확인
    ↓
-5. 마음에 드는 레시피 찜하기 ❤️
+5. 레시피 북마크 기능은 별도 모듈에서 제공 📖
 ```
-
-### 찜하기 시스템
-- **토글 방식**: 찜하기/찜하기 취소를 하나의 API로 처리
-- **중복 방지**: 사용자-레시피 조합에 UNIQUE 제약 조건
-- **실시간 상태**: 모든 API에서 찜하기 여부 실시간 반영
 
 ## 🗄️ 데이터베이스 설계
 
@@ -166,14 +157,10 @@ user_ingredients (id, user_id, ingredient_id, custom_name, purchase_date, expiry
 
 -- 레시피 정보 테이블
 recipes (rcp_seq, rcp_nm, rcp_parts_dtls, manual01, manual02)
-
--- 사용자 레시피 찜하기 테이블
-recipe_favorites (id, user_id, recipe_id, created_at)
 ```
 
 ### Flyway 마이그레이션 스크립트
 - `V2__modify_user_ingredients_null.sql`: 사용자 재료 테이블 컬럼 타입 수정
-- `V3__create_recipe_favorites_table.sql`: 찜하기 테이블 생성
 
 ## 🚦 현재 개발 상태
 
@@ -182,7 +169,6 @@ recipe_favorites (id, user_id, recipe_id, created_at)
 - ✅ 사용자 재료 도메인 설계
 - ✅ 외부 API 레시피 수집 및 저장
 - ✅ 재료 기반 레시피 추천 시스템
-- ✅ 레시피 찜하기 기능
 - ✅ 전역 예외 처리 및 보안 설정
 
 ⏳ **개발 예정**
@@ -190,7 +176,7 @@ recipe_favorites (id, user_id, recipe_id, created_at)
 - 사용자 재료 CRUD API 구현
 - 알림 기능 (소비기한 임박 등)
 - 자동 레시피 추천 (사용자 보유 재료 기반)
-- 레시피 평점 및 리뷰 시스템
+- 레시피 북마크 시스템 (별도 모듈)
 
 ## 🛠️ 로컬 개발 환경 설정
 
@@ -255,14 +241,9 @@ curl -X POST http://localhost:8080/api/recommendations/recipes \
   }'
 ```
 
-### 3. 레시피 찜하기
+### 3. 레시피 상세 조회
 ```bash
-curl -X POST http://localhost:8080/api/recommendations/favorites/toggle \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "user123",
-    "recipeId": "RCP_001"
-  }'
+curl -X GET http://localhost:8080/api/recommendations/recipes/RCP_001
 ```
 
 ## 📝 개발 참고사항

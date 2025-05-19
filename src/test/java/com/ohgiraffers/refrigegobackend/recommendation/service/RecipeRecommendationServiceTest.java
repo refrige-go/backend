@@ -2,9 +2,9 @@ package com.ohgiraffers.refrigegobackend.recommendation.service;
 
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
-import com.ohgiraffers.refrigegobackend.recommendation.domain.RecipeFavorite;
-import com.ohgiraffers.refrigegobackend.recommendation.dto.*;
-import com.ohgiraffers.refrigegobackend.recommendation.infrastructure.repository.RecipeFavoriteRepository;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationRequestDto;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationResponseDto;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecommendedRecipeDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,17 +13,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("레시피 추천 서비스 테스트")
@@ -32,16 +28,12 @@ class RecipeRecommendationServiceTest {
     @Mock
     private RecipeRepository recipeRepository;
 
-    @Mock
-    private RecipeFavoriteRepository recipeFavoriteRepository;
-
     @InjectMocks
     private RecipeRecommendationService recommendationService;
 
     private Recipe recipe1;
     private Recipe recipe2;
     private Recipe recipe3;
-    private RecipeFavorite recipeFavorite;
 
     @BeforeEach
     void setUp() {
@@ -66,14 +58,6 @@ class RecipeRecommendationServiceTest {
         recipe3.setRcpPartsDtls("파스타면 100g, 토마토소스, 마늘, 올리브오일");
         recipe3.setManual01("파스타면을 삶는다.");
         recipe3.setManual02("토마토소스와 마늘을 볶아 소스를 만든다.");
-
-        // 테스트용 찜하기 데이터 생성
-        recipeFavorite = RecipeFavorite.builder()
-                .id(1L)
-                .userId("user123")
-                .recipeId("RCP_001")
-                .createdAt(LocalDateTime.now())
-                .build();
     }
 
     @Test
@@ -86,10 +70,7 @@ class RecipeRecommendationServiceTest {
         requestDto.setLimit(10);
 
         List<Recipe> allRecipes = Arrays.asList(recipe1, recipe2, recipe3);
-        List<String> favoriteRecipeIds = Arrays.asList("RCP_001");
 
-        given(recipeFavoriteRepository.findRecipeIdsByUserId("user123"))
-                .willReturn(favoriteRecipeIds);
         given(recipeRepository.findAll()).willReturn(allRecipes);
 
         // when
@@ -105,13 +86,13 @@ class RecipeRecommendationServiceTest {
         RecommendedRecipeDto firstRecommended = response.getRecommendedRecipes().get(0);
         assertThat(firstRecommended.getRecipeId()).isEqualTo("RCP_001");
         assertThat(firstRecommended.getMatchedIngredientCount()).isEqualTo(2);
-        assertThat(firstRecommended.isFavorite()).isTrue();
+        assertThat(firstRecommended.isFavorite()).isFalse(); // recipe_bookmarks에서 관리
 
         // 두 번째 레시피가 계란 볶음밥인지 확인 (2개 재료 매칭)
         RecommendedRecipeDto secondRecommended = response.getRecommendedRecipes().get(1);
         assertThat(secondRecommended.getRecipeId()).isEqualTo("RCP_002");
         assertThat(secondRecommended.getMatchedIngredientCount()).isEqualTo(2);
-        assertThat(secondRecommended.isFavorite()).isFalse();
+        assertThat(secondRecommended.isFavorite()).isFalse(); // recipe_bookmarks에서 관리
     }
 
     @Test
@@ -124,10 +105,7 @@ class RecipeRecommendationServiceTest {
         requestDto.setLimit(10);
 
         List<Recipe> allRecipes = Arrays.asList(recipe1, recipe2, recipe3);
-        List<String> favoriteRecipeIds = Arrays.asList();
 
-        given(recipeFavoriteRepository.findRecipeIdsByUserId("user123"))
-                .willReturn(favoriteRecipeIds);
         given(recipeRepository.findAll()).willReturn(allRecipes);
 
         // when
@@ -140,125 +118,22 @@ class RecipeRecommendationServiceTest {
     }
 
     @Test
-    @DisplayName("레시피 찜하기 추가 - 성공")
-    void toggleRecipeFavorite_Add_Success() {
-        // given
-        RecipeFavoriteRequestDto requestDto = new RecipeFavoriteRequestDto();
-        requestDto.setUserId("user123");
-        requestDto.setRecipeId("RCP_002");
-
-        given(recipeFavoriteRepository.existsByUserIdAndRecipeId("user123", "RCP_002"))
-                .willReturn(false);
-        given(recipeFavoriteRepository.save(any(RecipeFavorite.class)))
-                .willReturn(recipeFavorite);
-
-        // when
-        recommendationService.toggleRecipeFavorite(requestDto);
-
-        // then
-        verify(recipeFavoriteRepository).save(any(RecipeFavorite.class));
-        verify(recipeFavoriteRepository, never()).delete(any(RecipeFavorite.class));
-    }
-
-    @Test
-    @DisplayName("레시피 찜하기 취소 - 성공")
-    void toggleRecipeFavorite_Remove_Success() {
-        // given
-        RecipeFavoriteRequestDto requestDto = new RecipeFavoriteRequestDto();
-        requestDto.setUserId("user123");
-        requestDto.setRecipeId("RCP_001");
-
-        given(recipeFavoriteRepository.existsByUserIdAndRecipeId("user123", "RCP_001"))
-                .willReturn(true);
-        given(recipeFavoriteRepository.findByUserIdAndRecipeId("user123", "RCP_001"))
-                .willReturn(Optional.of(recipeFavorite));
-
-        // when
-        recommendationService.toggleRecipeFavorite(requestDto);
-
-        // then
-        verify(recipeFavoriteRepository).delete(recipeFavorite);
-        verify(recipeFavoriteRepository, never()).save(any(RecipeFavorite.class));
-    }
-
-    @Test
-    @DisplayName("레시피 찜하기 취소 - 찜하기 정보 없음")
-    void toggleRecipeFavorite_Remove_NotFound() {
-        // given
-        RecipeFavoriteRequestDto requestDto = new RecipeFavoriteRequestDto();
-        requestDto.setUserId("user123");
-        requestDto.setRecipeId("RCP_001");
-
-        given(recipeFavoriteRepository.existsByUserIdAndRecipeId("user123", "RCP_001"))
-                .willReturn(true);
-        given(recipeFavoriteRepository.findByUserIdAndRecipeId("user123", "RCP_001"))
-                .willReturn(Optional.empty());
-
-        // when & then
-        assertThatThrownBy(() -> recommendationService.toggleRecipeFavorite(requestDto))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("찜하기 정보를 찾을 수 없습니다.");
-    }
-
-    @Test
-    @DisplayName("찜한 레시피 목록 조회 - 성공")
-    void getFavoriteRecipes_Success() {
-        // given
-        String userId = "user123";
-        List<RecipeFavorite> favorites = Arrays.asList(recipeFavorite);
-
-        given(recipeFavoriteRepository.findByUserIdOrderByCreatedAtDesc(userId))
-                .willReturn(favorites);
-        given(recipeRepository.findById("RCP_001"))
-                .willReturn(Optional.of(recipe1));
-
-        // when
-        List<RecommendedRecipeDto> result = recommendationService.getFavoriteRecipes(userId);
-
-        // then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getRecipeId()).isEqualTo("RCP_001");
-        assertThat(result.get(0).getRecipeName()).isEqualTo("브로콜리 볶음");
-        assertThat(result.get(0).isFavorite()).isTrue();
-    }
-
-    @Test
-    @DisplayName("찜한 레시피 목록 조회 - 빈 목록")
-    void getFavoriteRecipes_Empty() {
-        // given
-        String userId = "user123";
-        List<RecipeFavorite> favorites = Arrays.asList();
-
-        given(recipeFavoriteRepository.findByUserIdOrderByCreatedAtDesc(userId))
-                .willReturn(favorites);
-
-        // when
-        List<RecommendedRecipeDto> result = recommendationService.getFavoriteRecipes(userId);
-
-        // then
-        assertThat(result).isEmpty();
-    }
-
-    @Test
     @DisplayName("레시피 상세 조회 - 성공")
     void getRecipeDetail_Success() {
         // given
         String recipeId = "RCP_001";
-        String userId = "user123";
 
         given(recipeRepository.findById(recipeId))
                 .willReturn(Optional.of(recipe1));
-        given(recipeFavoriteRepository.existsByUserIdAndRecipeId(userId, recipeId))
-                .willReturn(true);
 
         // when
-        RecommendedRecipeDto result = recommendationService.getRecipeDetail(recipeId, userId);
+        RecommendedRecipeDto result = recommendationService.getRecipeDetail(recipeId);
 
         // then
         assertThat(result).isNotNull();
         assertThat(result.getRecipeId()).isEqualTo("RCP_001");
         assertThat(result.getRecipeName()).isEqualTo("브로콜리 볶음");
-        assertThat(result.isFavorite()).isTrue();
+        assertThat(result.isFavorite()).isFalse(); // recipe_bookmarks에서 관리
     }
 
     @Test
@@ -266,13 +141,12 @@ class RecipeRecommendationServiceTest {
     void getRecipeDetail_NotFound() {
         // given
         String recipeId = "INVALID_ID";
-        String userId = "user123";
 
         given(recipeRepository.findById(recipeId))
                 .willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> recommendationService.getRecipeDetail(recipeId, userId))
+        assertThatThrownBy(() -> recommendationService.getRecipeDetail(recipeId))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("레시피를 찾을 수 없습니다. ID: INVALID_ID");
     }

@@ -2,6 +2,7 @@ package com.ohgiraffers.refrigegobackend.recommendation.dto;
 
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class RecommendedRecipeDto {
 
     /**
@@ -34,12 +36,12 @@ public class RecommendedRecipeDto {
     /**
      * 조리 방법 1
      */
-    private String manual01;
+    private String cookingMethod1;
 
     /**
      * 조리 방법 2
      */
-    private String manual02;
+    private String cookingMethod2;
 
     /**
      * 매칭된 재료 개수
@@ -52,9 +54,10 @@ public class RecommendedRecipeDto {
     private List<String> matchedIngredients;
 
     /**
-     * 찜하기 여부
+     * 찜하기 여부 (recipe_bookmarks 모듈에서 관리)
      */
-    private boolean isFavorite;
+    @Builder.Default
+    private boolean isFavorite = false;
 
     /**
      * 매칭 점수 (매칭된 재료 수 / 전체 선택 재료 수)
@@ -71,16 +74,16 @@ public class RecommendedRecipeDto {
         double score = totalSelectedIngredients > 0 ? 
                       (double) matchedCount / totalSelectedIngredients : 0.0;
         
-        return new RecommendedRecipeDto(
-                recipe.getRcpSeq(),
-                recipe.getRcpNm(),
-                recipe.getRcpPartsDtls(),
-                recipe.getManual01(),
-                recipe.getManual02(),
-                matchedCount,
-                matchedIngredients,
-                isFavorite,
-                score
-        );
+        return RecommendedRecipeDto.builder()
+                .recipeId(recipe.getRcpSeq())
+                .recipeName(recipe.getRcpNm())
+                .ingredients(recipe.getRcpPartsDtls())
+                .cookingMethod1(recipe.getManual01())
+                .cookingMethod2(recipe.getManual02())
+                .matchedIngredientCount(matchedCount)
+                .matchedIngredients(matchedIngredients)
+                .isFavorite(isFavorite)
+                .matchScore(score)
+                .build();
     }
 }
