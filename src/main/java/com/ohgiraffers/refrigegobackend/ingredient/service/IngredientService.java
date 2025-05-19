@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.ingredient.service;
 
+import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
 import com.ohgiraffers.refrigegobackend.ingredient.dto.IngredientResponseDto;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,11 +19,14 @@ public class IngredientService {
     private final IngredientRepository ingredientRepository;
 
     /**
-     * 전체 기준 재료 조회
+     * 카테고리별 기준 재료 조회
+     * @param category 조회할 카테고리명 (null 또는 "전체"면 전체 조회)
+     * @return 해당 카테고리 기준 재료 리스트
      */
-    public List<IngredientResponseDto> getAllIngredients() {
-        return ingredientRepository.findAll().stream()
-                .map(IngredientResponseDto::new)
-                .collect(Collectors.toList());
+    public List<Ingredient> getIngredientsByCategory(String category) {
+        if (category == null || category.isEmpty() || category.equals("전체")) {
+            return ingredientRepository.findAll();  // 전체 조회
+        }
+        return ingredientRepository.findByCategory(category);
     }
 }

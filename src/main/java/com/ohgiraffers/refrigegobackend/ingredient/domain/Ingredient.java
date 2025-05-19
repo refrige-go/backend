@@ -36,4 +36,12 @@ public class Ingredient {
      */
     @Column(nullable = false)
     private String category;
+
+    /**
+     * 재료 이미지 URL
+     * - 기준 재료 이미지 경로 또는 외부 URL
+     * - null 가능 (이미지가 없는 경우도 있음)
+     */
+    @Column(nullable = true)
+    private String imageUrl;
 }

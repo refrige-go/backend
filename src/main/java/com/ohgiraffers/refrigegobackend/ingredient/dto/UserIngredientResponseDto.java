@@ -14,12 +14,20 @@ public class UserIngredientResponseDto {
     private final Long ingredientId;   // 기준 재료 ID (nullable)
     private final String name;         // 재료명 (기준재료 or 직접입력)
     private final boolean isFrozen;    // 냉동 여부
+    private final Long expiryDaysLeft; // 유통기한까지 남은 일수 (null 가능)
 
     public UserIngredientResponseDto(UserIngredient entity, String name) {
         this.id = entity.getId();
         this.userId = entity.getUserId();
-        this.ingredientId = entity.getIngredientId(); // 기준 재료 ID
-        this.name = name; // 기준 or custom 재료 이름
+        this.ingredientId = entity.getIngredientId();
+        this.name = name;
         this.isFrozen = entity.isFrozen();
+
+        // expiryDate가 null이면 null, 아니면 D-day 계산값 저장
+        if (entity.getExpiryDate() != null) {
+            this.expiryDaysLeft = java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), entity.getExpiryDate());
+        } else {
+            this.expiryDaysLeft = null;
+        }
     }
 }
