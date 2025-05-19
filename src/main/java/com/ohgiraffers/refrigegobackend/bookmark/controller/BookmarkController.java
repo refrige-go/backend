@@ -31,7 +31,17 @@ public class BookmarkController {
         return ResponseEntity.ok(response);
     }
 
+    // 찜한 레시피 목록
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<Recipe>> getUserBookmarks(@PathVariable Long userId) {
+        List<Recipe> bookmarkedRecipes = bookmarkService.getBookmarkedRecipes(userId);
+        return ResponseEntity.ok(bookmarkedRecipes);
+    }
+
+
     // 찜한 레시피 밑에 비슷한 재료로 만든 레시피 목록 - 레시피 화면 (재료 기준)
+
+
 
     // 찜한 레시피와 비슷한 레시피 목록 - 메인화면 (요리 종류 기준)
     @GetMapping("/recommendations")
@@ -41,4 +51,5 @@ public class BookmarkController {
     }
 
     // 찜한 레시피 중 현재 만들 수 있는 레시피 목록 - 메인화면
+
 }

@@ -16,6 +16,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     @Query("SELECT l.recipe.rcpSeq FROM Bookmark l WHERE l.userId = :userId")
     List<String> findRecipeIdsByUserId(@Param("userId") Long userId);
 
-    void deleteByUserIdAndRecipe_RcpSeq(Long userId, String rcpSeq);
-    List<Bookmark> findAllByUserId(Long userId);
+    @Query("SELECT b.recipe FROM Bookmark b WHERE b.userId = :userId")
+    List<Recipe> findRecipesByUserId(@Param("userId") Long userId);
 }
