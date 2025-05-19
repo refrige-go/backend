@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -80,10 +81,8 @@ public class RecipeRecommendationService {
                                                    List<String> selectedIngredients,
                                                    Set<String> favoriteRecipeIds) {
         
-        String ingredients = recipe.getRcpPartsDtls();
-        if (ingredients == null) {
-            ingredients = "";
-        }
+        // final로 선언하여 람다 표현식에서 사용 가능하게 함
+        final String ingredients = recipe.getRcpPartsDtls() != null ? recipe.getRcpPartsDtls() : "";
 
         // 레시피 재료에서 선택한 재료와 매칭되는 것들 찾기
         List<String> matchedIngredients = selectedIngredients.stream()
@@ -170,8 +169,9 @@ public class RecipeRecommendationService {
         List<RecommendedRecipeDto> favoriteRecipes = new ArrayList<>();
         
         for (RecipeFavorite favorite : favorites) {
-            Recipe recipe = recipeRepository.findById(favorite.getRecipeId()).orElse(null);
-            if (recipe != null) {
+            Optional<Recipe> recipeOpt = recipeRepository.findById(favorite.getRecipeId());
+            if (recipeOpt.isPresent()) {
+                Recipe recipe = recipeOpt.get();
                 RecommendedRecipeDto dto = new RecommendedRecipeDto(
                         recipe.getRcpSeq(),
                         recipe.getRcpNm(),
@@ -184,6 +184,8 @@ public class RecipeRecommendationService {
                         0.0
                 );
                 favoriteRecipes.add(dto);
+            } else {
+                log.warn("찜한 레시피를 찾을 수 없습니다. 레시피 ID: {}", favorite.getRecipeId());
             }
         }
 
