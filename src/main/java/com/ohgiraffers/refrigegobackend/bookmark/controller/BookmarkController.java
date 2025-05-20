@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.bookmark.controller;
 
 import com.ohgiraffers.refrigegobackend.bookmark.dto.response.BookmarkResponseDTO;
+import com.ohgiraffers.refrigegobackend.bookmark.dto.response.UserIngredientRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.service.BookmarkService;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +44,7 @@ public class BookmarkController {
 
 
 
+
     // 찜한 레시피와 비슷한 레시피 목록 - 메인화면 (요리 종류 기준)
     @GetMapping("/recommendations")
     public ResponseEntity<List<Recipe>> getRecommendations(@RequestParam Long userId) {
@@ -51,5 +53,9 @@ public class BookmarkController {
     }
 
     // 찜한 레시피 중 현재 만들 수 있는 레시피 목록 - 메인화면
-
+    @GetMapping("/ingredient-recommend")
+    public ResponseEntity<List<UserIngredientRecipeResponseDTO>> recommendBookmarkedRecipes(@RequestParam Long userId) {
+        List<UserIngredientRecipeResponseDTO> recommendedRecipes = bookmarkService.getRecommendedRecipes(userId);
+        return ResponseEntity.ok(recommendedRecipes);
+    }
 }

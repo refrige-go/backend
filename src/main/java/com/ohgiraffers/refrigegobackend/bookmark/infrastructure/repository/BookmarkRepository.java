@@ -18,4 +18,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 
     @Query("SELECT b.recipe FROM Bookmark b WHERE b.userId = :userId")
     List<Recipe> findRecipesByUserId(@Param("userId") Long userId);
+
+    List<Bookmark> findByUserId(Long userId);
 }
