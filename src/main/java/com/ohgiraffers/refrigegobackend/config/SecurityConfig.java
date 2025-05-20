@@ -42,7 +42,7 @@ public class SecurityConfig {
         
         //접근할 수 있는 경로 설정
         http.authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/user/signup").permitAll()
+                        .requestMatchers("/login", "/", "/user/signup", "/api/bookmark/*").permitAll()
                         .anyRequest().authenticated());
         
         //세션은 STATELESS 로
