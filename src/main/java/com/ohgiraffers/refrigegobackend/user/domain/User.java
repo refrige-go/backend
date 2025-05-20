@@ -27,12 +27,12 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "USER_ROLE", nullable = false, length = 50)
-    private UserRole userRole;
+    private String userRole;
 
     public User() {
     }
 
-    public User(Integer userCode, String userId, String userName, String password, UserRole userRole) {
+    public User(Integer userCode, String userId, String userName, String password, String userRole) {
         this.userCode = userCode;
         this.userId = userId;
         this.userName = userName;
