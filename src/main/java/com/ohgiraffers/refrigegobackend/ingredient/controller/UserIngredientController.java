@@ -1,7 +1,9 @@
 package com.ohgiraffers.refrigegobackend.ingredient.controller;
 
+import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientBatchRequestDto;
 import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientRequestDto;
 import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientResponseDto;
+import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientUpdateRequestDto;
 import com.ohgiraffers.refrigegobackend.ingredient.service.UserIngredientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -47,5 +49,44 @@ public class UserIngredientController {
     public ResponseEntity<String> deleteUserIngredient(@PathVariable Long id) {
         service.deleteUserIngredient(id);
         return ResponseEntity.ok("재료가 삭제되었습니다.");
+    }
+
+    /**
+     * 보유 재료 일괄 등록 API
+     * POST /user-ingredients/batch
+     */
+    @PostMapping("/batch")
+    public ResponseEntity<String> addUserIngredientsBatch(@RequestBody UserIngredientBatchRequestDto dto) {
+        service.saveBatch(dto);
+        return ResponseEntity.ok("재료가 일괄 등록되었습니다.");
+    }
+
+    /**
+     * 유저 보유 재료 정보 수정 API
+     * PUT /user-ingredients/{id}
+     *
+     * @param id 수정할 유저 재료 ID
+     * @param dto 수정할 재료 정보 DTO
+     * @return 수정 성공 메시지 반환
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<String> updateUserIngredient(@PathVariable Long id,
+                                                       @RequestBody UserIngredientUpdateRequestDto dto) {
+
+        service.updateUserIngredient(id, dto);
+        return ResponseEntity.ok("재료 정보가 수정되었습니다.");
+    }
+
+    /**
+     * 유저 보유 재료 상세 조회 API
+     * GET /user-ingredients/{id}
+     *
+     * @param id 조회할 유저 재료 ID
+     * @return 상세 정보가 담긴 DTO 반환
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<UserIngredientResponseDto> getUserIngredientDetail(@PathVariable Long id) {
+        UserIngredientResponseDto dto = service.getUserIngredientDetail(id);
+        return ResponseEntity.ok(dto);
     }
 }
