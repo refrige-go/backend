@@ -21,16 +21,16 @@ public class RecipeApiController {
         this.recipeApiService = recipeApiService;
     }
 
-    /**
-     * 레시피 데이터를 외부 API에서 JSON 문자열로 조회하는 엔드포인트
-     * GET /api/recipes/fetch
-     *
-     * @return JSON 문자열 형태의 레시피 데이터
-     */
-    @GetMapping("/api/recipes/fetch")
-    public String fetchRecipes() {
-        return recipeApiService.fetchRecipes(1, 10); // 1~10개 호출
-    }
+//    /**
+//     * 레시피 데이터를 외부 API에서 JSON 문자열로 조회하는 엔드포인트
+//     * GET /api/recipes/fetch
+//     *
+//     * @return JSON 문자열 형태의 레시피 데이터
+//     */
+//    @GetMapping("/api/recipes/fetch")
+//    public String fetchRecipes() {
+//        return recipeApiService.fetchRecipes(1, 10); // 1~10개 호출
+//    }
 
     /**
      * 외부 API에서 조회한 레시피 데이터를 DB에 저장하는 엔드포인트
@@ -46,7 +46,7 @@ public class RecipeApiController {
 
     @GetMapping("/api/recipes/saveAll")
     public String saveAllRecipes() {
-        int totalCount = 1000; // 전체 예상 개수, 실제 API에서 받아와도 됨
+        int totalCount = 1136; //
         int batchSize = 100;   // 한 번에 처리할 개수
         recipeApiService.saveAllRecipes(totalCount, batchSize);
         return "레시피 100개씩 저장 완료";
