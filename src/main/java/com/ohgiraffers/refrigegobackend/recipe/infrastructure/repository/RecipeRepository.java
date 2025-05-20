@@ -1,0 +1,21 @@
+package com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository;
+
+import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+/**
+ * Recipe 엔티티에 대한 JPA Repository 인터페이스
+ * JpaRepository를 상속받아 기본 CRUD 기능 제공
+ *
+ * @param Recipe - 관리할 엔티티 타입
+ * @param String - 엔티티의 ID 타입 (여기선 String)
+ */
+public interface RecipeRepository extends JpaRepository<Recipe, String> {
+    // JpaRepository가 기본 CRUD 메서드를 모두 제공하므로 별도의 메서드 선언 불필요
+
+    // 요리 종류가 같은 레시피 조회 (찜한 레시피는 제외)
+    List<Recipe> findByCuisineTypeInAndRcpSeqNotIn(List<String> cuisineTypes, List<String> excludedRcpSeqs);
+
+}
