@@ -2,7 +2,11 @@ package com.ohgiraffers.refrigegobackend.user.domain;
 
 import com.ohgiraffers.refrigegobackend.common.UserRole;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 public class User {
@@ -36,45 +40,7 @@ public class User {
         this.userRole = userRole;
     }
 
-    public Integer getUserCode() {
-        return userCode;
-    }
 
-    public void setUserCode(Integer userCode) {
-        this.userCode = userCode;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public UserRole getUserRole() {
-        return userRole;
-    }
-
-    public void setUserRole(UserRole userRole) {
-        this.userRole = userRole;
-    }
 
     @Override
     public String toString() {
