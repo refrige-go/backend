@@ -1,17 +1,17 @@
 package com.ohgiraffers.refrigegobackend.bookmark.service;
 
 import com.ohgiraffers.refrigegobackend.bookmark.domain.Bookmark;
+import com.ohgiraffers.refrigegobackend.bookmark.dto.response.UserIngredientRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.infrastructure.repository.BookmarkRepository;
+import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
+import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.UserIngredientRepository;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,11 +19,13 @@ public class BookmarkService {
 
     private final BookmarkRepository bookmarkRepository;
     private final RecipeRepository recipeRepository;
+    private final UserIngredientRepository userIngredientRepository;
 
     @Autowired
-    public BookmarkService(BookmarkRepository bookmarkRepository, RecipeRepository recipeRepository) {
+    public BookmarkService(BookmarkRepository bookmarkRepository, RecipeRepository recipeRepository, UserIngredientRepository userIngredientRepository) {
         this.bookmarkRepository = bookmarkRepository;
         this.recipeRepository = recipeRepository;
+        this.userIngredientRepository = userIngredientRepository;
     }
 
     // 레시피 찜하기
@@ -84,4 +86,43 @@ public class BookmarkService {
 
 
     // 찜한 레시피 중 현재 만들 수 있는 레시피 목록 - 메인화면
+    public List<UserIngredientRecipeResponseDTO> getRecommendedRecipes(Long userId) {
+        // 냉장고 재료 조회
+        List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(String.valueOf(userId));
+        List<String> fridgeIngredientNames = userIngredients.stream()
+                .map(UserIngredient::getCustomName)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .toList();
+
+        // 찜한 레시피 조회
+        List<Bookmark> bookmarks = bookmarkRepository.findByUserId(userId);
+        List<Recipe> likedRecipes = bookmarks.stream()
+                .map(Bookmark::getRecipe)
+                .toList();
+
+        // 필터링
+        List<Recipe> matchedRecipes = likedRecipes.stream()
+                .filter(recipe -> {
+                    String parts = recipe.getRcpPartsDtls();
+                    if (parts == null) return false;
+
+                    List<String> recipeIngredients = Arrays.stream(parts.split("[●•\\n]"))  // ● 시점으로 구분
+                            .flatMap(section -> Arrays.stream(section.split("[:,]")))  // 콜론(:) 또는 쉼표(,)로 나누기
+                            .map(s -> s.trim().split(" ")[0])  // 앞 단어(재료명)만 가져오기
+                            .map(s -> s.replaceAll("[^가-힣a-zA-Z]", "").trim())  // 특수문자 제거
+                            .filter(s -> !s.isBlank())  // 빈 문자열 제거
+                            .toList();
+
+                    return recipeIngredients.stream().anyMatch(
+                            ri -> fridgeIngredientNames.stream().anyMatch(ri::contains)
+                    );
+                })
+                .toList();
+
+        // Dto로 변환
+        return matchedRecipes.stream()
+                .map(recipe -> new UserIngredientRecipeResponseDTO(recipe))
+                .toList();
+    }
 }
