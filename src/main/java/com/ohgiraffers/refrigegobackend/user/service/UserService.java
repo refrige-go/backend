@@ -25,39 +25,29 @@ public class UserService {
     }
 
     @Transactional
-    public Integer regist(SignupDTO singupDTO){
+    public Integer regist(SignupDTO signupDTO) {
 
-        if(userRepository.existsByUserId(singupDTO.getUserId())){
+        if (userRepository.existsByUserName(signupDTO.getUserName())) {
             return null;
         }
 
-        try{
+        try {
             User user = new User();
-            user.setUserId(singupDTO.getUserId());
-            user.setUserName(singupDTO.getUserName());
 
-            user.setPassword(encoder.encode(singupDTO.getUserPassword()));
-            user.setUserRole(UserRole.valueOf(singupDTO.getRole()));
-
+            user.setUserId(signupDTO.getUserId());
+            user.setUserName(signupDTO.getUserName());
+            user.setPassword(encoder.encode(signupDTO.getUserPassword()));
+            user.setUserRole(UserRole.valueOf(signupDTO.getRole()));
 
             User savedUser = userRepository.save(user);
+
             return savedUser.getUserCode();
-        }catch (Exception e){
+
+        } catch (Exception e) {
             e.printStackTrace();
             return 0;
         }
     }
 
 
-    public LoginUserDTO findByUserName(String userName) {
-        Optional<User> user = userRepository.findByUserId(userName);
-
-        return user.map(u -> new LoginUserDTO(
-                u.getUserCode(),
-                u.getUserId(),
-                u.getUserName(),
-                u.getPassword(),
-                u.getUserRole()
-        )).orElse(null);
-    }
 }

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,45 +32,22 @@ public class SecurityConfig {
     }
 
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
-    }
-
-    @Bean
     public SecurityFilterChain confiig(HttpSecurity http) throws Exception {
 
-        http.authorizeHttpRequests(auth -> {
-            //어떤 페이지에 어떤 아이디가 접근할 수 있는지 설정
-            auth.requestMatchers("/auth/login", "/user/signup", "/auth/fail","/").permitAll();
-            auth.requestMatchers("/auth/*").hasAnyAuthority(UserRole.ADMIN.getRole());
-            auth.requestMatchers("/user/*").hasAnyAuthority(UserRole.USER.getRole());
-            auth.anyRequest().authenticated();
-        }).formLogin( login ->{
-            //어떤요청을 보냈을때 로그인을 한걸로 설정할건지
-            login.loginPage("/auth/login");
-            login.usernameParameter("user");
-            login.passwordParameter("pass");
-            login.defaultSuccessUrl("/", true);
-            login.failureUrl("/");
-            //로그인 실패했을 때 써주는 핸들러
-            login.failureHandler(authFailHandler);
-
-        }).logout(logout ->{
-
-            logout.logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout"));
-            // 어떤요청이 들어왔을 때 로그아웃 할건지
-            logout.deleteCookies("JSESSIONID");
-            //로그아웃 했을 때 사용자의 브라우저에서 해당 세션을 삭제함
-            logout.invalidateHttpSession(true);
-            logout.logoutSuccessUrl("/");
-            //로그아웃에 성공하고 어떤페이지로 갈건지
-        }).sessionManagement(session ->{
-            //사용자가 세션을 할때 몇개의 세션을 열어줄건지
-            session.maximumSessions(1);
-            //동일한 아이디로 2명이 로그인 할 수 없음, 한명만 허용
-            session.invalidSessionUrl("/");
-            //이미로그인 한게 있으면 로그인성공했을때 기본경로로감
-        }).csrf(csrf -> csrf.disable());
+        // 세션기반 로그인과 다르게 밑에 세가지 disable 
+        http.csrf((auth) -> auth.disable());
+        http.formLogin((auth) -> auth.disable());
+        http.httpBasic((auth) -> auth.disable());
+        
+        
+        //접근할 수 있는 경로 설정
+        http.authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/login", "/", "/user/signup").permitAll()
+                        .anyRequest().authenticated());
+        
+        //세션은 STATELESS 로
+        http.sessionManagement((session) -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
