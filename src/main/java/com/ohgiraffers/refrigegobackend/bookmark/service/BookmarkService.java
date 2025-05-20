@@ -1,6 +1,8 @@
 package com.ohgiraffers.refrigegobackend.bookmark.service;
 
 import com.ohgiraffers.refrigegobackend.bookmark.domain.Bookmark;
+import com.ohgiraffers.refrigegobackend.bookmark.dto.response.CuisineTypeRecipeResponseDTO;
+import com.ohgiraffers.refrigegobackend.bookmark.dto.response.SimilarRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.dto.response.UserIngredientRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.infrastructure.repository.BookmarkRepository;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
@@ -62,31 +64,73 @@ public class BookmarkService {
     }
 
     // 찜한 레시피 밑에 비슷한 재료로 만든 레시피 목록 - 레시피 화면 (재료 기준)
+    public List<SimilarRecipeResponseDTO> getSimilarRecipes(Long userId) {
+        // 1. 사용자의 찜한 레시피 목록 가져오기
+        List<Bookmark> bookmarks = bookmarkRepository.findByUserId(userId);
+        List<Recipe> likedRecipes = bookmarks.stream()
+                .map(Bookmark::getRecipe)
+                .toList();
+
+        // 2. 찜한 레시피들의 재료 모두 수집
+        Set<String> likedIngredients = likedRecipes.stream()
+                .flatMap(recipe -> Arrays.stream(recipe.getRcpPartsDtls().split("[,\\n]")))
+                .map(s -> s.replaceAll("[^가-힣a-zA-Z]", "").trim())
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toSet());
+
+        // 3. 전체 레시피 중 찜한 레시피를 제외
+        List<Recipe> allRecipes = recipeRepository.findAll();
+        List<Recipe> otherRecipes = allRecipes.stream()
+                .filter(r -> !likedRecipes.contains(r))
+                .toList();
+
+        // 4. 찜한 재료 중 하나 이상 포함하는 다른 레시피 필터링
+        List<Recipe> similarRecipes = otherRecipes.stream()
+                .filter(recipe -> {
+                    String parts = recipe.getRcpPartsDtls();
+                    if (parts == null) return false;
+                    List<String> recipeIngredients = Arrays.stream(parts.split("[,\\n]"))
+                            .map(s -> s.replaceAll("[^가-힣a-zA-Z]", "").trim())
+                            .toList();
+                    return recipeIngredients.stream().anyMatch(likedIngredients::contains);
+                })
+                .toList();
+
+        // 5. DTO로 변환
+        return similarRecipes.stream()
+                .map(SimilarRecipeResponseDTO::new)
+                .toList();
+    }
+
 
     // 찜한 레시피와 비슷한 레시피 목록 - 메인화면 (요리 종류 기준)
-    public List<Recipe> getRecommendedRecipesByBookmarked(Long userId) {
-        // 1. 유저가 찜한 레시피 ID 목록
-        List<String> bookmarkedRecipeIds = bookmarkRepository.findRecipeIdsByUserId(userId);
+    public List<CuisineTypeRecipeResponseDTO> getRecommendedRecipesByBookmarked(Long userId) {
+        // 1. 유저가 찜한 레시피 ID 목록 (Set으로 변환)
+        List<String> bookmarkedRecipeIdsList = bookmarkRepository.findRecipeIdsByUserId(userId);
+        if (bookmarkedRecipeIdsList.isEmpty()) return Collections.emptyList();
 
-        if (bookmarkedRecipeIds.isEmpty()) return Collections.emptyList();
+        Set<String> bookmarkedRecipeIds = new HashSet<>(bookmarkedRecipeIdsList);
 
         // 2. 찜한 레시피들의 요리 종류 가져오기
-        List<Recipe> likedRecipes = recipeRepository.findAllById(bookmarkedRecipeIds);
+        List<Recipe> likedRecipes = recipeRepository.findAllById(bookmarkedRecipeIdsList);
         List<String> cuisineTypes = likedRecipes.stream()
                 .map(Recipe::getCuisineType)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-
         if (cuisineTypes.isEmpty()) return Collections.emptyList();
 
-        // 3. 추천 레시피 (찜하지 않은 것 중에서 요리 종류 일치)
-        return recipeRepository.findByCuisineTypeInAndRcpSeqNotIn(cuisineTypes, bookmarkedRecipeIds);
+        // 3. 찜하지 않은 같은 요리 종류 레시피 조회
+        List<Recipe> recommendedRecipes = recipeRepository.findByCuisineTypeInAndRcpSeqNotIn(cuisineTypes, bookmarkedRecipeIdsList);
+
+        // 4. DTO 변환 (추천 목록이니 bookmarked false or 포함 여부 체크)
+        return recommendedRecipes.stream()
+                .map(recipe -> new CuisineTypeRecipeResponseDTO(recipe, bookmarkedRecipeIds.contains(recipe.getRcpSeq())))
+                .collect(Collectors.toList());
     }
 
-
     // 찜한 레시피 중 현재 만들 수 있는 레시피 목록 - 메인화면
-    public List<UserIngredientRecipeResponseDTO> getRecommendedRecipes(Long userId) {
+    public List<UserIngredientRecipeResponseDTO> getRecommendedRecipesByUserIngredient(Long userId) {
         // 냉장고 재료 조회
         List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(String.valueOf(userId));
         List<String> fridgeIngredientNames = userIngredients.stream()
