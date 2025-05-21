@@ -43,6 +43,8 @@ public class UserIngredient {
     @Column(nullable = true)
     private String imageUrl; // 유저가 등록한 재료 이미지 URL
 
+    private String customCategory;
+
     /**
      * 유통기한까지 남은 일 수 계산
      * @return 오늘부터 expiryDate까지 남은 일수 (음수면 지난 날짜)
@@ -53,4 +55,5 @@ public class UserIngredient {
         }
         return java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), this.expiryDate);
     }
+
 }
