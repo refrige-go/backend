@@ -1,9 +1,6 @@
 package com.ohgiraffers.refrigegobackend.ingredient.controller;
 
-import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientBatchRequestDto;
-import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientRequestDto;
-import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientResponseDto;
-import com.ohgiraffers.refrigegobackend.ingredient.dto.UserIngredientUpdateRequestDto;
+import com.ohgiraffers.refrigegobackend.ingredient.dto.*;
 import com.ohgiraffers.refrigegobackend.ingredient.service.UserIngredientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +17,7 @@ import java.util.List;
 public class UserIngredientController {
 
     private final UserIngredientService service;
+    private final UserIngredientService userIngredientService;
 
     /**
      * 재료 등록 API
@@ -89,4 +87,20 @@ public class UserIngredientController {
         UserIngredientResponseDto dto = service.getUserIngredientDetail(id);
         return ResponseEntity.ok(dto);
     }
+
+    @PatchMapping("/{id}/frozen")
+    public ResponseEntity<Void> updateFrozenStatus(
+            @PathVariable Long id,
+            @RequestBody UpdateFrozenDto dto
+    ) {
+        userIngredientService.updateFrozenStatus(id, dto.getFrozen());
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}/dates")
+    public ResponseEntity<Void> updateDates(@PathVariable Long id, @RequestBody UpdateDateDto dto) {
+        userIngredientService.updateDates(id, dto.getPurchaseDate(), dto.getExpiryDate());
+        return ResponseEntity.ok().build();
+    }
+
 }
