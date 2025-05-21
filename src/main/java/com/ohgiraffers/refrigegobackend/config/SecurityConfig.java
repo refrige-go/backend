@@ -47,7 +47,8 @@ public class SecurityConfig {
                         "/",
                         "/user/signup",
                         "/user-ingredients/**",
-                        "/ingredients/**"
+                        "/ingredients/**",
+                        "/api/recipes/saveAll"
                 ).permitAll()
 
                 .anyRequest().authenticated());
