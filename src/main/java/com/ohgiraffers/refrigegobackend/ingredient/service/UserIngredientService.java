@@ -52,14 +52,26 @@ public class UserIngredientService {
     public List<UserIngredientResponseDto> getUserIngredients(String userId) {
         return repository.findByUserId(userId).stream()
                 .map(ui -> {
-                    String name = (ui.getIngredientId() != null)
-                            ? ingredientRepository.findById(ui.getIngredientId())
-                            .map(Ingredient::getName)
-                            .orElse("(삭제된 기준 재료)")
-                            : ui.getCustomName();
+                    String name;
+                    String category;
 
-                    // expiryDate null 체크 후 DTO 생성
-                    return new UserIngredientResponseDto(ui, name);
+                    if (ui.getIngredientId() != null) {
+                        // 기준 재료일 경우
+                        Ingredient ingredient = ingredientRepository.findById(ui.getIngredientId()).orElse(null);
+                        if (ingredient != null) {
+                            name = ingredient.getName();
+                            category = ingredient.getCategory();
+                        } else {
+                            name = "(삭제된 기준 재료)";
+                            category = "기타"; // 기본값 설정
+                        }
+                    } else {
+                        // 직접 입력 재료
+                        name = ui.getCustomName();
+                        category = ui.getCustomCategory(); // 직접 입력 재료의 카테고리도 저장되어 있다고 가정
+                    }
+
+                    return new UserIngredientResponseDto(ui, name, category);
                 })
                 .collect(Collectors.toList());
     }
@@ -123,18 +135,25 @@ public class UserIngredientService {
     public UserIngredientResponseDto getUserIngredientDetail(Long id) {
         UserIngredient entity = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 재료입니다."));
+
         String name;
+        String category;
+
         if (entity.getIngredientId() != null) {
-            name = ingredientRepository.findById(entity.getIngredientId())
-                    .map(ingredient -> ingredient.getName())
+            // 기준 재료일 경우
+            Ingredient ingredient = ingredientRepository.findById(entity.getIngredientId())
                     .orElseThrow(() -> new IllegalArgumentException("기준 재료가 존재하지 않습니다."));
+            name = ingredient.getName();
+            category = ingredient.getCategory();
+            entity.setCustomName(null); // 기준 재료일 경우 customName은 null 처리
         } else {
+            // 직접 입력 재료일 경우
             name = entity.getCustomName();
+            category = entity.getCustomCategory() != null ? entity.getCustomCategory() : "기타";
         }
-        if (entity.getIngredientId() != null) {
-            entity.setCustomName(null);
-        }
-        return new UserIngredientResponseDto(entity, name);
+
+        return new UserIngredientResponseDto(entity, name, category);
     }
+
 
 }
