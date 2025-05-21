@@ -11,7 +11,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 public class CorsConfig {
 
     @Bean
-    public FilterRegistrationBean<CorsFilter> corsFilter() {
+    public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowCredentials(true);
@@ -25,6 +25,6 @@ public class CorsConfig {
         FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
         bean.setOrder(0);
 
-        return bean;
+        return new CorsFilter(source);
     }
 }
