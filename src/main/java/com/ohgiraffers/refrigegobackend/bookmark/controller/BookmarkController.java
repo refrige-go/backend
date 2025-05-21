@@ -1,6 +1,6 @@
 package com.ohgiraffers.refrigegobackend.bookmark.controller;
 
-import com.ohgiraffers.refrigegobackend.bookmark.dto.response.BookmarkResponseDTO;
+import com.ohgiraffers.refrigegobackend.bookmark.dto.response.*;
 import com.ohgiraffers.refrigegobackend.bookmark.service.BookmarkService;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import org.springframework.http.ResponseEntity;
@@ -33,23 +33,32 @@ public class BookmarkController {
 
     // 찜한 레시피 목록
     @GetMapping("/{userId}")
-    public ResponseEntity<List<Recipe>> getUserBookmarks(@PathVariable Long userId) {
-        List<Recipe> bookmarkedRecipes = bookmarkService.getBookmarkedRecipes(userId);
+    public ResponseEntity<List<BookmarkRecipeResponseDTO>> getUserBookmarks(@PathVariable Long userId) {
+        List<BookmarkRecipeResponseDTO> bookmarkedRecipes = bookmarkService.getBookmarkedRecipes(userId);
         return ResponseEntity.ok(bookmarkedRecipes);
     }
 
 
     // 찜한 레시피 밑에 비슷한 재료로 만든 레시피 목록 - 레시피 화면 (재료 기준)
-
+    // !!! 애매함 AI로 구현해야할 듯 - 일단 나중에 생각 !!!
+    @GetMapping("/similar-recipes")
+    public ResponseEntity<List<SimilarRecipeResponseDTO>> getSimilarRecipes(@RequestParam Long userId) {
+        List<SimilarRecipeResponseDTO> result = bookmarkService.getSimilarRecipes(userId);
+        return ResponseEntity.ok(result);
+    }
 
 
     // 찜한 레시피와 비슷한 레시피 목록 - 메인화면 (요리 종류 기준)
-    @GetMapping("/recommendations")
-    public ResponseEntity<List<Recipe>> getRecommendations(@RequestParam Long userId) {
-        List<Recipe> recommendations = bookmarkService.getRecommendedRecipesByBookmarked(userId);
+    @GetMapping("/bookmark-recommend")
+    public ResponseEntity<List<CuisineTypeRecipeResponseDTO>> getRecommendedRecipesByBookmarked(@RequestParam Long userId) {
+        List<CuisineTypeRecipeResponseDTO> recommendations = bookmarkService.getRecommendedRecipesByBookmarked(userId);
         return ResponseEntity.ok(recommendations);
     }
 
     // 찜한 레시피 중 현재 만들 수 있는 레시피 목록 - 메인화면
-
+    @GetMapping("/ingredient-recommend")
+    public ResponseEntity<List<UserIngredientRecipeResponseDTO>> getRecommendedRecipesByUserIngredient(@RequestParam Long userId) {
+        List<UserIngredientRecipeResponseDTO> recommendedRecipes = bookmarkService.getRecommendedRecipesByUserIngredient(userId);
+        return ResponseEntity.ok(recommendedRecipes);
+    }
 }

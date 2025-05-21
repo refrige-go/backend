@@ -60,62 +60,6 @@ public class Recipe {
    @Column(name = "manual06", columnDefinition = "TEXT")
    private String manual06;
 
-   @Lob
-   @Column(name = "manual07", columnDefinition = "TEXT")
-   private String manual07;
-
-   @Lob
-   @Column(name = "manual08", columnDefinition = "TEXT")
-   private String manual08;
-
-   @Lob
-   @Column(name = "manual09", columnDefinition = "TEXT")
-   private String manual09;
-
-   @Lob
-   @Column(name = "manual10", columnDefinition = "TEXT")
-   private String manual10;
-
-   @Lob
-   @Column(name = "manual11", columnDefinition = "TEXT")
-   private String manual11;
-
-   @Lob
-   @Column(name = "manual12", columnDefinition = "TEXT")
-   private String manual12;
-
-   @Lob
-   @Column(name = "manual13", columnDefinition = "TEXT")
-   private String manual13;
-
-   @Lob
-   @Column(name = "manual14", columnDefinition = "TEXT")
-   private String manual14;
-
-   @Lob
-   @Column(name = "manual15", columnDefinition = "TEXT")
-   private String manual15;
-
-   @Lob
-   @Column(name = "manual16", columnDefinition = "TEXT")
-   private String manual16;
-
-   @Lob
-   @Column(name = "manual17", columnDefinition = "TEXT")
-   private String manual17;
-
-   @Lob
-   @Column(name = "manual18", columnDefinition = "TEXT")
-   private String manual18;
-
-   @Lob
-   @Column(name = "manual19", columnDefinition = "TEXT")
-   private String manual19;
-
-   @Lob
-   @Column(name = "manual20", columnDefinition = "TEXT")
-   private String manual20;
-
    @Column(name = "info_eng")
    private String infoEng;     // 열량
 
@@ -130,4 +74,7 @@ public class Recipe {
 
    @Column(name = "info_na")
    private String infoNa;      // 나트륨
+
+   @Column(name = "rcp_category")
+   private String category;
 }
