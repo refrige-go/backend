@@ -1,7 +1,7 @@
 package com.ohgiraffers.refrigegobackend.recipe.service;
 
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
-import com.ohgiraffers.refrigegobackend.recipe.dto.RecipeApiResponseDto;
+import com.ohgiraffers.refrigegobackend.recipe.dto.response.RecipeApiResponseDto;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository; // 레포지토리 import
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -75,20 +75,6 @@ public class RecipeApiService {
                 recipe.setManual04(dto.getManual04());
                 recipe.setManual05(dto.getManual05());
                 recipe.setManual06(dto.getManual06());
-                recipe.setManual07(dto.getManual07());
-                recipe.setManual08(dto.getManual08());
-                recipe.setManual09(dto.getManual09());
-                recipe.setManual10(dto.getManual10());
-                recipe.setManual11(dto.getManual11());
-                recipe.setManual12(dto.getManual12());
-                recipe.setManual13(dto.getManual13());
-                recipe.setManual14(dto.getManual14());
-                recipe.setManual15(dto.getManual15());
-                recipe.setManual16(dto.getManual16());
-                recipe.setManual17(dto.getManual17());
-                recipe.setManual18(dto.getManual18());
-                recipe.setManual19(dto.getManual19());
-                recipe.setManual20(dto.getManual20());
 
                 // 부가 정보
                 recipe.setCuisineType(dto.getCuisineType());
@@ -154,20 +140,6 @@ public class RecipeApiService {
                     recipe.setManual04(dto.getManual04());
                     recipe.setManual05(dto.getManual05());
                     recipe.setManual06(dto.getManual06());
-                    recipe.setManual07(dto.getManual07());
-                    recipe.setManual08(dto.getManual08());
-                    recipe.setManual09(dto.getManual09());
-                    recipe.setManual10(dto.getManual10());
-                    recipe.setManual11(dto.getManual11());
-                    recipe.setManual12(dto.getManual12());
-                    recipe.setManual13(dto.getManual13());
-                    recipe.setManual14(dto.getManual14());
-                    recipe.setManual15(dto.getManual15());
-                    recipe.setManual16(dto.getManual16());
-                    recipe.setManual17(dto.getManual17());
-                    recipe.setManual18(dto.getManual18());
-                    recipe.setManual19(dto.getManual19());
-                    recipe.setManual20(dto.getManual20());
 
                     // 부가 정보
                     recipe.setCuisineType(dto.getCuisineType());

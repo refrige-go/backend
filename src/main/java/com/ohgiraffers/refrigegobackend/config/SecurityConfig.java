@@ -34,7 +34,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain confiig(HttpSecurity http) throws Exception {
 
-        // 세션기반 로그인과 다르게 밑에 세가지 disable
+        // 세션기반 로그인과 다르게 밑에 세가지 disable 
         http.csrf((auth) -> auth.disable());
         http.formLogin((auth) -> auth.disable());
         http.httpBasic((auth) -> auth.disable());
@@ -48,7 +48,8 @@ public class SecurityConfig {
                         "/user/signup",
                         "/user-ingredients/**",
                         "/ingredients/**",
-                        "/api/recipes/saveAll"
+                        "/api/recipes/*",
+                        "/api/bookmark/*"
                 ).permitAll()
 
                 .anyRequest().authenticated());

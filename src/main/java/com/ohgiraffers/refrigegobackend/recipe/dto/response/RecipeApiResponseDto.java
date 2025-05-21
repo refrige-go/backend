@@ -1,4 +1,4 @@
-package com.ohgiraffers.refrigegobackend.recipe.dto;
+package com.ohgiraffers.refrigegobackend.recipe.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -122,48 +122,6 @@ public class RecipeApiResponseDto {
 
         @JsonProperty("MANUAL_IMG06")
         private String manualImg06;     // 조리 방법 6 이미지 (Image for Step 6)
-
-        @JsonProperty("MANUAL_IMG07")
-        private String manualImg07;     // 조리 방법 7 이미지 (Image for Step 7)
-
-        @JsonProperty("MANUAL_IMG08")
-        private String manualImg08;     // 조리 방법 8 이미지 (Image for Step 8)
-
-        @JsonProperty("MANUAL_IMG09")
-        private String manualImg09;     // 조리 방법 9 이미지 (Image for Step 9)
-
-        @JsonProperty("MANUAL_IMG10")
-        private String manualImg10;     // 조리 방법 10 이미지 (Image for Step 10)
-
-        @JsonProperty("MANUAL_IMG11")
-        private String manualImg11;     // 조리 방법 11 이미지 (Image for Step 11)
-
-        @JsonProperty("MANUAL_IMG12")
-        private String manualImg12;     // 조리 방법 12 이미지 (Image for Step 12)
-
-        @JsonProperty("MANUAL_IMG13")
-        private String manualImg13;     // 조리 방법 13 이미지 (Image for Step 13)
-
-        @JsonProperty("MANUAL_IMG14")
-        private String manualImg14;     // 조리 방법 14 이미지 (Image for Step 14)
-
-        @JsonProperty("MANUAL_IMG15")
-        private String manualImg15;     // 조리 방법 15 이미지 (Image for Step 15)
-
-        @JsonProperty("MANUAL_IMG16")
-        private String manualImg16;     // 조리 방법 16 이미지 (Image for Step 16)
-
-        @JsonProperty("MANUAL_IMG17")
-        private String manualImg17;     // 조리 방법 17 이미지 (Image for Step 17)
-
-        @JsonProperty("MANUAL_IMG18")
-        private String manualImg18;     // 조리 방법 18 이미지 (Image for Step 18)
-
-        @JsonProperty("MANUAL_IMG19")
-        private String manualImg19;     // 조리 방법 19 이미지 (Image for Step 19)
-
-        @JsonProperty("MANUAL_IMG20")
-        private String manualImg20;     // 조리 방법 20 이미지 (Image for Step 20)
 
         @JsonProperty("RCP_WAY2")
         private String rcpWay2;         // 조리 방법 상세 (예: 찌기, 굽기 등) (Cooking Way Detail)
