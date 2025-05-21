@@ -48,7 +48,7 @@ public class SecurityConfig {
                         "/user/signup",
                         "/user-ingredients/**",
                         "/ingredients/**",
-                        "/api/recipes/saveAll",
+                        "/api/recipes/*",
                         "/api/bookmark/*"
                 ).permitAll()
 
