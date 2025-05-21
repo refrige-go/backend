@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.bookmark.service;
 
 import com.ohgiraffers.refrigegobackend.bookmark.domain.Bookmark;
+import com.ohgiraffers.refrigegobackend.bookmark.dto.response.BookmarkRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.dto.response.CuisineTypeRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.dto.response.SimilarRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.dto.response.UserIngredientRecipeResponseDTO;
@@ -59,9 +60,14 @@ public class BookmarkService {
     }
 
     // 찜한 레시피 목록 조회
-    public List<Recipe> getBookmarkedRecipes(Long userId) {
-        return bookmarkRepository.findRecipesByUserId(userId);
+    public List<BookmarkRecipeResponseDTO> getBookmarkedRecipes(Long userId) {
+        List<Recipe> recipes = bookmarkRepository.findRecipesByUserId(userId);
+
+        return recipes.stream()
+                .map(BookmarkRecipeResponseDTO::new) // Recipe -> DTO
+                .collect(Collectors.toList());       // 리스트로 변환
     }
+
 
     // 찜한 레시피 밑에 비슷한 재료로 만든 레시피 목록 - 레시피 화면 (재료 기준)
     public List<SimilarRecipeResponseDTO> getSimilarRecipes(Long userId) {
