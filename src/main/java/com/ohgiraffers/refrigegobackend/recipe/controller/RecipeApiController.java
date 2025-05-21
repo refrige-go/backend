@@ -49,6 +49,6 @@ public class RecipeApiController {
         int totalCount = 1136; //
         int batchSize = 100;   // 한 번에 처리할 개수
         recipeApiService.saveAllRecipes(totalCount, batchSize);
-        return "레시피 100개씩 저장 완료";
+        return "레시피 저장 완료";
     }
 }
