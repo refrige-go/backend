@@ -3,6 +3,8 @@ package com.ohgiraffers.refrigegobackend.ingredient.dto;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
 import lombok.Getter;
 
+import java.time.LocalDate;
+
 /**
  * 유저 냉장고 보유 재료 조회 응답 DTO
  */
@@ -16,6 +18,8 @@ public class UserIngredientResponseDto {
     private final boolean isFrozen;    // 냉동 여부
     private final Long expiryDaysLeft; // 유통기한까지 남은 일수 (null 가능)
     private final String category;
+    private final LocalDate purchaseDate;
+    private final LocalDate expiryDate;
 
     public UserIngredientResponseDto(UserIngredient entity, String name, String category) {
         this.id = entity.getId();
@@ -24,6 +28,8 @@ public class UserIngredientResponseDto {
         this.name = name;
         this.isFrozen = entity.isFrozen();
         this.category = category;
+        this.purchaseDate = entity.getPurchaseDate();
+        this.expiryDate = entity.getExpiryDate();
 
         // expiryDate가 null이면 null, 아니면 D-day 계산값 저장
         if (entity.getExpiryDate() != null) {
