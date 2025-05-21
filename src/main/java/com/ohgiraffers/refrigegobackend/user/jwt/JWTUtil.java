@@ -1,4 +1,4 @@
-package com.ohgiraffers.refrigegobackend.auth.jwt;
+package com.ohgiraffers.refrigegobackend.user.jwt;
 
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,12 +13,10 @@ import java.util.Date;
 public class JWTUtil {
 
     private SecretKey secretKey;
-    // yml에 설정해놓은 객체키를 가져옴
 
-    public JWTUtil(@Value("${jwt.secret}")String secret) {
+    public JWTUtil(@Value("${spring.jwt.secret}")String secret) {
 
-
-        secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
+        this.secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
 
     public String getUsername(String token) {
@@ -35,6 +33,7 @@ public class JWTUtil {
 
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
     }
+
 
     public String createJwt(String username, String role, Long expiredMs) {
 
