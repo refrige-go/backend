@@ -10,7 +10,9 @@ import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.Ing
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.UserIngredientRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,7 @@ public class UserIngredientService {
 
     private final UserIngredientRepository repository;
     private final IngredientRepository ingredientRepository;
+    private final UserIngredientRepository userIngredientRepository;
 
     /**
      * 보유 재료 등록
@@ -154,6 +157,29 @@ public class UserIngredientService {
 
         return new UserIngredientResponseDto(entity, name, category);
     }
+
+    @Transactional
+    public void updateFrozenStatus(Long id, boolean isFrozen) {
+        System.out.println("before setFrozen: " + isFrozen);
+        UserIngredient ingredient = userIngredientRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("재료를 찾을 수 없습니다."));
+
+        ingredient.setFrozen(isFrozen);
+        System.out.println("after setFrozen: " + ingredient.isFrozen());
+
+        userIngredientRepository.save(ingredient);
+    }
+
+    public void updateDates(Long id, LocalDate purchaseDate, LocalDate expiryDate) {
+        UserIngredient ingredient = userIngredientRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("재료를 찾을 수 없습니다."));
+
+        ingredient.setPurchaseDate(purchaseDate);
+        ingredient.setExpiryDate(expiryDate);
+
+        userIngredientRepository.save(ingredient);
+    }
+
 
 
 }

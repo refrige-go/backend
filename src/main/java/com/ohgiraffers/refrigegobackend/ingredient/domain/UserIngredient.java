@@ -37,8 +37,8 @@ public class UserIngredient {
     @Column(nullable = false)
     private LocalDate expiryDate;    // 소비기한
 
-    @Column(nullable = false)
-    private boolean isFrozen;        // 냉동 보관 여부
+    @Column(name = "is_frozen", nullable = false)
+    private boolean isFrozen;      // 냉동 보관 여부
 
     @Column(nullable = true)
     private String imageUrl; // 유저가 등록한 재료 이미지 URL
