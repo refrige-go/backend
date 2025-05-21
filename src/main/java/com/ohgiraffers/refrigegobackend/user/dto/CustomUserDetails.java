@@ -1,21 +1,22 @@
 package com.ohgiraffers.refrigegobackend.user.dto;
 
-import com.ohgiraffers.refrigegobackend.common.UserRole;
-import com.ohgiraffers.refrigegobackend.user.domain.User;
+
+import com.ohgiraffers.refrigegobackend.user.entity.UserEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-// UserDetails를 구현하는 클래스
-public class CustomUserDetails implements UserDetails {
+public class CustomUserDetails  implements UserDetails {
 
-    private final User user;
+    private final UserEntity userEntity;
 
-    public CustomUserDetails(User user) {
-        this.user = user;
+    public CustomUserDetails(UserEntity userEntity) {
+
+        this.userEntity = userEntity;
     }
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -27,7 +28,7 @@ public class CustomUserDetails implements UserDetails {
             @Override
             public String getAuthority() {
 
-                return user.getUserRole();
+                return userEntity.getRole();
             }
         });
 
@@ -37,13 +38,13 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getPassword() {
 
-        return user.getPassword();
+        return userEntity.getPassword();
     }
 
     @Override
     public String getUsername() {
 
-        return user.getUserName();
+        return userEntity.getUsername();
     }
 
     @Override
