@@ -42,9 +42,18 @@ public class SecurityConfig {
         
         //접근할 수 있는 경로 설정
         http.authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/user/signup", "/api/bookmark/*").permitAll()
-                        .anyRequest().authenticated());
-        
+                .requestMatchers(
+                        "/login",
+                        "/",
+                        "/user/signup",
+                        "/user-ingredients/**",
+                        "/ingredients/**",
+                        "/api/recipes/saveAll",
+                        "/api/bookmark/*"
+                ).permitAll()
+
+                .anyRequest().authenticated());
+
         //세션은 STATELESS 로
         http.sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));

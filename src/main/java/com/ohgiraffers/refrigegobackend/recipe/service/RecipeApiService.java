@@ -61,21 +61,53 @@ public class RecipeApiService {
     public void saveRecipesBatch(int start, int end) {
         RecipeApiResponseDto responseDto = fetchRecipeDto(start, end);
 
-
         if (responseDto != null && responseDto.getCOOKRCP01() != null) {
             Arrays.stream(responseDto.getCOOKRCP01().getRow()).forEach(dto -> {
                 Recipe recipe = new Recipe();
                 recipe.setRcpSeq(dto.getRcpSeq());               // 레시피 고유 번호
                 recipe.setRcpNm(dto.getRcpNm());                 // 레시피 이름
                 recipe.setRcpPartsDtls(dto.getRcpPartsDtls());   // 재료 상세
-                recipe.setManual01(dto.getManual01());           // 조리 방법 1
-                recipe.setManual02(dto.getManual02());           // 조리 방법 2
-                recipe.setCuisineType(dto.getCuisineType());     // 요리 종류
-                recipe.setRcpWay2(dto.getRcpWay2());             // 조리 방법 상세
-                recipe.setImage(dto.getAttFileNoMain());                // 이미지
-                recipeRepository.save(recipe);                   // DB 저장
+
+                // 조리 방법
+                recipe.setManual01(dto.getManual01());
+                recipe.setManual02(dto.getManual02());
+                recipe.setManual03(dto.getManual03());
+                recipe.setManual04(dto.getManual04());
+                recipe.setManual05(dto.getManual05());
+                recipe.setManual06(dto.getManual06());
+                recipe.setManual07(dto.getManual07());
+                recipe.setManual08(dto.getManual08());
+                recipe.setManual09(dto.getManual09());
+                recipe.setManual10(dto.getManual10());
+                recipe.setManual11(dto.getManual11());
+                recipe.setManual12(dto.getManual12());
+                recipe.setManual13(dto.getManual13());
+                recipe.setManual14(dto.getManual14());
+                recipe.setManual15(dto.getManual15());
+                recipe.setManual16(dto.getManual16());
+                recipe.setManual17(dto.getManual17());
+                recipe.setManual18(dto.getManual18());
+                recipe.setManual19(dto.getManual19());
+                recipe.setManual20(dto.getManual20());
+
+                // 부가 정보
+                recipe.setCuisineType(dto.getCuisineType());
+                recipe.setRcpWay2(dto.getRcpWay2());
+                recipe.setImage(dto.getAttFileNoMain());
+                recipe.setThumbnail(dto.getAttFileNoMk());
+                recipe.setHashTag(dto.getHashTag());
+
+                // 영양 정보
+                recipe.setInfoEng(dto.getInfoEng());
+                recipe.setInfoCar(dto.getInfoCar());
+                recipe.setInfoPro(dto.getInfoPro());
+                recipe.setInfoFat(dto.getInfoFat());
+                recipe.setInfoNa(dto.getInfoNa());
+
+                recipeRepository.save(recipe); // DB 저장
             });
         }
+
     }
 
     /**
@@ -111,14 +143,46 @@ public class RecipeApiService {
             if (responseDto != null && responseDto.getCOOKRCP01() != null) {
                 Arrays.stream(responseDto.getCOOKRCP01().getRow()).forEach(dto -> {
                     Recipe recipe = new Recipe();
-                    recipe.setRcpSeq(dto.getRcpSeq());
-                    recipe.setRcpNm(dto.getRcpNm());
-                    recipe.setRcpPartsDtls(dto.getRcpPartsDtls());
+                    recipe.setRcpSeq(dto.getRcpSeq());               // 레시피 고유 번호
+                    recipe.setRcpNm(dto.getRcpNm());                 // 레시피 이름
+                    recipe.setRcpPartsDtls(dto.getRcpPartsDtls());   // 재료 상세
+
+                    // 조리 방법
                     recipe.setManual01(dto.getManual01());
                     recipe.setManual02(dto.getManual02());
+                    recipe.setManual03(dto.getManual03());
+                    recipe.setManual04(dto.getManual04());
+                    recipe.setManual05(dto.getManual05());
+                    recipe.setManual06(dto.getManual06());
+                    recipe.setManual07(dto.getManual07());
+                    recipe.setManual08(dto.getManual08());
+                    recipe.setManual09(dto.getManual09());
+                    recipe.setManual10(dto.getManual10());
+                    recipe.setManual11(dto.getManual11());
+                    recipe.setManual12(dto.getManual12());
+                    recipe.setManual13(dto.getManual13());
+                    recipe.setManual14(dto.getManual14());
+                    recipe.setManual15(dto.getManual15());
+                    recipe.setManual16(dto.getManual16());
+                    recipe.setManual17(dto.getManual17());
+                    recipe.setManual18(dto.getManual18());
+                    recipe.setManual19(dto.getManual19());
+                    recipe.setManual20(dto.getManual20());
+
+                    // 부가 정보
                     recipe.setCuisineType(dto.getCuisineType());
                     recipe.setRcpWay2(dto.getRcpWay2());
                     recipe.setImage(dto.getAttFileNoMain());
+                    recipe.setThumbnail(dto.getAttFileNoMk());
+                    recipe.setHashTag(dto.getHashTag());
+
+                    // 영양 정보
+                    recipe.setInfoEng(dto.getInfoEng());
+                    recipe.setInfoCar(dto.getInfoCar());
+                    recipe.setInfoPro(dto.getInfoPro());
+                    recipe.setInfoFat(dto.getInfoFat());
+                    recipe.setInfoNa(dto.getInfoNa());
+
                     recipeRepository.save(recipe); // DB 저장
                 });
             }
