@@ -1,7 +1,7 @@
 package com.ohgiraffers.refrigegobackend.user.service;
 
 import com.ohgiraffers.refrigegobackend.user.dto.JoinDTO;
-import com.ohgiraffers.refrigegobackend.user.entity.UserEntity;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ public class JoinService {
 
         String username = joinDTO.getUsername();
         String password = joinDTO.getPassword();
-        String userId = joinDTO.getUserId();
+
 
         Boolean isExist = userRepository.existsByUsername(username);
 
@@ -31,12 +31,12 @@ public class JoinService {
             return;
         }
 
-        UserEntity data = new UserEntity();
+        User data = new User();
 
         data.setUsername(username);
         data.setPassword(bCryptPasswordEncoder.encode(password));
         data.setRole("ROLE_USER");
-        data.setUserId(userId);
+
 
         userRepository.save(data);
     }
