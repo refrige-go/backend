@@ -70,7 +70,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(username, role, userId, 60*60*10L);  // userId 추가
+        String token = jwtUtil.createJwt(username, role, userId, 60*60*10L * 1000);  // userId 추가
         
         // CORS 대응을 위한 헤더 추가
         response.addHeader("Access-Control-Expose-Headers", "Authorization");
