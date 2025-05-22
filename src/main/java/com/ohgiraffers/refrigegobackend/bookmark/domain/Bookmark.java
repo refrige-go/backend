@@ -21,7 +21,7 @@ public class Bookmark {
     private Recipe recipe;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "USER_NO")
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "created_at")

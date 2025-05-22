@@ -65,11 +65,14 @@ public class BookmarkService {
 
     // 찜한 레시피 목록 조회
     public List<BookmarkRecipeResponseDTO> getBookmarkedRecipes(Long userId) {
+
         List<Recipe> recipes = bookmarkRepository.findRecipesByUserId(userId);
 
-        return recipes.stream()
+        List<BookmarkRecipeResponseDTO> result = recipes.stream()
                 .map(BookmarkRecipeResponseDTO::new) // Recipe -> DTO
                 .collect(Collectors.toList());       // 리스트로 변환
+                
+        return result;
     }
 
 
