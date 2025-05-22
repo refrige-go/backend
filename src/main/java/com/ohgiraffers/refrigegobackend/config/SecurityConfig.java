@@ -1,4 +1,4 @@
-package com.ohgiraffers.refrigegobackend.user.config;
+package com.ohgiraffers.refrigegobackend.config;
 
 import com.ohgiraffers.refrigegobackend.user.jwt.JWTFilter;
 import com.ohgiraffers.refrigegobackend.user.jwt.JWTUtil;
