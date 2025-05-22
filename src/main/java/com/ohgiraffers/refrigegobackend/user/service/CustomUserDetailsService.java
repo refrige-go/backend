@@ -1,7 +1,7 @@
 package com.ohgiraffers.refrigegobackend.user.service;
 
 import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
-import com.ohgiraffers.refrigegobackend.user.entity.UserEntity;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         System.out.println("로그인 시도 username: " + username);
         
         // 데이터베이스에서 사용자 찾기
-        UserEntity userData = userRepository.findByUsername(username);
+        User userData = userRepository.findByUsername(username);
 
         if (userData != null) {
             System.out.println("사용자 찾음: " + userData.getUsername() + ", 역할: " + userData.getRole());
