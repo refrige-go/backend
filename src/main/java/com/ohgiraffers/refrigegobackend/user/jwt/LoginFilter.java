@@ -63,13 +63,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         String username = customUserDetails.getUsername();
+        Long userId = customUserDetails.getId();  // userId 추가
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(username, role, 60*60*10L);
+        String token = jwtUtil.createJwt(username, role, userId, 60*60*10L);  // userId 추가
         
         // CORS 대응을 위한 헤더 추가
         response.addHeader("Access-Control-Expose-Headers", "Authorization");
@@ -77,9 +78,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         
         // 응답 본문에도 토큰 추가 (프론트엔드에서 쉽게 접근할 수 있도록)
         response.setContentType("application/json");
-        response.getWriter().write("{\"token\":\"" + token + "\"}");
+        response.getWriter().write("{\"token\":\"" + token + "\", \"userId\":" + userId + "}");
         
-        System.out.println("Login successful for user: " + username);
+        System.out.println("Login successful for user: " + username + " (ID: " + userId + ")");
     }
 
     @Override

@@ -35,12 +35,13 @@ public class BookmarkController {
     }
 
     // 찜한 레시피 목록
-    @GetMapping
+    @GetMapping("/list")
     public ResponseEntity<List<BookmarkRecipeResponseDTO>> getUserBookmarks(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long userId = userDetails.getId();
         List<BookmarkRecipeResponseDTO> bookmarkedRecipes = bookmarkService.getBookmarkedRecipes(userId);
+
         return ResponseEntity.ok(bookmarkedRecipes);
     }
 
