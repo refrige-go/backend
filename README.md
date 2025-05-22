@@ -37,7 +37,7 @@ src/main/java/com/ohgiraffers/refrigegobackend/
 │   ├── exception/GlobalExceptionHandler.java  # 전역 예외 처리
 │   ├── filter/                        # 필터 (예정)
 │   └── interceptor/                   # 인터셉터 (예정)
-├── ingredient/                        # 재료 관리 도메인 ✅
+├── ocrIngredients/                        # 재료 관리 도메인 ✅
 │   ├── controller/
 │   │   ├── IngredientController.java  # 기준 재료 API
 │   │   └── UserIngredientController.java  # 사용자 재료 API
