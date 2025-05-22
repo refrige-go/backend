@@ -1,7 +1,7 @@
 package com.ohgiraffers.refrigegobackend.user.jwt;
 
 import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
-import com.ohgiraffers.refrigegobackend.user.entity.UserEntity;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,12 +55,12 @@ public class JWTFilter extends OncePerRequestFilter {
         String username = jwtUtil.getUsername(token);
         String role = jwtUtil.getRole(token);
 
-        UserEntity userEntity = new UserEntity();
-        userEntity.setUsername(username);
-        userEntity.setPassword("temppassword");
-        userEntity.setRole(role);
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword("temppassword");
+        user.setRole(role);
 
-        CustomUserDetails customUserDetails = new CustomUserDetails(userEntity);
+        CustomUserDetails customUserDetails = new CustomUserDetails(user);
 
         Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
 

@@ -1,16 +1,15 @@
 package com.ohgiraffers.refrigegobackend.user.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+@Table(name = "users")
 @Entity
 @Setter
 @Getter
-public class UserEntity {
+
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +17,6 @@ public class UserEntity {
 
     private String username;
     private String password;
-    private String userId;
 
     private String role;
 }
