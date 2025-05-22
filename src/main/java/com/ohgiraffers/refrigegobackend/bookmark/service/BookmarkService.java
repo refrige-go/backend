@@ -10,7 +10,7 @@ import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.UserIngredientRepository;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
-import com.ohgiraffers.refrigegobackend.user.entity.UserEntity;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,8 +36,8 @@ public class BookmarkService {
     }
 
     // 레시피 찜하기
-    public boolean toggleBookmark(int userId, String recipeId) {
-        UserEntity user = userRepository.findById(userId)
+    public boolean toggleBookmark(Long userId, String recipeId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("유저 없음"));
 
         Recipe recipe = recipeRepository.findById(recipeId)
@@ -64,7 +64,7 @@ public class BookmarkService {
     }
 
     // 찜한 레시피 목록 조회
-    public List<BookmarkRecipeResponseDTO> getBookmarkedRecipes(int userId) {
+    public List<BookmarkRecipeResponseDTO> getBookmarkedRecipes(Long userId) {
         List<Recipe> recipes = bookmarkRepository.findRecipesByUserId(userId);
 
         return recipes.stream()
@@ -74,7 +74,7 @@ public class BookmarkService {
 
 
     // 찜한 레시피 밑에 비슷한 재료로 만든 레시피 목록 - 레시피 화면 (재료 기준)
-    public List<SimilarRecipeResponseDTO> getSimilarRecipes(int userId) {
+    public List<SimilarRecipeResponseDTO> getSimilarRecipes(Long userId) {
         // 1. 사용자의 찜한 레시피 목록 가져오기
         List<Bookmark> bookmarks = bookmarkRepository.findByUserId(userId);
         List<Recipe> likedRecipes = bookmarks.stream()
@@ -114,7 +114,7 @@ public class BookmarkService {
 
 
     // 찜한 레시피와 비슷한 레시피 목록 - 메인화면 (요리 종류 기준)
-    public List<CuisineTypeRecipeResponseDTO> getRecommendedRecipesByBookmarked(int userId) {
+    public List<CuisineTypeRecipeResponseDTO> getRecommendedRecipesByBookmarked(Long userId) {
         // 1. 유저가 찜한 레시피 ID 목록 (Set으로 변환)
         List<String> bookmarkedRecipeIdsList = bookmarkRepository.findRecipeIdsByUserId(userId);
         if (bookmarkedRecipeIdsList.isEmpty()) return Collections.emptyList();
@@ -140,7 +140,7 @@ public class BookmarkService {
     }
 
     // 찜한 레시피 중 현재 만들 수 있는 레시피 목록 - 메인화면
-    public List<UserIngredientRecipeResponseDTO> getRecommendedRecipesByUserIngredient(int userId) {
+    public List<UserIngredientRecipeResponseDTO> getRecommendedRecipesByUserIngredient(Long userId) {
         // 냉장고 재료 조회
         List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(String.valueOf(userId));
         List<String> fridgeIngredientNames = userIngredients.stream()
