@@ -90,7 +90,7 @@ public class SecurityConfig {
                         "/ingredients/**",
                         "/api/recipes/*",
                         "/api/recipe/*",
-                        "/api/bookmark/*"
+                        "/api/bookmark/**"
                         ).permitAll()
                 .requestMatchers("/admin").hasRole("ADMIN")
                 .anyRequest().authenticated());
