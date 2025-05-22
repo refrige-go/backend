@@ -1,7 +1,7 @@
 package com.ohgiraffers.refrigegobackend.bookmark.domain;
 
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
-import com.ohgiraffers.refrigegobackend.user.entity.UserEntity;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -21,15 +21,15 @@ public class Bookmark {
     private Recipe recipe;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private UserEntity user;
+    @JoinColumn(name = "USER_NO")
+    private User user;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     public Bookmark() {}
 
-    public Bookmark(Long id, Recipe recipe, UserEntity user, LocalDateTime createdAt) {
+    public Bookmark(Long id, Recipe recipe, User user, LocalDateTime createdAt) {
         this.id = id;
         this.recipe = recipe;
         this.user = user;
@@ -49,11 +49,11 @@ public class Bookmark {
         this.id = id;
     }
 
-    public UserEntity getUser() {
+    public User getUser() {
         return user;
     }
 
-    public void setUser(UserEntity user) {
+    public void setUser(User user) {
         this.user = user;
     }
 
