@@ -49,6 +49,7 @@ public class SecurityConfig {
                         "/user-ingredients/**",
                         "/ingredients/**",
                         "/api/recipes/*",
+                        "/api/recipe/*",
                         "/api/bookmark/*"
                 ).permitAll()
 
