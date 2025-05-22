@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.bookmark.domain;
 
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
+import com.ohgiraffers.refrigegobackend.user.domain.User;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -14,28 +15,24 @@ public class Bookmark {
     @Column(name = "bookmark_id")
     private Long id;
 
-//    // 레시피 찜한 사람
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "user_id", nullable = false)
-//    private User user;
-
     // 찜한 레시피
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipe_id", referencedColumnName = "rcpSeq")
     private Recipe recipe;
 
-    // 임시
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "USER_NO")
+    private User user;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     public Bookmark() {}
 
-    public Bookmark(Long id, Recipe recipe, Long userId, LocalDateTime createdAt) {
+    public Bookmark(Long id, Recipe recipe, User user, LocalDateTime createdAt) {
         this.id = id;
         this.recipe = recipe;
-        this.userId = userId;
+        this.user = user;
         this.createdAt = createdAt;
     }
 
@@ -52,12 +49,12 @@ public class Bookmark {
         this.id = id;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public Recipe getRecipe() {
