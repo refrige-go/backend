@@ -1,4 +1,4 @@
-package com.ohgiraffers.refrigegobackend.user.config;
+package com.ohgiraffers.refrigegobackend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
