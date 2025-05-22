@@ -12,6 +12,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "user_ingredients")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -36,6 +37,23 @@ public class UserIngredient {
     @Column(nullable = false)
     private LocalDate expiryDate;    // 소비기한
 
-    @Column(nullable = false)
-    private boolean isFrozen;        // 냉동 보관 여부
+    @Column(name = "is_frozen", nullable = false)
+    private boolean isFrozen;      // 냉동 보관 여부
+
+    @Column(nullable = true)
+    private String imageUrl; // 유저가 등록한 재료 이미지 URL
+
+    private String customCategory;
+
+    /**
+     * 유통기한까지 남은 일 수 계산
+     * @return 오늘부터 expiryDate까지 남은 일수 (음수면 지난 날짜)
+     */
+    public long getExpiryDaysLeft() {
+        if (this.expiryDate == null) {
+            return Long.MAX_VALUE;  // 또는 적절한 기본값, 예: -1 등
+        }
+        return java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), this.expiryDate);
+    }
+
 }
