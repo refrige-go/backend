@@ -2,7 +2,6 @@ package com.ohgiraffers.refrigegobackend.bookmark.controller;
 
 import com.ohgiraffers.refrigegobackend.bookmark.dto.response.*;
 import com.ohgiraffers.refrigegobackend.bookmark.service.BookmarkService;
-import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

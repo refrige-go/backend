@@ -1,7 +1,5 @@
 package com.ohgiraffers.refrigegobackend.recipe.service;
 
-import com.ohgiraffers.refrigegobackend.bookmark.dto.response.BookmarkRecipeResponseDTO;
-import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.dto.response.RecipeByCategoryDTO;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
 import jakarta.transaction.Transactional;
