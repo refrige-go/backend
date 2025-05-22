@@ -46,11 +46,11 @@ public class ProductMatchingService {
                     matched.setOriginalName(productName);
                     matched.setMatchedName(dbName);
                     matched.setSimilarity(100); // 포함 매칭이므로 100%로 설정
-                    // 필요하다면 카테고리 등도 추가
+                    matched.setMainCategory(ingredient.getCategory()); // 카테고리 정보 추가
                     matchedProducts.add(matched);
                     anyMatched = true;
                     matchedThisProduct = true;
-                    System.out.println("매칭 성공: " + productName + " → " + dbName);
+                    System.out.println("매칭 성공: " + productName + " → " + dbName + " (카테고리: " + ingredient.getCategory() + ")");
                     break;
                 }
             }
