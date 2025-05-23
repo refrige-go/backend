@@ -13,30 +13,26 @@ public class JoinService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public JoinService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
-
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     public void joinProcess(JoinDTO joinDTO) {
 
-        String username = joinDTO.getUsername();
+        String loginId = joinDTO.getUsername(); // username을 loginId로 사용
         String password = joinDTO.getPassword();
 
-
-        Boolean isExist = userRepository.existsByUsername(username);
+        Boolean isExist = userRepository.existsByLoginId(loginId);
 
         if (isExist) {
-
             return;
         }
 
         User data = new User();
 
-        data.setUsername(username);
+        data.setLoginId(loginId);
         data.setPassword(bCryptPasswordEncoder.encode(password));
         data.setRole("ROLE_USER");
-
 
         userRepository.save(data);
     }
