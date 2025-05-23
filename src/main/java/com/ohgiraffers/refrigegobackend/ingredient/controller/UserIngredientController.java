@@ -37,7 +37,7 @@ public class UserIngredientController {
      * GET /user-ingredients?userId=uuid-be-001
      */
     @GetMapping
-    public ResponseEntity<List<UserIngredientResponseDto>> getUserIngredients(@RequestParam String userId) {
+    public ResponseEntity<List<UserIngredientResponseDto>> getUserIngredients(@RequestParam Long userId) {
         List<UserIngredientResponseDto> list = service.getUserIngredients(userId);
         return ResponseEntity.ok(list);
     }
@@ -111,9 +111,10 @@ public class UserIngredientController {
             @RequestBody IngredientAddRequestDto requestDto,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
-        String userId = String.valueOf(user.getUserId());
-
-        userIngredientService.addIngredients(userId, requestDto.getIngredientIds());
+        userIngredientService.addIngredients(
+                user.getId(),
+                requestDto.getIngredientIds()
+        );
         return ResponseEntity.ok().build();
     }
 
