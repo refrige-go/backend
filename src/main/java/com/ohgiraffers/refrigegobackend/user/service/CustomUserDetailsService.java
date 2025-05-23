@@ -22,10 +22,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         System.out.println("로그인 시도 username: " + username);
         
         // 데이터베이스에서 사용자 찾기
-        User userData = userRepository.findByUsername(username);
+        User userData = userRepository.findByLoginId(username);
 
         if (userData != null) {
-            System.out.println("사용자 찾음: " + userData.getUsername() + ", 역할: " + userData.getRole());
+            System.out.println("사용자 찾음: " + userData.getLoginId() + ", 역할: " + userData.getRole());
             return new CustomUserDetails(userData);
         }
 

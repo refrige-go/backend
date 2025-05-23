@@ -30,12 +30,11 @@ public class RecipeRecommendationService {
     /**
      * 사용자가 선택한 재료를 기반으로 레시피 추천
      * 
-     * @param requestDto 추천 요청 정보 (사용자 ID, 선택한 재료들)
+     * @param requestDto 추천 요청 정보 (선택한 재료들)
      * @return 추천된 레시피 목록
      */
     public RecipeRecommendationResponseDto recommendRecipes(RecipeRecommendationRequestDto requestDto) {
-        log.info("레시피 추천 시작 - 사용자: {}, 선택한 재료: {}", 
-                requestDto.getUserId(), requestDto.getSelectedIngredients());
+        log.info("레시피 추천 시작 - 선택한 재료: {}", requestDto.getSelectedIngredients());
 
         // 1. 모든 레시피 조회
         List<Recipe> allRecipes = recipeRepository.findAll();
