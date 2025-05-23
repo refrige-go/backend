@@ -85,7 +85,13 @@ public class SecurityConfig {
 
         // 경로별 권한 설정
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/", "/join").permitAll()
+                .requestMatchers("/login", "/", "/join",
+                        "/user-ingredients/**",
+                        "/ingredients/**",
+                        "/api/recipes/*",
+                        "/api/recipe/*",
+                        "/api/bookmark/**"
+                        ).permitAll()
                 .requestMatchers("/admin").hasRole("ADMIN")
                 .anyRequest().authenticated());
 
