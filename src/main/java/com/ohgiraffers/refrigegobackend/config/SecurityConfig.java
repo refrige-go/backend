@@ -52,7 +52,15 @@ public class SecurityConfig {
 
         // ✅ 모든 요청 허용
         http.authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll());
+                .requestMatchers("/login", "/", "/join",
+                        "/user-ingredients/**",
+                        "/ingredients/**",
+                        "/api/recipes/**",
+                        "/api/recipe/**",
+                        "/api/recommendations/**"
+                        ).permitAll()
+                .requestMatchers("/bookmark-page/**").authenticated()
+                .anyRequest().authenticated());
 
         // ✅ JWT 필터는 유지 (예외 경로는 내부에서 걸러짐)
         http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil),

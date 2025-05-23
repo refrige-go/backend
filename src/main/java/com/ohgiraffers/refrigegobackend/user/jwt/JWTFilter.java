@@ -31,8 +31,7 @@ public class JWTFilter extends OncePerRequestFilter {
             "/ingredients",
             "/api/recipes",
             "/api/recipe",
-            "/api/recommendations",
-            "/bookmark-page"
+            "/api/recommendations"
     );
 
 
