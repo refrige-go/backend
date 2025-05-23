@@ -17,6 +17,10 @@ public class CustomUserDetails  implements UserDetails {
         this.userEntity = userEntity;
     }
 
+    public int getUserId() {
+        return userEntity.getId();
+    }
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

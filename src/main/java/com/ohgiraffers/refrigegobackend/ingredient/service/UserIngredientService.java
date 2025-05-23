@@ -180,6 +180,17 @@ public class UserIngredientService {
         userIngredientRepository.save(ingredient);
     }
 
+    public void addIngredients(String userId, List<Long> ingredientIds) {
+        List<UserIngredient> entities = ingredientIds.stream()
+                .map(id -> UserIngredient.builder()
+                        .userId(userId)
+                        .ingredientId(id)
+                        .purchaseDate(LocalDate.now())
+                        .expiryDate(LocalDate.now().plusDays(7))
+                        .isFrozen(false)
+                        .build())
+                .toList();
 
-
+        userIngredientRepository.saveAll(entities);
+    }
 }
