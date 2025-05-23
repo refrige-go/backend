@@ -2,9 +2,12 @@ package com.ohgiraffers.refrigegobackend.ingredient.controller;
 
 import com.ohgiraffers.refrigegobackend.ingredient.dto.*;
 import com.ohgiraffers.refrigegobackend.ingredient.service.UserIngredientService;
+import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
@@ -34,7 +37,7 @@ public class UserIngredientController {
      * GET /user-ingredients?userId=uuid-be-001
      */
     @GetMapping
-    public ResponseEntity<List<UserIngredientResponseDto>> getUserIngredients(@RequestParam String userId) {
+    public ResponseEntity<List<UserIngredientResponseDto>> getUserIngredients(@RequestParam Long userId) {
         List<UserIngredientResponseDto> list = service.getUserIngredients(userId);
         return ResponseEntity.ok(list);
     }
@@ -100,6 +103,18 @@ public class UserIngredientController {
     @PatchMapping("/{id}/dates")
     public ResponseEntity<Void> updateDates(@PathVariable Long id, @RequestBody UpdateDateDto dto) {
         userIngredientService.updateDates(id, dto.getPurchaseDate(), dto.getExpiryDate());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/batch-add")
+    public ResponseEntity<?> addUserIngredients(
+            @RequestBody IngredientAddRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        userIngredientService.addIngredients(
+                user.getId(),
+                requestDto.getIngredientIds()
+        );
         return ResponseEntity.ok().build();
     }
 

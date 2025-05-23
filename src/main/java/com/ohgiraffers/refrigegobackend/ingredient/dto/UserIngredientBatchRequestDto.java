@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @Setter
 public class UserIngredientBatchRequestDto {
-    private String userId;
+    private Long userId;
     private List<UserIngredientItem> ingredients;
 
     @Getter

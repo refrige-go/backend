@@ -145,7 +145,7 @@ public class BookmarkService {
     // 찜한 레시피 중 현재 만들 수 있는 레시피 목록 - 메인화면
     public List<UserIngredientRecipeResponseDTO> getRecommendedRecipesByUserIngredient(Long userId) {
         // 냉장고 재료 조회
-        List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(String.valueOf(userId));
+        List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(userId); // ← Long으로 직접 전달
         List<String> fridgeIngredientNames = userIngredients.stream()
                 .map(UserIngredient::getCustomName)
                 .filter(Objects::nonNull)
