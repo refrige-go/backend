@@ -18,7 +18,7 @@ import java.util.List;
 public class RecipeRecommendationRequestDto {
 
     /**
-     * 사용자 ID
+     * 사용자 ID (선택적, 로그인하지 않은 사용자도 추천 받을 수 있음)
      */
     private String userId;
 
@@ -31,4 +31,15 @@ public class RecipeRecommendationRequestDto {
      * 최대 추천 레시피 개수 (기본값: 10)
      */
     private Integer limit = 10;
+
+    // userId 없이 재료만으로 생성할 수 있는 생성자
+    public RecipeRecommendationRequestDto(List<String> selectedIngredients) {
+        this.selectedIngredients = selectedIngredients;
+        this.limit = 10;
+    }
+
+    public RecipeRecommendationRequestDto(List<String> selectedIngredients, Integer limit) {
+        this.selectedIngredients = selectedIngredients;
+        this.limit = limit;
+    }
 }
