@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.user.jwt;
 
-import com.example.springjwt.repository.RefreshRepository;
+
+import com.ohgiraffers.refrigegobackend.user.repository.RefreshRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

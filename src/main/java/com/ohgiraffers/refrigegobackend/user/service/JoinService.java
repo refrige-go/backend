@@ -1,8 +1,9 @@
 package com.ohgiraffers.refrigegobackend.user.service;
 
-import com.example.springjwt.dto.JoinDTO;
-import com.example.springjwt.entity.User;
-import com.example.springjwt.repository.UserRepository;
+
+import com.ohgiraffers.refrigegobackend.user.dto.JoinDTO;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
+import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 

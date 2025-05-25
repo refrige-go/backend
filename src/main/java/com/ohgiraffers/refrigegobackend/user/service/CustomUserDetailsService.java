@@ -1,8 +1,9 @@
 package com.ohgiraffers.refrigegobackend.user.service;
 
-import com.example.springjwt.dto.CustomUserDetails;
-import com.example.springjwt.entity.User;
-import com.example.springjwt.repository.UserRepository;
+
+import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
+import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

@@ -1,7 +1,8 @@
 package com.ohgiraffers.refrigegobackend.user.jwt;
 
-import com.example.springjwt.dto.CustomUserDetails;
-import com.example.springjwt.entity.User;
+
+import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
