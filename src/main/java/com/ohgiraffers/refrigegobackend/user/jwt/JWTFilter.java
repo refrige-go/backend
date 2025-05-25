@@ -1,7 +1,9 @@
 package com.ohgiraffers.refrigegobackend.user.jwt;
 
+
 import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,93 +11,95 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.io.PrintWriter;
+/*
+* 1. 로그인 시 → LoginFilter에서 JWT를 발급
+2. 이후 요청마다 → 클라이언트는 JWT를 Authorization 헤더에 실어 보냄
+3. 서버는 JWTFilter에서 이 토큰을 검사함 ✅ (지금 보는 코드!)
+4. 유효하면 → Spring Security에 인증 객체 등록
+5. 컨트롤러에서는 "인증된 사용자"로 인식됨
+*
+* */
+// JWT 토큰 검증 필터
+// 사용자가 API 요청을 보낼 때 Authorization 헤더에 담긴 JWT 토큰을 검증하고, 인증된 사용자 정보를 SecurityContext에 등록하는 필터
+
+// 요청당 한 번만 실행되는 Spring Security 필터
+
 
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
-    private final UserDetailsService userDetailsService;
 
-    // JWT 검증을 건너뛸 경로들
-    private static final List<String> EXCLUDED_PATHS = Arrays.asList(
-            "/login",
-            "/",
-            "/join",
-            "/user-ingredients",
-            "/ingredients",
-            "/api/recipes",
-            "/api/recipe",
-            "/api/recommendations"
-    );
+    public JWTFilter(JWTUtil jwtUtil) {
 
-
-    public JWTFilter(JWTUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
-        this.userDetailsService = userDetailsService;
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String requestURI = request.getRequestURI();
-        return EXCLUDED_PATHS.stream().anyMatch(requestURI::startsWith);
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        //request에서 Authorization 헤더를 찾음
-        String authorization = request.getHeader("Authorization");
-
-        //Authorization 헤더 검증
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            System.out.println("token null for path: " + request.getRequestURI());
+    // Authorization 헤더에서 access 토큰을 꺼내는 코드
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
+        String accessToken = header.substring(7); // "Bearer " 이후 토큰 값만 추출
 
-        String token = authorization.split(" ")[1];
 
-        //토큰 소멸 시간 검증
-        if (jwtUtil.isExpired(token)) {
-            System.out.println("token expired");
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String loginId = jwtUtil.getLoginId(token);
-
-        if (loginId == null) {
-            System.out.println("loginId not found in token claims for path: " + request.getRequestURI());
-            filterChain.doFilter(request, response);
-            return;
-        }
-
+    // 토큰 만료 여부 확인, 만료시 다음 필터로 넘기지 않음
         try {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(loginId);
+            jwtUtil.isExpired(accessToken);
+        } catch (ExpiredJwtException e) {
 
-            if (userDetails != null && userDetails instanceof CustomUserDetails) {
-                Authentication authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+            //response body
+            PrintWriter writer = response.getWriter();
+            writer.print("access token이 만료되었습니다");
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-
-            } else {
-                System.out.println("User details not found or invalid type for loginId: " + loginId + " for path: " + request.getRequestURI());
-            }
-
-        } catch (Exception e) {
-            System.out.println("Error loading user from DB for loginId: " + loginId + " for path: " + request.getRequestURI() + ". Error: " + e.getMessage());
+            //response status code
+            // 응답은 401이나 400으로 설정가능
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
+
+        // 토큰이 access인지 확인 (발급시 페이로드에 명시)
+        String category = jwtUtil.getCategory(accessToken);
+
+        if (!category.equals("access")) {
+
+            //response body
+            PrintWriter writer = response.getWriter();
+            writer.print("access token이 아닙니다");
+
+            //response status code
+            // 응답은 401이나 400으로 설정가능
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        // username, role 값을 획득
+        String username = jwtUtil.getUsername(accessToken);
+        String role = jwtUtil.getRole(accessToken);
+
+        User user = new User();
+        user.setUsername(username);
+        user.setRole(role);
+        CustomUserDetails customUserDetails = new CustomUserDetails(user);
+
+        Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authToken);
 
         filterChain.doFilter(request, response);
     }
 }
+
+/*
+* JWTFilter는 사용자의 JWT를 검사하고, 인증된 사용자 정보를 Spring Security에 등록해서
+로그인하지 않아도 사용자 정보를 기억하고 보호된 API에 접근 가능하게 해주는 필터
+*
+*
+* */

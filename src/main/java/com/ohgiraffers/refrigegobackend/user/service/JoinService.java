@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.user.service;
 
+
 import com.ohgiraffers.refrigegobackend.user.dto.JoinDTO;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
@@ -13,24 +14,26 @@ public class JoinService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public JoinService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     public void joinProcess(JoinDTO joinDTO) {
 
-        String loginId = joinDTO.getUsername(); // username을 loginId로 사용
+        String username = joinDTO.getUsername();
         String password = joinDTO.getPassword();
 
-        Boolean isExist = userRepository.existsByLoginId(loginId);
+        Boolean isExist = userRepository.existsByUsername(username);
 
         if (isExist) {
+
             return;
         }
 
         User data = new User();
 
-        data.setLoginId(loginId);
+        data.setUsername(username);
         data.setPassword(bCryptPasswordEncoder.encode(password));
         data.setRole("ROLE_USER");
 
