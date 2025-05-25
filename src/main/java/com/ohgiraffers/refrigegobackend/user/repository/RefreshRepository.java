@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.user.repository;
 
-import com.example.springjwt.entity.RefreshToken;
+
+import com.ohgiraffers.refrigegobackend.user.entity.RefreshToken;
 import jakarta.transaction.Transactional;
 import org.springframework.data.repository.CrudRepository;
 

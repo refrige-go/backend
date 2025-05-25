@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.user.dto;
 
-import com.example.springjwt.entity.User;
+
+import com.ohgiraffers.refrigegobackend.user.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

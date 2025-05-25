@@ -1,9 +1,10 @@
 package com.ohgiraffers.refrigegobackend.user.jwt;
 
-import com.example.springjwt.dto.LoginDTO;
-import com.example.springjwt.entity.RefreshToken;
-import com.example.springjwt.repository.RefreshRepository;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ohgiraffers.refrigegobackend.user.dto.LoginDTO;
+import com.ohgiraffers.refrigegobackend.user.entity.RefreshToken;
+import com.ohgiraffers.refrigegobackend.user.repository.RefreshRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.Cookie;

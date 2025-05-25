@@ -1,10 +1,11 @@
 package com.ohgiraffers.refrigegobackend.user.config;
 
-import com.example.springjwt.jwt.CustomLogoutFilter;
-import com.example.springjwt.jwt.JWTFilter;
-import com.example.springjwt.jwt.JWTUtil;
-import com.example.springjwt.jwt.LoginFilter;
-import com.example.springjwt.repository.RefreshRepository;
+
+import com.ohgiraffers.refrigegobackend.user.jwt.CustomLogoutFilter;
+import com.ohgiraffers.refrigegobackend.user.jwt.JWTFilter;
+import com.ohgiraffers.refrigegobackend.user.jwt.JWTUtil;
+import com.ohgiraffers.refrigegobackend.user.jwt.LoginFilter;
+import com.ohgiraffers.refrigegobackend.user.repository.RefreshRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

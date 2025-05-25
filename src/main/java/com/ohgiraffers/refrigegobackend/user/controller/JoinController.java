@@ -1,7 +1,8 @@
 package com.ohgiraffers.refrigegobackend.user.controller;
 
-import com.example.springjwt.dto.JoinDTO;
-import com.example.springjwt.service.JoinService;
+
+import com.ohgiraffers.refrigegobackend.user.dto.JoinDTO;
+import com.ohgiraffers.refrigegobackend.user.service.JoinService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
