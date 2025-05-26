@@ -133,10 +133,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private Cookie createCookie(String key, String value) {
 
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24*60*60);
-        //cookie.setSecure(true);
-        //cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        cookie.setMaxAge(24*60*60); // 쿠키가 브라우저에 저장될 시간 (24시간), 이 설정이 없으면 브라우저 종료시 삭제되게
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true); // XSS 공격으로부터 보호
 
         return cookie;
     }
