@@ -1,6 +1,5 @@
 package com.ohgiraffers.refrigegobackend.user.jwt;
 
-
 import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -28,7 +27,6 @@ import java.io.PrintWriter;
 
 // 요청당 한 번만 실행되는 Spring Security 필터
 
-
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
@@ -38,11 +36,11 @@ public class JWTFilter extends OncePerRequestFilter {
         this.jwtUtil = jwtUtil;
     }
 
-
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-    // Authorization 헤더에서 access 토큰을 꺼내는 코드
+        // Authorization 헤더에서 access 토큰을 꺼내는 코드
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -50,17 +48,16 @@ public class JWTFilter extends OncePerRequestFilter {
         }
         String accessToken = header.substring(7); // "Bearer " 이후 토큰 값만 추출
 
-
-    // 토큰 만료 여부 확인, 만료시 다음 필터로 넘기지 않음
+        // 토큰 만료 여부 확인, 만료시 다음 필터로 넘기지 않음
         try {
             jwtUtil.isExpired(accessToken);
         } catch (ExpiredJwtException e) {
 
-            //response body
+            // response body
             PrintWriter writer = response.getWriter();
             writer.print("access token이 만료되었습니다");
 
-            //response status code
+            // response status code
             // 응답은 401이나 400으로 설정가능
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
@@ -71,11 +68,11 @@ public class JWTFilter extends OncePerRequestFilter {
 
         if (!category.equals("access")) {
 
-            //response body
+            // response body
             PrintWriter writer = response.getWriter();
             writer.print("access token이 아닙니다");
 
-            //response status code
+            // response status code
             // 응답은 401이나 400으로 설정가능
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
@@ -90,7 +87,8 @@ public class JWTFilter extends OncePerRequestFilter {
         user.setRole(role);
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 
-        Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
+        Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null,
+                customUserDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
         filterChain.doFilter(request, response);
@@ -98,8 +96,8 @@ public class JWTFilter extends OncePerRequestFilter {
 }
 
 /*
-* JWTFilter는 사용자의 JWT를 검사하고, 인증된 사용자 정보를 Spring Security에 등록해서
-로그인하지 않아도 사용자 정보를 기억하고 보호된 API에 접근 가능하게 해주는 필터
-*
-*
-* */
+ * JWTFilter는 사용자의 JWT를 검사하고, 인증된 사용자 정보를 Spring Security에 등록해서
+ * 로그인하지 않아도 사용자 정보를 기억하고 보호된 API에 접근 가능하게 해주는 필터
+ *
+ *
+ */

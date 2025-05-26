@@ -1,6 +1,5 @@
 package com.ohgiraffers.refrigegobackend.user.service;
 
-
 import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
@@ -28,18 +27,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        User userData = userRepository.findByUsername(username); //로그인 시도한 유저 db에서 조회
+        User userData = userRepository.findByUsername(username); // 로그인 시도한 유저 db에서 조회
+
+        if (userData == null) {
+            throw new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username);
+        }
 
         // 입력한 유저의 정보가 db에 존재하면 그 사용자의 정보를 UserDetails로 넘겨,
         // 계속해서 Security가 그 유저의 정보를 사용하게함
-        if (userData != null) {
-
-            return new CustomUserDetails(userData);
-            // 조회한 유저를 CustomUserDetails로 감싸서 리턴
-            // 이 CustomUserDetails를 Security가 계속사용
-        }
-
-
-        return null;
+        return new CustomUserDetails(userData);
+        // 조회한 유저를 CustomUserDetails로 감싸서 리턴
+        // 이 CustomUserDetails를 Security가 계속사용
     }
 }

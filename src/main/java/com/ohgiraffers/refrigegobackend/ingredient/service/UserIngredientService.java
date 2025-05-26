@@ -52,7 +52,7 @@ public class UserIngredientService {
      * 기준 재료가 없으면 customName 사용
      * 기준 재료 없으면 "(삭제된 기준 재료)" 표시하도록 수정 권장
      */
-    public List<UserIngredientResponseDto> getUserIngredients(String userId) {
+    public List<UserIngredientResponseDto> getUserIngredients(Long userId) {
         return repository.findByUserId(userId).stream()
                 .map(ui -> {
                     String name;
@@ -90,7 +90,7 @@ public class UserIngredientService {
      * 보유 재료 일괄 등록
      */
     public void saveBatch(UserIngredientBatchRequestDto batchDto) {
-        String userId = batchDto.getUserId();
+        Long userId = batchDto.getUserId();
         List<UserIngredient> entities = batchDto.getIngredients().stream()
                 .map(item -> {
                     if ((item.getIngredientId() == null && (item.getCustomName() == null || item.getCustomName().isEmpty())) ||

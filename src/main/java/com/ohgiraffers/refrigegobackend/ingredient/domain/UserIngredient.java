@@ -23,7 +23,7 @@ public class UserIngredient {
     private Long id;  // 고유 ID
 
     @Column(nullable = false)
-    private String userId;  // 유저 ID
+    private Long userId;  // 유저 ID
 
     @Column(nullable = true)
     private Long ingredientId;  // 기준 재료 ID

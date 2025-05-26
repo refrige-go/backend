@@ -34,7 +34,7 @@ public class UserIngredientController {
      * GET /user-ingredients?userId=uuid-be-001
      */
     @GetMapping
-    public ResponseEntity<List<UserIngredientResponseDto>> getUserIngredients(@RequestParam String userId) {
+    public ResponseEntity<List<UserIngredientResponseDto>> getUserIngredients(@RequestParam Long userId) {
         List<UserIngredientResponseDto> list = service.getUserIngredients(userId);
         return ResponseEntity.ok(list);
     }
