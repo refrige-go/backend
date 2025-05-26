@@ -41,4 +41,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("예상치 못한 오류가 발생했습니다.");
     }
+
+    /* username 중복처리 */
+    // 발생한 예외를 HTTP 응답으로 변환
+    @ExceptionHandler(UsernameDuplicateException.class)
+    public ResponseEntity<String> handleUsernameDuplicate(UsernameDuplicateException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
+    // 예외 발생
+    public static class UsernameDuplicateException extends RuntimeException {
+        public UsernameDuplicateException(String message) {
+            super(message);
+        }
+    }
 }
