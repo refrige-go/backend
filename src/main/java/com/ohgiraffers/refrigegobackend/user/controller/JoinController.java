@@ -3,12 +3,13 @@ package com.ohgiraffers.refrigegobackend.user.controller;
 
 import com.ohgiraffers.refrigegobackend.user.dto.JoinDTO;
 import com.ohgiraffers.refrigegobackend.user.service.JoinService;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-@RestController
+@Controller
+@ResponseBody
 public class JoinController {
 
     private final JoinService joinService;
@@ -19,11 +20,10 @@ public class JoinController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<String> joinProcess(@RequestBody JoinDTO joinDTO) {
+    public String joinProcess(@RequestBody JoinDTO joinDTO) {
 
         joinService.joinProcess(joinDTO);
 
-
-        return ResponseEntity.ok("회원가입이 완료되었습니다.");
+        return "회원가입이 완료되었습니다.";
     }
 }
