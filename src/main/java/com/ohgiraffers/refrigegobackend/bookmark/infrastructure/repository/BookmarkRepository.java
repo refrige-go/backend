@@ -10,13 +10,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
-    Optional<Bookmark> findByUserUserIdAndRecipeRcpSeq(Long userId, String rcpSeq);
+    Optional<Bookmark> findByUserIdAndRecipeRcpSeq(Long userId, String rcpSeq);
 
-    @Query("SELECT l.recipe.rcpSeq FROM Bookmark l WHERE l.user.userId = :userId")
+    @Query("SELECT l.recipe.rcpSeq FROM Bookmark l WHERE l.user.id = :userId")
     List<String> findRecipeIdsByUserId(@Param("userId") Long userId);
 
-    @Query("SELECT b.recipe FROM Bookmark b WHERE b.user.userId = :userId")
+    @Query("SELECT b.recipe FROM Bookmark b WHERE b.user.id = :userId")
     List<Recipe> findRecipesByUserId(@Param("userId") Long userId);
 
-    List<Bookmark> findByUserUserId(Long userId);
+    List<Bookmark> findByUserId(Long userId);
 }

@@ -44,7 +44,7 @@ public class BookmarkService {
                 .orElseThrow(() -> new IllegalArgumentException("레시피 없음"));
 
         try {
-            Optional<Bookmark> existing = bookmarkRepository.findByUserUserIdAndRecipeRcpSeq(userId, recipeId);
+            Optional<Bookmark> existing = bookmarkRepository.findByUserIdAndRecipeRcpSeq(userId, recipeId);
 
             if (existing.isPresent()) {
                 bookmarkRepository.delete(existing.get());
@@ -64,8 +64,9 @@ public class BookmarkService {
     }
 
     // 찜한 레시피 목록 조회
-    public List<BookmarkRecipeResponseDTO> getBookmarkedRecipes(Long userId) {
-        List<Recipe> recipes = bookmarkRepository.findRecipesByUserId(userId);
+    public List<BookmarkRecipeResponseDTO> getBookmarkedRecipes(String username) {
+        User user = userRepository.findByUsername(username);
+        List<Recipe> recipes = bookmarkRepository.findRecipesByUserId(user.getId());
 
         List<BookmarkRecipeResponseDTO> result = recipes.stream()
                 .map(BookmarkRecipeResponseDTO::new) // Recipe -> DTO
@@ -77,7 +78,7 @@ public class BookmarkService {
     // 찜한 레시피 밑에 비슷한 재료로 만든 레시피 목록 - 레시피 화면 (재료 기준)
     public List<SimilarRecipeResponseDTO> getSimilarRecipes(Long userId) {
         // 1. 사용자의 찜한 레시피 목록 가져오기
-        List<Bookmark> bookmarks = bookmarkRepository.findByUserUserId(userId);
+        List<Bookmark> bookmarks = bookmarkRepository.findByUserId(userId);
         List<Recipe> likedRecipes = bookmarks.stream()
                 .map(Bookmark::getRecipe)
                 .toList();
@@ -114,9 +115,11 @@ public class BookmarkService {
     }
 
     // 찜한 레시피와 비슷한 레시피 목록 - 메인화면 (요리 종류 기준)
-    public List<CuisineTypeRecipeResponseDTO> getRecommendedRecipesByBookmarked(Long userId) {
+    public List<CuisineTypeRecipeResponseDTO> getRecommendedRecipesByBookmarked(String username) {
+        User user = userRepository.findByUsername(username);
+
         // 1. 유저가 찜한 레시피 ID 목록 (Set으로 변환)
-        List<String> bookmarkedRecipeIdsList = bookmarkRepository.findRecipeIdsByUserId(userId);
+        List<String> bookmarkedRecipeIdsList = bookmarkRepository.findRecipeIdsByUserId(user.getId());
         if (bookmarkedRecipeIdsList.isEmpty()) return Collections.emptyList();
 
         Set<String> bookmarkedRecipeIds = new HashSet<>(bookmarkedRecipeIdsList);
@@ -140,9 +143,11 @@ public class BookmarkService {
     }
 
     // 찜한 레시피 중 현재 만들 수 있는 레시피 목록 - 메인화면
-    public List<UserIngredientRecipeResponseDTO> getRecommendedRecipesByUserIngredient(Long userId) {
+    public List<UserIngredientRecipeResponseDTO> getRecommendedRecipesByUserIngredient(String username) {
+        User user = userRepository.findByUsername(username);
+
         // 냉장고 재료 조회
-        List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(String.valueOf(userId));
+        List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
         List<String> fridgeIngredientNames = userIngredients.stream()
                 .map(UserIngredient::getCustomName)
                 .filter(Objects::nonNull)
@@ -150,7 +155,7 @@ public class BookmarkService {
                 .toList();
 
         // 찜한 레시피 조회
-        List<Bookmark> bookmarks = bookmarkRepository.findByUserUserId(userId);
+        List<Bookmark> bookmarks = bookmarkRepository.findByUserId(user.getId());
         List<Recipe> likedRecipes = bookmarks.stream()
                 .map(Bookmark::getRecipe)
                 .toList();

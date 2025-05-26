@@ -25,7 +25,7 @@ public class SecurityUtil {
         
         if (authentication.getPrincipal() instanceof CustomUserDetails) {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            return userDetails.getId();
+            return userDetails.getUserId();
         }
         
         return null;

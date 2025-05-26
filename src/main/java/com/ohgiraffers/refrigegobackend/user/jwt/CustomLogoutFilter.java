@@ -1,6 +1,5 @@
 package com.ohgiraffers.refrigegobackend.user.jwt;
 
-
 import com.ohgiraffers.refrigegobackend.user.repository.RefreshRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;

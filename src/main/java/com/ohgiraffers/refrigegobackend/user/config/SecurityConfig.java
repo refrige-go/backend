@@ -1,6 +1,5 @@
 package com.ohgiraffers.refrigegobackend.user.config;
 
-
 import com.ohgiraffers.refrigegobackend.user.jwt.CustomLogoutFilter;
 import com.ohgiraffers.refrigegobackend.user.jwt.JWTFilter;
 import com.ohgiraffers.refrigegobackend.user.jwt.JWTUtil;
@@ -31,80 +30,96 @@ import java.util.Collections;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final AuthenticationConfiguration authenticationConfiguration;
-    private final JWTUtil jwtUtil;
-    private final RefreshRepository refreshRepository;
+        private final AuthenticationConfiguration authenticationConfiguration;
+        private final JWTUtil jwtUtil;
+        private final RefreshRepository refreshRepository;
 
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil, RefreshRepository refreshRepository) {
+        public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,
+                        RefreshRepository refreshRepository) {
 
-        this.authenticationConfiguration = authenticationConfiguration;
-        this.jwtUtil = jwtUtil;
-        this.refreshRepository = refreshRepository;
-    }
+                this.authenticationConfiguration = authenticationConfiguration;
+                this.jwtUtil = jwtUtil;
+                this.refreshRepository = refreshRepository;
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
 
-        return configuration.getAuthenticationManager();
-    }
+                return configuration.getAuthenticationManager();
+        }
 
-    @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        @Bean
+        public BCryptPasswordEncoder bCryptPasswordEncoder() {
 
-        return new BCryptPasswordEncoder();
-    }
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
-                .cors((corsCustomizer -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
-                    @Override
-                    public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-                        CorsConfiguration configuration = new CorsConfiguration();
-                        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
-                        configuration.setAllowedMethods(Collections.singletonList("*"));
-                        configuration.setAllowCredentials(true);
-                        configuration.setMaxAge(3600L);
-                        configuration.setExposedHeaders(Arrays.asList("access", "Authorization"));
-                        // 어떤 응답 헤더를 브라우저에서 자바스크립트로 읽을 수 있게 할지
-                        configuration.setAllowedHeaders(Collections.singletonList("*"));  // 모든 헤더 허용 (프론트 요청 시)
-                        return configuration;
-                    }
-                })));
+                http
+                                .cors((corsCustomizer -> corsCustomizer
+                                                .configurationSource(new CorsConfigurationSource() {
+                                                        @Override
+                                                        public CorsConfiguration getCorsConfiguration(
+                                                                        HttpServletRequest request) {
+                                                                CorsConfiguration configuration = new CorsConfiguration();
+                                                                configuration.setAllowedOrigins(Collections
+                                                                                .singletonList("http://localhost:3000"));
+                                                                configuration.setAllowedMethods(
+                                                                                Collections.singletonList("*"));
+                                                                configuration.setAllowCredentials(true);
+                                                                configuration.setMaxAge(3600L);
+                                                                configuration.setExposedHeaders(Arrays.asList("access",
+                                                                                "Authorization"));
+                                                                // 어떤 응답 헤더를 브라우저에서 자바스크립트로 읽을 수 있게 할지
+                                                                configuration.setAllowedHeaders(
+                                                                                Collections.singletonList("*")); // 모든
+                                                                                                                 // 헤더
+                                                                                                                 // 허용
+                                                                                                                 // (프론트
+                                                                                                                 // 요청
+                                                                                                                 // 시)
+                                                                return configuration;
+                                                        }
+                                                })));
 
-        //csrf disable
-        http
-                .csrf((auth) -> auth.disable());
+                // csrf disable
+                http
+                                .csrf((auth) -> auth.disable());
 
-        //From 로그인 방식 disable
-        http
-                .formLogin((auth) -> auth.disable());
+                // From 로그인 방식 disable
+                http
+                                .formLogin((auth) -> auth.disable());
 
-        //http basic 인증 방식 disable
-        http
-                .httpBasic((auth) -> auth.disable());
+                // http basic 인증 방식 disable
+                http
+                                .httpBasic((auth) -> auth.disable());
 
+                http
+                                .authorizeHttpRequests((auth) -> auth
+                                                .requestMatchers("/login", "/join").permitAll()
+                                                .requestMatchers("/api/bookmark/**").hasAnyAuthority("ROLE_USER")
+                                                .requestMatchers("/admin").hasRole("ADMIN") // /admin경로 요청은 ADMIN권한필요
+                                                .requestMatchers("/reissue").permitAll() // 토큰이 만료되었을떄 접근하게되므로 접근할수있도록
+                                                                                         // 설정
+                                                .anyRequest().authenticated()); // 위 경로설정 외 기타 요청은 인증필요
 
-        http
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/join").permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN") // /admin경로 요청은 ADMIN권한필요
-                        .requestMatchers("/reissue").permitAll() // 토큰이 만료되었을떄 접근하게되므로 접근할수있도록 설정
-                        .anyRequest().authenticated()); //위 경로설정 외 기타 요청은 인증필요
+                http
+                                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
+                http
+                                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration),
+                                                jwtUtil, refreshRepository),
+                                                UsernamePasswordAuthenticationFilter.class);
+                http
+                                .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository),
+                                                LogoutFilter.class); // 로그아웃 필터 등록
 
-        http
-                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
-        http
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository ), UsernamePasswordAuthenticationFilter.class);
-        http
-                .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository), LogoutFilter.class); // 로그아웃 필터 등록
+                // 세션 설정
+                http
+                                .sessionManagement((session) -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        //세션 설정
-        http
-                .sessionManagement((session) -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        return http.build();
-    }
+                return http.build();
+        }
 }
