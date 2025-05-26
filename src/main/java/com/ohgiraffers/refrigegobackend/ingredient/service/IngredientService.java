@@ -29,4 +29,8 @@ public class IngredientService {
         }
         return ingredientRepository.findByCategory(category);
     }
+
+    public List<String> getCategoryList() {
+        return ingredientRepository.findDistinctCategories();
+    }
 }

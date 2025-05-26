@@ -2,9 +2,12 @@ package com.ohgiraffers.refrigegobackend.ingredient.controller;
 
 import com.ohgiraffers.refrigegobackend.ingredient.dto.*;
 import com.ohgiraffers.refrigegobackend.ingredient.service.UserIngredientService;
+import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
@@ -102,5 +105,24 @@ public class UserIngredientController {
         userIngredientService.updateDates(id, dto.getPurchaseDate(), dto.getExpiryDate());
         return ResponseEntity.ok().build();
     }
+
+//    @PostMapping("/batch-add")
+//    public ResponseEntity<?> addUserIngredients(
+//            @RequestBody IngredientAddRequestDto requestDto,
+//            @AuthenticationPrincipal CustomUserDetails user
+//    ) {
+//        userIngredientService.addIngredients(
+//                user.getId(),
+//                requestDto.getIngredientIds()
+//        );
+//        return ResponseEntity.ok().build();
+//    }
+
+    @PostMapping("/batch-add")
+    public ResponseEntity<String> addUserIngredients(@RequestBody UserIngredientBatchRequestDto requestDto) {
+        userIngredientService.addIngredients(requestDto.getUserId(), requestDto.getIngredientIds());
+        return ResponseEntity.ok("재료가 일괄 등록되었습니다.");
+    }
+
 
 }
