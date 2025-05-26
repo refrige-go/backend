@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.user.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,5 +18,7 @@ public class User {
     private String username;
     private String password;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    private Role role;
 }
