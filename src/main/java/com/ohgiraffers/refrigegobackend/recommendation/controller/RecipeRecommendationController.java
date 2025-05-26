@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.recommendation.controller;
 
+import com.ohgiraffers.refrigegobackend.common.util.SecurityUtil;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationRequestDto;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationResponseDto;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecommendedRecipeDto;
@@ -20,6 +21,7 @@ import java.util.List;
 @RequestMapping("/api/recommendations")
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin(origins = "*")  // CORS 추가
 public class RecipeRecommendationController {
 
     private final RecipeRecommendationService recommendationService;
@@ -28,28 +30,40 @@ public class RecipeRecommendationController {
      * 선택한 재료 기반 레시피 추천 API
      * POST /api/recommendations/recipes
      * 
-     * @param requestDto 추천 요청 정보 (사용자 ID, 선택한 재료들)
+     * @param requestDto 추천 요청 정보 (선택한 재료들)
      * @return 추천된 레시피 목록
      */
     @PostMapping("/recipes")
     public ResponseEntity<RecipeRecommendationResponseDto> recommendRecipes(
             @RequestBody RecipeRecommendationRequestDto requestDto) {
         
-        log.info("레시피 추천 요청 - 사용자: {}, 재료 수: {}", 
-                requestDto.getUserId(), requestDto.getSelectedIngredients().size());
+        try {
+            // JWT 토큰이 있으면 사용자 정보 설정 (선택적)
+            Long currentUserId = SecurityUtil.getCurrentUserId();
+            if (currentUserId != null) {
+                requestDto.setUserId(String.valueOf(currentUserId));
+                log.info("인증된 사용자의 레시피 추천 요청 - 사용자 ID: {}, 선택한 재료: {}", 
+                        currentUserId, requestDto.getSelectedIngredients());
+            } else {
+                log.info("익명 사용자의 레시피 추천 요청 - 선택한 재료: {}", requestDto.getSelectedIngredients());
+            }
 
-        // 입력 유효성 검증
-        if (requestDto.getSelectedIngredients() == null || requestDto.getSelectedIngredients().isEmpty()) {
-            throw new IllegalArgumentException("선택한 재료가 없습니다.");
-        }
-        
-        if (requestDto.getSelectedIngredients().size() < 2) {
-            throw new IllegalArgumentException("최소 2개 이상의 재료를 선택해주세요.");
-        }
+            // 입력 유효성 검증
+            if (requestDto.getSelectedIngredients() == null || requestDto.getSelectedIngredients().isEmpty()) {
+                throw new IllegalArgumentException("선택한 재료가 없습니다.");
+            }
+            
+            if (requestDto.getSelectedIngredients().size() < 1) {
+                throw new IllegalArgumentException("최소 1개 이상의 재료를 선택해주세요.");
+            }
 
-        RecipeRecommendationResponseDto response = recommendationService.recommendRecipes(requestDto);
-        
-        return ResponseEntity.ok(response);
+            RecipeRecommendationResponseDto response = recommendationService.recommendRecipes(requestDto);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("레시피 추천 중 오류 발생: ", e);
+            throw new RuntimeException("레시피 추천 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
     /**
