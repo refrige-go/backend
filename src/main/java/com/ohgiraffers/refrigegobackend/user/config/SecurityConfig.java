@@ -101,9 +101,9 @@ public class SecurityConfig {
                                                 .requestMatchers("/login", "/join").permitAll()
                                                 .requestMatchers("/api/bookmark/**").hasAnyAuthority("ROLE_USER")
                                                 .requestMatchers("/admin").hasRole("ADMIN") // /admin경로 요청은 ADMIN권한필요
-                                                .requestMatchers("/reissue").permitAll() // 토큰이 만료되었을떄 접근하게되므로 접근할수있도록
-                                                                                         // 설정
+                                                .requestMatchers("/reissue").permitAll() // 토큰이 만료되었을떄 접근하게되므로 접근할수있도록// 설정
                                                 .anyRequest().authenticated()); // 위 경로설정 외 기타 요청은 인증필요
+
 
                 http
                                 .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
