@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class UserIngredientRequestDto {
 
-    private String userId;         // 유저 ID
+    private Long userId;         // 유저 ID
     private Long ingredientId;    // 기준 재료 ID
     private String customName;    // 직접 입력한 재료명
     private LocalDate purchaseDate; // 구매일자

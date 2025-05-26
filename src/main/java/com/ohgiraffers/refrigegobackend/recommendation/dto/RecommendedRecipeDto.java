@@ -64,16 +64,15 @@ public class RecommendedRecipeDto {
      */
     private double matchScore;
 
-    /**
-     * Recipe 엔티티로부터 DTO 생성하는 정적 메서드
-     */
-    public static RecommendedRecipeDto fromEntity(Recipe recipe, int matchedCount, 
-                                                 List<String> matchedIngredients, 
-                                                 boolean isFavorite,
-                                                 int totalSelectedIngredients) {
-        double score = totalSelectedIngredients > 0 ? 
-                      (double) matchedCount / totalSelectedIngredients : 0.0;
-        
+    private String imageUrl;
+
+    public static RecommendedRecipeDto fromEntity(Recipe recipe, int matchedCount,
+                                                  List<String> matchedIngredients,
+                                                  boolean isFavorite,
+                                                  int totalSelectedIngredients) {
+        double score = totalSelectedIngredients > 0 ?
+                (double) matchedCount / totalSelectedIngredients : 0.0;
+
         return RecommendedRecipeDto.builder()
                 .recipeId(recipe.getRcpSeq())
                 .recipeName(recipe.getRcpNm())
@@ -84,6 +83,7 @@ public class RecommendedRecipeDto {
                 .matchedIngredients(matchedIngredients)
                 .isFavorite(isFavorite)
                 .matchScore(score)
+                .imageUrl(recipe.getImage())
                 .build();
     }
 }
