@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -20,6 +21,13 @@ public class UserIngredientBatchRequestDto {
         private LocalDate purchaseDate;
         private LocalDate expiryDate;
         private boolean isFrozen;
+    }
+
+    public List<Long> getIngredientIds() {
+        return ingredients.stream()
+                .map(UserIngredientItem::getIngredientId)
+                .filter(Objects::nonNull)
+                .toList();
     }
 }
 
