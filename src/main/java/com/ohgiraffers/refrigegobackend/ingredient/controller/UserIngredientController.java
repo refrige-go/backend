@@ -106,16 +106,23 @@ public class UserIngredientController {
         return ResponseEntity.ok().build();
     }
 
+//    @PostMapping("/batch-add")
+//    public ResponseEntity<?> addUserIngredients(
+//            @RequestBody IngredientAddRequestDto requestDto,
+//            @AuthenticationPrincipal CustomUserDetails user
+//    ) {
+//        userIngredientService.addIngredients(
+//                user.getId(),
+//                requestDto.getIngredientIds()
+//        );
+//        return ResponseEntity.ok().build();
+//    }
+
     @PostMapping("/batch-add")
-    public ResponseEntity<?> addUserIngredients(
-            @RequestBody IngredientAddRequestDto requestDto,
-            @AuthenticationPrincipal CustomUserDetails user
-    ) {
-        userIngredientService.addIngredients(
-                user.getId(),
-                requestDto.getIngredientIds()
-        );
-        return ResponseEntity.ok().build();
+    public ResponseEntity<String> addUserIngredients(@RequestBody UserIngredientBatchRequestDto requestDto) {
+        userIngredientService.addIngredients(requestDto.getUserId(), requestDto.getIngredientIds());
+        return ResponseEntity.ok("재료가 일괄 등록되었습니다.");
     }
+
 
 }
