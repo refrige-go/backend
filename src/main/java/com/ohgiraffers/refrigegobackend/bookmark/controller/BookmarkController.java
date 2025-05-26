@@ -27,11 +27,13 @@ public class BookmarkController {
 
     // 레시피 찜하기
     @PostMapping("/toggle")
-    public ResponseEntity<BookmarkResponseDTO> toggleFavorite(@AuthenticationPrincipal CustomUserDetails details,
-            @RequestParam String recipeId) {
-        Long userId = details.getUserId();
+    public ResponseEntity<BookmarkResponseDTO> toggleFavorite(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                              @RequestParam String recipeId) {
+        String username = userDetails.getUsername();
 
-        boolean isBookmarked = bookmarkService.toggleBookmark(userId, recipeId);
+        boolean isBookmarked = bookmarkService.toggleBookmark(username, recipeId);
+        System.out.println("📌 recipeId: " + recipeId);
+
 
         BookmarkResponseDTO response = new BookmarkResponseDTO(
                 isBookmarked,
