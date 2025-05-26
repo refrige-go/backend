@@ -53,7 +53,6 @@ public class BookmarkController {
         return ResponseEntity.ok(bookmarkedRecipes);
     }
 
-
     // 찜한 레시피와 비슷한 레시피 목록 - 메인화면 (요리 종류 기준)
     @GetMapping("/bookmark-recommend")
     public ResponseEntity<List<CuisineTypeRecipeResponseDTO>> getRecommendedRecipesByBookmarked(
@@ -61,7 +60,8 @@ public class BookmarkController {
         String username = userDetails.getUsername();
         System.out.println("로그인된 유저 name: " + username);
 
-        List<CuisineTypeRecipeResponseDTO> recommendations = bookmarkService.getRecommendedRecipesByBookmarked(username);
+        List<CuisineTypeRecipeResponseDTO> recommendations = bookmarkService
+                .getRecommendedRecipesByBookmarked(username);
         return ResponseEntity.ok(recommendations);
     }
 
