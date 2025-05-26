@@ -1,12 +1,13 @@
 package com.ohgiraffers.refrigegobackend.recipe.controller;
 
-import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.dto.response.RecipeByCategoryDTO;
 import com.ohgiraffers.refrigegobackend.recipe.service.RecipeService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/recipe")
@@ -19,8 +20,14 @@ public class RecipeController {
     }
 
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<RecipeByCategoryDTO>> findByCategory(@PathVariable String category) {
-        List<RecipeByCategoryDTO> recipes = recipeService.findByCategory(category);
+    public ResponseEntity<Page<RecipeByCategoryDTO>> findByCategory(
+            @PathVariable String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<RecipeByCategoryDTO> recipes = recipeService.findByCategory(category, pageable);
         return ResponseEntity.ok(recipes);
     }
+
 }
