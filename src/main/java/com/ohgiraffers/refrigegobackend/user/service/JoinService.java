@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.user.service;
 
+
 import com.ohgiraffers.refrigegobackend.user.dto.JoinDTO;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
@@ -23,7 +24,6 @@ public class JoinService {
         String username = joinDTO.getUsername();
         String password = joinDTO.getPassword();
 
-
         Boolean isExist = userRepository.existsByUsername(username);
 
         if (isExist) {
@@ -36,7 +36,6 @@ public class JoinService {
         data.setUsername(username);
         data.setPassword(bCryptPasswordEncoder.encode(password));
         data.setRole("ROLE_USER");
-
 
         userRepository.save(data);
     }
