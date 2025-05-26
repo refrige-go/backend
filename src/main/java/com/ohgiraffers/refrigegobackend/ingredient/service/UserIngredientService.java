@@ -50,7 +50,7 @@ public class UserIngredientService {
     /**
      * 유저 보유 재료 전체 조회
      * 기준 재료가 없으면 customName 사용
-     * 기준 재료 없으면 "(삭제된 기준 재료)" 표시하도록 수정 권장
+     * 기준 재료 없으면 "(삭제된 기준 재료)" 표시
      */
     public List<UserIngredientResponseDto> getUserIngredients(Long userId) {
         return repository.findByUserId(userId).stream()
@@ -59,19 +59,17 @@ public class UserIngredientService {
                     String category;
 
                     if (ui.getIngredientId() != null) {
-                        // 기준 재료일 경우
                         Ingredient ingredient = ingredientRepository.findById(ui.getIngredientId()).orElse(null);
                         if (ingredient != null) {
                             name = ingredient.getName();
                             category = ingredient.getCategory();
                         } else {
                             name = "(삭제된 기준 재료)";
-                            category = "기타"; // 기본값 설정
+                            category = "기타";
                         }
                     } else {
-                        // 직접 입력 재료
                         name = ui.getCustomName();
-                        category = ui.getCustomCategory(); // 직접 입력 재료의 카테고리도 저장되어 있다고 가정
+                        category = ui.getCustomCategory();
                     }
 
                     return new UserIngredientResponseDto(ui, name, category);
@@ -90,7 +88,7 @@ public class UserIngredientService {
      * 보유 재료 일괄 등록
      */
     public void saveBatch(UserIngredientBatchRequestDto batchDto) {
-        Long userId = batchDto.getUserId();
+        Long userId = Long.valueOf(batchDto.getUserId());
         List<UserIngredient> entities = batchDto.getIngredients().stream()
                 .map(item -> {
                     if ((item.getIngredientId() == null && (item.getCustomName() == null || item.getCustomName().isEmpty())) ||
@@ -112,7 +110,6 @@ public class UserIngredientService {
 
     /**
      * 유저 보유 재료 정보 수정
-     * 수정 가능한 필드 : purchaseDate, expiryDate, isFrozen, customName, imageUrl
      */
     public void updateUserIngredient(Long id, UserIngredientUpdateRequestDto dto) {
         UserIngredient entity = repository.findById(id)
@@ -132,8 +129,6 @@ public class UserIngredientService {
 
     /**
      * 보유 재료 상세 조회
-     * 기준 재료가 있을 경우 해당 이름 반환, 없으면 customName 사용
-     * 기준 재료면 customName은 null 처리 (수정 금지)
      */
     public UserIngredientResponseDto getUserIngredientDetail(Long id) {
         UserIngredient entity = repository.findById(id)
@@ -143,14 +138,12 @@ public class UserIngredientService {
         String category;
 
         if (entity.getIngredientId() != null) {
-            // 기준 재료일 경우
             Ingredient ingredient = ingredientRepository.findById(entity.getIngredientId())
                     .orElseThrow(() -> new IllegalArgumentException("기준 재료가 존재하지 않습니다."));
             name = ingredient.getName();
             category = ingredient.getCategory();
-            entity.setCustomName(null); // 기준 재료일 경우 customName은 null 처리
+            entity.setCustomName(null);
         } else {
-            // 직접 입력 재료일 경우
             name = entity.getCustomName();
             category = entity.getCustomCategory() != null ? entity.getCustomCategory() : "기타";
         }
@@ -158,6 +151,9 @@ public class UserIngredientService {
         return new UserIngredientResponseDto(entity, name, category);
     }
 
+    /**
+     * 냉동 여부 수정
+     */
     @Transactional
     public void updateFrozenStatus(Long id, boolean isFrozen) {
         System.out.println("before setFrozen: " + isFrozen);
@@ -170,6 +166,9 @@ public class UserIngredientService {
         userIngredientRepository.save(ingredient);
     }
 
+    /**
+     * 구매일자 및 소비기한 수정
+     */
     public void updateDates(Long id, LocalDate purchaseDate, LocalDate expiryDate) {
         UserIngredient ingredient = userIngredientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("재료를 찾을 수 없습니다."));
@@ -180,6 +179,19 @@ public class UserIngredientService {
         userIngredientRepository.save(ingredient);
     }
 
-
-
+    /**
+     * 간편 등록 (기본값 포함)
+     */
+    public void addIngredients(Long userId, List<Long> ingredientIds) {
+        List<UserIngredient> entities = ingredientIds.stream()
+                .map(id -> UserIngredient.builder()
+                        .userId(userId)
+                        .ingredientId(id)
+                        .purchaseDate(LocalDate.now())
+                        .expiryDate(LocalDate.now().plusDays(7))
+                        .isFrozen(false)
+                        .build())
+                .toList();
+        userIngredientRepository.saveAll(entities);
+    }
 }
