@@ -156,9 +156,13 @@ public class UserIngredientService {
      */
     @Transactional
     public void updateFrozenStatus(Long id, boolean isFrozen) {
+        System.out.println("before setFrozen: " + isFrozen);
         UserIngredient ingredient = userIngredientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("재료를 찾을 수 없습니다."));
+
         ingredient.setFrozen(isFrozen);
+        System.out.println("after setFrozen: " + ingredient.isFrozen());
+
         userIngredientRepository.save(ingredient);
     }
 
@@ -168,8 +172,10 @@ public class UserIngredientService {
     public void updateDates(Long id, LocalDate purchaseDate, LocalDate expiryDate) {
         UserIngredient ingredient = userIngredientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("재료를 찾을 수 없습니다."));
+
         ingredient.setPurchaseDate(purchaseDate);
         ingredient.setExpiryDate(expiryDate);
+
         userIngredientRepository.save(ingredient);
     }
 
