@@ -35,7 +35,7 @@ public class CustomUserDetails  implements UserDetails {
             @Override
             public String getAuthority() {
 
-                return user.getRole();
+                return user.getRole().getRole();
             }
         });
         // userEntity.getRole()에서 권한 정보를 가져오고, 그걸 하나짜리 리스트(collection)로 반환
