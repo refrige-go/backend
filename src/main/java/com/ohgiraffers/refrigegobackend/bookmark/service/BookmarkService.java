@@ -71,7 +71,7 @@ public class BookmarkService {
         List<BookmarkRecipeResponseDTO> result = recipes.stream()
                 .map(BookmarkRecipeResponseDTO::new) // Recipe -> DTO
                 .collect(Collectors.toList());       // 리스트로 변환
-                
+
         return result;
     }
 
@@ -147,11 +147,7 @@ public class BookmarkService {
         User user = userRepository.findByUsername(username);
 
         // 냉장고 재료 조회
-<<<<<<< HEAD
-        List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(userId); // ← Long으로 직접 전달
-=======
         List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
->>>>>>> origin/dev
         List<String> fridgeIngredientNames = userIngredients.stream()
                 .map(UserIngredient::getCustomName)
                 .filter(Objects::nonNull)
