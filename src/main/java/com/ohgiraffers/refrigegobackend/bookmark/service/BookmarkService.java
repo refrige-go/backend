@@ -106,7 +106,6 @@ public class BookmarkService {
     public List<UserIngredientRecipeResponseDTO> getRecommendedRecipesByUserIngredient(String username) {
         User user = userRepository.findByUsername(username);
 
-        // 냉장고 재료 조회
         List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
 
         List<String> fridgeIngredientNames = userIngredients.stream()
@@ -115,23 +114,21 @@ public class BookmarkService {
                 .map(String::trim)
                 .toList();
 
-        // 찜한 레시피 조회
         List<Bookmark> bookmarks = bookmarkRepository.findByUserId(user.getId());
         List<Recipe> likedRecipes = bookmarks.stream()
                 .map(Bookmark::getRecipe)
                 .toList();
 
-        // 필터링
         List<Recipe> matchedRecipes = likedRecipes.stream()
                 .filter(recipe -> {
                     String parts = recipe.getRcpPartsDtls();
                     if (parts == null) return false;
 
-                    List<String> recipeIngredients = Arrays.stream(parts.split("[●•\\n]"))  // ● 시점으로 구분
-                            .flatMap(section -> Arrays.stream(section.split("[:,]")))  // 콜론(:) 또는 쉼표(,)로 나누기
-                            .map(s -> s.trim().split(" ")[0])  // 앞 단어(재료명)만 가져오기
-                            .map(s -> s.replaceAll("[^가-힣a-zA-Z]", "").trim())  // 특수문자 제거
-                            .filter(s -> !s.isBlank())  // 빈 문자열 제거
+                    List<String> recipeIngredients = Arrays.stream(parts.split("[●•\\n]"))
+                            .flatMap(section -> Arrays.stream(section.split("[:,]")))
+                            .map(s -> s.trim().split(" ")[0])
+                            .map(s -> s.replaceAll("[^가-힣a-zA-Z]", "").trim())
+                            .filter(s -> !s.isBlank())
                             .toList();
 
                     return recipeIngredients.stream().anyMatch(
@@ -140,9 +137,10 @@ public class BookmarkService {
                 })
                 .toList();
 
-        // Dto로 변환
+        // 여기서 bookmarked=true를 명확히 전달
         return matchedRecipes.stream()
-                .map(recipe -> new UserIngredientRecipeResponseDTO(recipe))
+                .map(recipe -> new UserIngredientRecipeResponseDTO(recipe, true))
                 .toList();
     }
+
 }
