@@ -3,6 +3,7 @@ package com.ohgiraffers.refrigegobackend.recipe.service;
 import com.ohgiraffers.refrigegobackend.bookmark.domain.Bookmark;
 import com.ohgiraffers.refrigegobackend.bookmark.infrastructure.repository.BookmarkRepository;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
+import com.ohgiraffers.refrigegobackend.recipe.dto.response.RecipeApiResponseDto;
 import com.ohgiraffers.refrigegobackend.recipe.dto.response.RecipeByCategoryDTO;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
@@ -62,4 +63,40 @@ public class RecipeService {
         });
     }
 
+    public RecipeApiResponseDto.Recipe getRecipeById(String id) {
+        Recipe recipe = recipeRepository.findByRcpSeq(id)
+                .orElseThrow(() -> new RuntimeException("레시피를 찾을 수 없습니다."));
+
+        return convertToResponseDto(recipe);
+    }
+
+    private RecipeApiResponseDto.Recipe convertToResponseDto(Recipe recipe) {
+        RecipeApiResponseDto.Recipe responseDto = new RecipeApiResponseDto.Recipe();
+
+        responseDto.setRcpSeq(recipe.getRcpSeq());
+        responseDto.setRcpNm(recipe.getRcpNm());
+        responseDto.setRcpPartsDtls(recipe.getRcpPartsDtls());
+        responseDto.setCuisineType(recipe.getCuisineType());
+        responseDto.setRcpWay2(recipe.getRcpWay2());
+        responseDto.setAttFileNoMain(recipe.getImage());
+        responseDto.setAttFileNoMk(recipe.getThumbnail());
+        responseDto.setHashTag(recipe.getHashTag());
+
+        // 조리 방법 설정
+        responseDto.setManual01(recipe.getManual01());
+        responseDto.setManual02(recipe.getManual02());
+        responseDto.setManual03(recipe.getManual03());
+        responseDto.setManual04(recipe.getManual04());
+        responseDto.setManual05(recipe.getManual05());
+        responseDto.setManual06(recipe.getManual06());
+
+        // 영양 정보 설정
+        responseDto.setInfoEng(recipe.getInfoEng());
+        responseDto.setInfoCar(recipe.getInfoCar());
+        responseDto.setInfoPro(recipe.getInfoPro());
+        responseDto.setInfoFat(recipe.getInfoFat());
+        responseDto.setInfoNa(recipe.getInfoNa());
+
+        return responseDto;
+    }
 }

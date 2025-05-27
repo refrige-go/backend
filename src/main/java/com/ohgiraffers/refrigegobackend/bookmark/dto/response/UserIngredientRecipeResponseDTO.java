@@ -8,7 +8,7 @@ public class UserIngredientRecipeResponseDTO {
     private String image;
     private boolean bookmarked;
 
-    public UserIngredientRecipeResponseDTO(Recipe recipe) {
+    public UserIngredientRecipeResponseDTO(Recipe recipe, boolean bookmarked) {
         this.rcpSeq = recipe.getRcpSeq();
         this.rcpNm = recipe.getRcpNm();
         this.image = recipe.getImage();

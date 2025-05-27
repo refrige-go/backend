@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.recipe.controller;
 
+import com.ohgiraffers.refrigegobackend.recipe.dto.response.RecipeApiResponseDto;
 import com.ohgiraffers.refrigegobackend.recipe.dto.response.RecipeByCategoryDTO;
 import com.ohgiraffers.refrigegobackend.recipe.service.RecipeService;
 import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
@@ -37,6 +38,12 @@ public class RecipeController {
         Pageable pageable = PageRequest.of(page, size);
         Page<RecipeByCategoryDTO> recipes = recipeService.findByCategory(category, pageable, username);
         return ResponseEntity.ok(recipes);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RecipeApiResponseDto.Recipe> getRecipeById(@PathVariable("id") String id) {
+        RecipeApiResponseDto.Recipe recipe = recipeService.getRecipeById(id);
+        return ResponseEntity.ok(recipe);
     }
 
 }
