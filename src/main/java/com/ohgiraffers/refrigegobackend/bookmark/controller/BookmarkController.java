@@ -78,15 +78,4 @@ public class BookmarkController {
                 .getRecommendedRecipesByUserIngredient(username);
         return ResponseEntity.ok(recommendedRecipes);
     }
-
-    // // 찜한 레시피 밑에 비슷한 재료로 만든 레시피 목록 - 레시피 화면 (재료 기준)
-    // // !!! 애매함 AI로 구현해야할 듯
-    // // 찜한거 x 모든 레시피 밑에
-    // @GetMapping("/similar-recipes")
-    // public ResponseEntity<List<SimilarRecipeResponseDTO>>
-    // getSimilarRecipes(@RequestParam Long userId) {
-    // List<SimilarRecipeResponseDTO> result =
-    // bookmarkService.getSimilarRecipes(userId);
-    // return ResponseEntity.ok(result);
-    // }
 }

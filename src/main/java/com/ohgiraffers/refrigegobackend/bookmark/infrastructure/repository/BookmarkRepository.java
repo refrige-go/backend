@@ -19,4 +19,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     List<Recipe> findRecipesByUserId(@Param("userId") Long userId);
 
     List<Bookmark> findByUserId(Long userId);
+
+    List<Bookmark> findAllByUserId(Long userId);
 }
