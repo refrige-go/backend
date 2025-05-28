@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: backend-service
+
+  config:
+    import: optional:configserver:http://43.201.53.70:8888/
+
+logging:
+  level:
+    org.springframework.cloud.config.client: DEBUG
