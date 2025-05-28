@@ -1,40 +1,62 @@
 package com.ohgiraffers.refrigegobackend.recipe.domain;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "recipes")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Recipe {
 
    @Id
-   private String rcpSeq; // 레시피 고유번호
+   @Column(name = "rcp_seq")
+   private String rcpSeq;
 
-   private String rcpNm;  // 레시피 이름
+   @Column(name = "rcp_nm")
+   private String rcpNm;
 
    @Lob
    @Column(name = "rcp_parts_dtls", columnDefinition = "TEXT")
-   private String rcpPartsDtls; // 재료 상세 설명
+   private String rcpPartsDtls;
 
-   @Column(name = "cuisine_type")
-   private String cuisineType; // 요리 종류 (밥, 반찬 등)
+   @Column(name = "cuisine_type", length = 100)
+   private String cuisineType;
 
-   @Column(name = "rcp_way2")
-   private String rcpWay2;     // 조리 방법 상세 (찌기, 굽기 등)
+   @Column(name = "rcp_category", length = 100)
+   private String rcpCategory;
 
-   @Column(name = "image", columnDefinition = "TEXT")
-   private String image;       // 메인 이미지 (ATT_FILE_NO_MAIN)
+   @Column(name = "rcp_way2", length = 100)
+   private String rcpWay2;
 
-   @Column(name = "thumbnail", columnDefinition = "TEXT")
-   private String thumbnail;   // 썸네일 이미지 (ATT_FILE_NO_MK)
+   @Lob
+   @Column(columnDefinition = "TEXT")
+   private String image;
 
-   @Column(name = "hash_tag")
-   private String hashTag;     // 해시태그
+   @Lob
+   @Column(columnDefinition = "TEXT")
+   private String thumbnail;
+
+   @Column(name = "hash_tag", length = 500)
+   private String hashTag;
+
+   @Column(name = "info_eng", length = 50)
+   private String infoEng;
+
+   @Column(name = "info_car", length = 50)
+   private String infoCar;
+
+   @Column(name = "info_pro", length = 50)
+   private String infoPro;
+
+   @Column(name = "info_fat", length = 50)
+   private String infoFat;
+
+   @Column(name = "info_na", length = 50)
+   private String infoNa;
 
    @Lob
    @Column(name = "manual01", columnDefinition = "TEXT")
@@ -59,22 +81,4 @@ public class Recipe {
    @Lob
    @Column(name = "manual06", columnDefinition = "TEXT")
    private String manual06;
-
-   @Column(name = "info_eng")
-   private String infoEng;     // 열량
-
-   @Column(name = "info_car")
-   private String infoCar;     // 탄수화물
-
-   @Column(name = "info_pro")
-   private String infoPro;     // 단백질
-
-   @Column(name = "info_fat")
-   private String infoFat;     // 지방
-
-   @Column(name = "info_na")
-   private String infoNa;      // 나트륨
-
-   @Column(name = "rcp_category")
-   private String category;
 }
