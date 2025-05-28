@@ -2,6 +2,7 @@ package com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository;
 
 import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -20,4 +21,7 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
 
     // category로 재료 목록 조회 (null이나 empty는 전체 조회는 서비스에서 처리)
     List<Ingredient> findByCategory(String category);
+
+    @Query("SELECT DISTINCT i.category FROM Ingredient i ORDER BY i.category")
+    List<String> findDistinctCategories();
 }
