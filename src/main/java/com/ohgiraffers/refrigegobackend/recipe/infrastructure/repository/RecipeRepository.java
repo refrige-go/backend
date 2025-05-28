@@ -22,7 +22,7 @@ public interface RecipeRepository extends JpaRepository<Recipe, String> {
     // 요리 종류가 같은 레시피 조회 (찜한 레시피는 제외)
     List<Recipe> findByCuisineTypeInAndRcpSeqNotIn(List<String> cuisineTypes, List<String> excludedRcpSeqs);
 
-    Page<Recipe> findByCategory(String category, Pageable pageable);
+    Page<Recipe> findByRcpCategory(String rcpCategory, Pageable pageable);
 
     Optional<Recipe> findByRcpSeq(String rcpSeq);
 
