@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.user.jwt;
 
 import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
+import com.ohgiraffers.refrigegobackend.user.entity.Role;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -84,7 +85,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         User user = new User();
         user.setUsername(username);
-        user.setRole(role);
+        user.setRole(Role.ROLE_USER);
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 
         Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null,
