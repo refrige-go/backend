@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.ingredient.service;
 
 import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
+import com.ohgiraffers.refrigegobackend.ingredient.domain.IngredientCategory;
 import com.ohgiraffers.refrigegobackend.ingredient.dto.IngredientResponseDto;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,10 @@ public class IngredientService {
         if (category == null || category.isEmpty() || category.equals("전체")) {
             return ingredientRepository.findAll();  // 전체 조회
         }
-        return ingredientRepository.findByCategory(category);
+
+        // 문자열을 Enum으로 변환
+        IngredientCategory enumCategory = IngredientCategory.fromDisplayName(category);
+        return ingredientRepository.findByCategory(enumCategory);
     }
 
     public List<String> getCategoryList() {
