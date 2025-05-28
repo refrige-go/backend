@@ -98,7 +98,8 @@ public class SecurityConfig {
 
                 http
                                 .authorizeHttpRequests((auth) -> auth
-                                                .requestMatchers("/login", "/join", "/reissue", "/").permitAll()
+
+                                                .requestMatchers("/login", "/join", "/reissue", "/" , "/api/recipe/**").permitAll()
                                                 .requestMatchers("/api/bookmark/**").hasAnyAuthority("ROLE_USER")
                                                 .requestMatchers("/admin").hasRole("ADMIN") // /admin경로 요청은 ADMIN권한필요
                                                 .anyRequest().authenticated()); // 위 경로설정 외 기타 요청은 인증필요

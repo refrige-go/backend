@@ -27,11 +27,13 @@ public class BookmarkController {
 
     // 레시피 찜하기
     @PostMapping("/toggle")
-    public ResponseEntity<BookmarkResponseDTO> toggleFavorite(@AuthenticationPrincipal CustomUserDetails details,
-            @RequestParam String recipeId) {
-        Long userId = details.getUserId();
+    public ResponseEntity<BookmarkResponseDTO> toggleFavorite(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                                              @RequestParam String recipeId) {
+        String username = userDetails.getUsername();
 
-        boolean isBookmarked = bookmarkService.toggleBookmark(userId, recipeId);
+        boolean isBookmarked = bookmarkService.toggleBookmark(username, recipeId);
+        System.out.println("📌 recipeId: " + recipeId);
+
 
         BookmarkResponseDTO response = new BookmarkResponseDTO(
                 isBookmarked,
@@ -53,7 +55,6 @@ public class BookmarkController {
         return ResponseEntity.ok(bookmarkedRecipes);
     }
 
-
     // 찜한 레시피와 비슷한 레시피 목록 - 메인화면 (요리 종류 기준)
     @GetMapping("/bookmark-recommend")
     public ResponseEntity<List<CuisineTypeRecipeResponseDTO>> getRecommendedRecipesByBookmarked(
@@ -61,7 +62,8 @@ public class BookmarkController {
         String username = userDetails.getUsername();
         System.out.println("로그인된 유저 name: " + username);
 
-        List<CuisineTypeRecipeResponseDTO> recommendations = bookmarkService.getRecommendedRecipesByBookmarked(username);
+        List<CuisineTypeRecipeResponseDTO> recommendations = bookmarkService
+                .getRecommendedRecipesByBookmarked(username);
         return ResponseEntity.ok(recommendations);
     }
 
@@ -76,15 +78,4 @@ public class BookmarkController {
                 .getRecommendedRecipesByUserIngredient(username);
         return ResponseEntity.ok(recommendedRecipes);
     }
-
-    // // 찜한 레시피 밑에 비슷한 재료로 만든 레시피 목록 - 레시피 화면 (재료 기준)
-    // // !!! 애매함 AI로 구현해야할 듯
-    // // 찜한거 x 모든 레시피 밑에
-    // @GetMapping("/similar-recipes")
-    // public ResponseEntity<List<SimilarRecipeResponseDTO>>
-    // getSimilarRecipes(@RequestParam Long userId) {
-    // List<SimilarRecipeResponseDTO> result =
-    // bookmarkService.getSimilarRecipes(userId);
-    // return ResponseEntity.ok(result);
-    // }
 }
