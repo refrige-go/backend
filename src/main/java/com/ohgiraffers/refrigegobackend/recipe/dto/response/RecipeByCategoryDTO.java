@@ -3,21 +3,25 @@ package com.ohgiraffers.refrigegobackend.recipe.dto.response;
 public class RecipeByCategoryDTO {
     
     private String recipeNm;
+    private String rcpSeq;
     private String category;
     private String image;
     private String rcpPartsDtls;
     private String cuisineType;
     private String rcpWay2;
+    private boolean bookmarked;
 
     public RecipeByCategoryDTO() {}
 
-    public RecipeByCategoryDTO(String recipeNm, String category, String image, String rcpPartsDtls, String cuisineType, String rcpWay2) {
+    public RecipeByCategoryDTO(String recipeNm, String rcpSeq, String category, String image, String rcpPartsDtls, String cuisineType, String rcpWay2, boolean bookmarked) {
         this.recipeNm = recipeNm;
+        this.rcpSeq = rcpSeq;
         this.category = category;
         this.image = image;
         this.rcpPartsDtls = rcpPartsDtls;
         this.cuisineType = cuisineType;
         this.rcpWay2 = rcpWay2;
+        this.bookmarked = bookmarked;
     }
 
     public String getRecipeNm() {
@@ -26,6 +30,14 @@ public class RecipeByCategoryDTO {
 
     public void setRecipeNm(String recipeNm) {
         this.recipeNm = recipeNm;
+    }
+
+    public String getRcpSeq() {
+        return rcpSeq;
+    }
+
+    public void setRcpSeq(String rcpSeq) {
+        this.rcpSeq = rcpSeq;
     }
 
     public String getCategory() {
@@ -66,5 +78,13 @@ public class RecipeByCategoryDTO {
 
     public void setRcpWay2(String rcpWay2) {
         this.rcpWay2 = rcpWay2;
+    }
+
+    public boolean getBookmarked() {
+        return bookmarked;
+    }
+
+    public void setBookmarked(boolean bookmarked) {
+        this.bookmarked = bookmarked;
     }
 }
