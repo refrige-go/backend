@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * 기준 재료 관련 API 컨트롤러
  */
 @RestController
-@RequestMapping("/ingredients")
+@RequestMapping("/api/ingredients")
 @RequiredArgsConstructor
 public class IngredientController {
 
@@ -36,5 +36,17 @@ public class IngredientController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtoList);
+    }
+
+    /**
+     * 카테고리 목록 조회 API
+     * GET /ingredients/categories
+     *
+     * @return 중복 없는 카테고리 목록
+     */
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getCategories() {
+        List<String> categories = ingredientService.getCategoryList();
+        return ResponseEntity.ok(categories);
     }
 }
