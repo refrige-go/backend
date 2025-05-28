@@ -3,7 +3,6 @@ package com.ohgiraffers.refrigegobackend.bookmark.service;
 import com.ohgiraffers.refrigegobackend.bookmark.domain.Bookmark;
 import com.ohgiraffers.refrigegobackend.bookmark.dto.response.BookmarkRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.dto.response.CuisineTypeRecipeResponseDTO;
-import com.ohgiraffers.refrigegobackend.bookmark.dto.response.SimilarRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.dto.response.UserIngredientRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.infrastructure.repository.BookmarkRepository;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
@@ -107,7 +106,6 @@ public class BookmarkService {
     public List<UserIngredientRecipeResponseDTO> getRecommendedRecipesByUserIngredient(String username) {
         User user = userRepository.findByUsername(username);
 
-        // 냉장고 재료 조회
         List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
 
         List<String> fridgeIngredientNames = userIngredients.stream()
@@ -116,23 +114,21 @@ public class BookmarkService {
                 .map(String::trim)
                 .toList();
 
-        // 찜한 레시피 조회
         List<Bookmark> bookmarks = bookmarkRepository.findByUserId(user.getId());
         List<Recipe> likedRecipes = bookmarks.stream()
                 .map(Bookmark::getRecipe)
                 .toList();
 
-        // 필터링
         List<Recipe> matchedRecipes = likedRecipes.stream()
                 .filter(recipe -> {
                     String parts = recipe.getRcpPartsDtls();
                     if (parts == null) return false;
 
-                    List<String> recipeIngredients = Arrays.stream(parts.split("[●•\\n]"))  // ● 시점으로 구분
-                            .flatMap(section -> Arrays.stream(section.split("[:,]")))  // 콜론(:) 또는 쉼표(,)로 나누기
-                            .map(s -> s.trim().split(" ")[0])  // 앞 단어(재료명)만 가져오기
-                            .map(s -> s.replaceAll("[^가-힣a-zA-Z]", "").trim())  // 특수문자 제거
-                            .filter(s -> !s.isBlank())  // 빈 문자열 제거
+                    List<String> recipeIngredients = Arrays.stream(parts.split("[●•\\n]"))
+                            .flatMap(section -> Arrays.stream(section.split("[:,]")))
+                            .map(s -> s.trim().split(" ")[0])
+                            .map(s -> s.replaceAll("[^가-힣a-zA-Z]", "").trim())
+                            .filter(s -> !s.isBlank())
                             .toList();
 
                     return recipeIngredients.stream().anyMatch(
@@ -141,48 +137,10 @@ public class BookmarkService {
                 })
                 .toList();
 
-        // Dto로 변환
+        // 여기서 bookmarked=true를 명확히 전달
         return matchedRecipes.stream()
-                .map(recipe -> new UserIngredientRecipeResponseDTO(recipe))
+                .map(recipe -> new UserIngredientRecipeResponseDTO(recipe, true))
                 .toList();
     }
 
-//    // 찜한 레시피 밑에 비슷한 재료로 만든 레시피 목록 - 레시피 화면 (재료 기준)
-//    public List<SimilarRecipeResponseDTO> getSimilarRecipes(Long userId) {
-//        // 1. 사용자의 찜한 레시피 목록 가져오기
-//        List<Bookmark> bookmarks = bookmarkRepository.findByUserId(userId);
-//        List<Recipe> likedRecipes = bookmarks.stream()
-//                .map(Bookmark::getRecipe)
-//                .toList();
-//
-//        // 2. 찜한 레시피들의 재료 모두 수집
-//        Set<String> likedIngredients = likedRecipes.stream()
-//                .flatMap(recipe -> Arrays.stream(recipe.getRcpPartsDtls().split("[,\\n]")))
-//                .map(s -> s.replaceAll("[^가-힣a-zA-Z]", "").trim())
-//                .filter(s -> !s.isBlank())
-//                .collect(Collectors.toSet());
-//
-//        // 3. 전체 레시피 중 찜한 레시피를 제외
-//        List<Recipe> allRecipes = recipeRepository.findAll();
-//        List<Recipe> otherRecipes = allRecipes.stream()
-//                .filter(r -> !likedRecipes.contains(r))
-//                .toList();
-//
-//        // 4. 찜한 재료 중 하나 이상 포함하는 다른 레시피 필터링
-//        List<Recipe> similarRecipes = otherRecipes.stream()
-//                .filter(recipe -> {
-//                    String parts = recipe.getRcpPartsDtls();
-//                    if (parts == null) return false;
-//                    List<String> recipeIngredients = Arrays.stream(parts.split("[,\\n]"))
-//                            .map(s -> s.replaceAll("[^가-힣a-zA-Z]", "").trim())
-//                            .toList();
-//                    return recipeIngredients.stream().anyMatch(likedIngredients::contains);
-//                })
-//                .toList();
-//
-//        // 5. DTO로 변환
-//        return similarRecipes.stream()
-//                .map(SimilarRecipeResponseDTO::new)
-//                .toList();
-//    }
 }
