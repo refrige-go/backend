@@ -4,11 +4,14 @@ import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
 import com.ohgiraffers.refrigegobackend.ocr.dto.MatchedProduct;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -22,14 +25,15 @@ public class ProductMatchingService {
 
     public List<MatchedProduct> matchProducts(List<String> productNames) {
         List<Ingredient> allIngredients = ingredientRepository.findAll();
-        System.out.println("DB에서 불러온 상품명 개수: " + allIngredients.size());
+        // 긴 이름 우선 정렬
+        allIngredients.sort(Comparator.comparingInt((Ingredient i) -> i.getName().length()).reversed());
 
         List<MatchedProduct> matchedProducts = new ArrayList<>();
-        boolean anyMatched = false; // 매칭 성공 여부 플래그
+        boolean anyMatched = false;
 
         for (String productName : productNames) {
             String cleanedName = cleanProductName(productName);
-            System.out.println("OCR 추출 품목명: " + productName + ", 정제 후: " + cleanedName);
+            log.info("OCR 추출 품목명: {}, 정제 후: {}", productName, cleanedName);
 
             if (cleanedName == null || cleanedName.isEmpty()) {
                 continue;
@@ -37,69 +41,80 @@ public class ProductMatchingService {
 
             boolean matchedThisProduct = false;
 
+            // 1. 완전일치
+            Optional<Ingredient> exactMatch = allIngredients.stream()
+                    .filter(ingredient -> cleanedName.equals(ingredient.getName()))
+                    .findFirst();
+
+            if (exactMatch.isPresent()) {
+                matchedProducts.add(makeMatchedProduct(productName, exactMatch.get(), 100));
+                log.info("완전일치 매칭 성공: {} → {}", productName, exactMatch.get().getName());
+                anyMatched = true;
+                continue;
+            }
+
+            // 2. 부분포함 (긴 이름 우선)
+            Optional<Ingredient> partialMatch = allIngredients.stream()
+                    .filter(ingredient -> cleanedName.contains(ingredient.getName()))
+                    .findFirst();
+
+            if (partialMatch.isPresent()) {
+                matchedProducts.add(makeMatchedProduct(productName, partialMatch.get(), 100));
+                log.info("부분포함 매칭 성공: {} → {}", productName, partialMatch.get().getName());
+                anyMatched = true;
+                continue;
+            }
+
+            // 3. 유사도 (Levenshtein) 75% 이상
+            int maxSimilarity = 0;
+            Ingredient bestMatch = null;
             for (Ingredient ingredient : allIngredients) {
-                String dbName = ingredient.getName();
-               // System.out.println("비교 대상: " + dbName); // DB와 비교 로그
-                // DB 상품명이 정제된 OCR 품목명에 포함되어 있으면 매칭
-                if (cleanedName.contains(dbName)) {
-                    MatchedProduct matched = new MatchedProduct();
-                    matched.setOriginalName(productName);
-                    matched.setMatchedName(dbName);
-                    matched.setSimilarity(100); // 포함 매칭이므로 100%로 설정
-                    matched.setMainCategory(ingredient.getCategory()); // 카테고리 정보 추가
-                    matchedProducts.add(matched);
-                    anyMatched = true;
-                    matchedThisProduct = true;
-                    System.out.println("매칭 성공: " + productName + " → " + dbName + " (카테고리: " + ingredient.getCategory() + ")");
-                    break;
+                int similarity = calculateSimilarity(cleanedName, ingredient.getName());
+                if (similarity > maxSimilarity) {
+                    maxSimilarity = similarity;
+                    bestMatch = ingredient;
                 }
             }
-            if (!matchedThisProduct) {
-                System.out.println("매칭 실패: " + cleanedName + " (DB에 해당 상품 없음)");
+            if (bestMatch != null && maxSimilarity >= 75) {
+                matchedProducts.add(makeMatchedProduct(productName, bestMatch, maxSimilarity));
+                log.info("유사도 매칭 성공: {} → {} ({}%)", productName, bestMatch.getName(), maxSimilarity);
+                anyMatched = true;
+                continue;
+            }
+
+            log.info("매칭 실패: {} (DB에 해당 상품 없음)", cleanedName);
         }
-    }
+
         if (!anyMatched) {
-            System.out.println("매칭된 상품이 없습니다.");
+            log.info("매칭된 상품이 없습니다.");
         }
+
         return matchedProducts;
     }
 
+    private MatchedProduct makeMatchedProduct(String originalName, Ingredient ingredient, int similarity) {
+        MatchedProduct matched = new MatchedProduct();
+        matched.setOriginalName(originalName);
+        matched.setMatchedName(ingredient.getName());
+        matched.setSimilarity(similarity);
+        matched.setMainCategory(ingredient.getCategory());
+        return matched;
+    }
+
     private String cleanProductName(String name) {
-        // 단위/수량 패턴 제거
-        String cleaned = name.replaceAll("\\d+\\s*(g|ml|L|kg|개|봉|팩|통|캔)", "")
+        if (name == null) return "";
+        // 공백, 단위, 특수문자 제거 등 전처리 강화
+        return name.replaceAll("\\s+", "")
+                .replaceAll("\\d+\\s*(g|ml|L|kg|개|봉|팩|통|캔)", "")
                 .replaceAll("[^가-힣a-zA-Z0-9]", "")
                 .trim();
-        return cleaned;
     }
 
+    // Levenshtein 거리 기반 유사도 (Apache Commons Text)
     private int calculateSimilarity(String s1, String s2) {
-        // Levenshtein 거리 기반 유사도 계산
         int maxLength = Math.max(s1.length(), s2.length());
         if (maxLength == 0) return 100;
-        return (int) ((1.0 - (double) levenshteinDistance(s1, s2) / maxLength) * 100);
-    }
-
-    private int levenshteinDistance(String s1, String s2) {
-        // Levenshtein 거리 계산 알고리즘
-        int[][] dp = new int[s1.length() + 1][s2.length() + 1];
-
-        for (int i = 0; i <= s1.length(); i++) {
-            dp[i][0] = i;
-        }
-        for (int j = 0; j <= s2.length(); j++) {
-            dp[0][j] = j;
-        }
-
-        for (int i = 1; i <= s1.length(); i++) {
-            for (int j = 1; j <= s2.length(); j++) {
-                if (s1.charAt(i-1) == s2.charAt(j-1)) {
-                    dp[i][j] = dp[i-1][j-1];
-                } else {
-                    dp[i][j] = Math.min(dp[i-1][j-1], Math.min(dp[i-1][j], dp[i][j-1])) + 1;
-                }
-            }
-        }
-
-        return dp[s1.length()][s2.length()];
+        int distance = new LevenshteinDistance().apply(s1, s2);
+        return (int) ((1.0 - (double) distance / maxLength) * 100);
     }
 }
