@@ -89,9 +89,10 @@ public class ReissueController {
         String role = jwtUtil.getRole(refresh);
 
         //make new JWT
-        // 새로운 access 토큰 생성 
-        String newAccess = jwtUtil.createJwt("access", username, role, 600000L);
-        String newRefresh = jwtUtil.createJwt("refresh", username, role, 86400000L);
+        // 새로운 access 토큰 생성
+        // reissue에서 새로운 토큰을 발급하므로, 시간도 여기서 재설정. 처음 발급한 토큰(Loginfilter)시간과 일치시켜야함!
+        String newAccess = jwtUtil.createJwt("access", username, role, 600000L); // 10분
+        String newRefresh = jwtUtil.createJwt("refresh", username, role, 86400000L); //하루
 
         //Refresh 토큰 저장 DB에 기존의 Refresh 토큰 삭제 후 새 Refresh 토큰 저장
         refreshRepository.deleteByRefresh(refresh); // 기존 토큰 삭제
