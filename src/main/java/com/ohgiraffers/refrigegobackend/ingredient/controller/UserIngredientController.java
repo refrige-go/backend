@@ -124,5 +124,12 @@ public class UserIngredientController {
         return ResponseEntity.ok("재료가 일괄 등록되었습니다.");
     }
 
+    @PostMapping(value = "", consumes = "multipart/form-data")
+    public ResponseEntity<String> addUserIngredientWithImage(@ModelAttribute UserIngredientCreateDto dto) {
+        service.addUserIngredientWithImage(dto);
+        return ResponseEntity.ok("이미지 포함 재료 등록 완료");
+    }
+
+
 
 }
