@@ -2,11 +2,12 @@ package com.ohgiraffers.refrigegobackend.ingredient.service;
 
 import com.ohgiraffers.refrigegobackend.config.FileStorageProperties;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
-import com.ohgiraffers.refrigegobackend.ingredient.domain.IngredientCategory;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
 import com.ohgiraffers.refrigegobackend.ingredient.dto.*;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.UserIngredientRepository;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
+import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,9 +25,10 @@ public class UserIngredientService {
 
     private final UserIngredientRepository repository;
     private final IngredientRepository ingredientRepository;
+    private final UserRepository userRepository; // UserRepository 추가
     private final FileStorageProperties fileStorageProperties;
 
-    // 이미지 저장
+    // 이미지 저장 메서드
     private String saveImage(MultipartFile imageFile) {
         if (imageFile == null || imageFile.isEmpty()) return null;
         try {
@@ -42,8 +44,11 @@ public class UserIngredientService {
         }
     }
 
-    // 재료 추가
-    public void addUserIngredient(UserIngredientRequestDto dto) {
+    // username 기준 재료 추가
+    public void addUserIngredient(String username, UserIngredientRequestDto dto) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+
         if ((dto.getIngredientId() == null && dto.getCustomName() == null) ||
                 (dto.getIngredientId() != null && dto.getCustomName() != null)) {
             throw new IllegalArgumentException("ingredientId 또는 customName 중 하나만 입력해야 합니다.");
@@ -54,7 +59,7 @@ public class UserIngredientService {
                 : null;
 
         UserIngredient userIngredient = UserIngredient.builder()
-                .userId(dto.getUserId())
+                .userId(user.getId())
                 .ingredient(ingredient)
                 .customName(dto.getCustomName())
                 .purchaseDate(dto.getPurchaseDate())
@@ -65,8 +70,64 @@ public class UserIngredientService {
         repository.save(userIngredient);
     }
 
-    // 이미지 포함 재료 추가
-    public void addUserIngredientWithImage(UserIngredientCreateDto dto) {
+    // username 기준 재료 조회
+    public List<UserIngredientResponseDto> getUserIngredientsByUsername(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+
+        return repository.findByUserId(user.getId()).stream()
+                .map(ui -> {
+                    String name = ui.getIngredientName();
+                    String category = ui.getIngredient() != null
+                            ? ui.getIngredient().getCategory().getDisplayName()
+                            : "기타";
+                    return new UserIngredientResponseDto(ui, name, category);
+                }).collect(Collectors.toList());
+    }
+
+    // username 기준 다건 저장
+    public void saveBatchWithUsername(UserIngredientBatchRequestDto dto, String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+
+        dto.setUserId(user.getId());
+        saveBatch(dto);
+    }
+
+    // 기준 재료 여러 개 추가 (username 기준)
+    public void addIngredientsByUsername(String username, List<UserIngredientBatchRequestDto.UserIngredientItem> items) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+
+        List<UserIngredient> entities = items.stream()
+                .map(item -> {
+                    if ((item.getIngredientId() == null && item.getCustomName() == null) ||
+                            (item.getIngredientId() != null && item.getCustomName() != null)) {
+                        throw new IllegalArgumentException("ingredientId 또는 customName 중 하나만 입력해야 합니다.");
+                    }
+
+                    Ingredient ingredient = item.getIngredientId() != null
+                            ? ingredientRepository.findById(item.getIngredientId()).orElse(null)
+                            : null;
+
+                    return UserIngredient.builder()
+                            .userId(user.getId())
+                            .ingredient(ingredient)
+                            .customName(item.getCustomName())
+                            .purchaseDate(item.getPurchaseDate())
+                            .expiryDate(item.getExpiryDate())
+                            .isFrozen(item.isFrozen())
+                            .build();
+                }).collect(Collectors.toList());
+
+        repository.saveAll(entities);
+    }
+
+    // 이미지 포함 재료 추가 (username 기준)
+    public void addUserIngredientWithImage(String username, UserIngredientCreateDto dto) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+
         String imageUrl = saveImage(dto.getImage());
 
         Ingredient ingredient = dto.getIngredientId() != null
@@ -74,7 +135,7 @@ public class UserIngredientService {
                 : null;
 
         UserIngredient userIngredient = UserIngredient.builder()
-                .userId(dto.getUserId())
+                .userId(user.getId())
                 .ingredient(ingredient)
                 .customName(dto.getCustomName())
                 .purchaseDate(dto.getPurchaseDate())
@@ -86,24 +147,7 @@ public class UserIngredientService {
         repository.save(userIngredient);
     }
 
-    // 유저 재료 전체 조회
-    public List<UserIngredientResponseDto> getUserIngredients(Long userId) {
-        return repository.findByUserId(userId).stream()
-                .map(ui -> {
-                    String name = ui.getIngredientName();
-                    String category = ui.getIngredient() != null
-                            ? ui.getIngredient().getCategory().getDisplayName()
-                            : "기타";
-                    return new UserIngredientResponseDto(ui, name, category);
-                }).collect(Collectors.toList());
-    }
-
-    // 단건 삭제
-    public void deleteUserIngredient(Long id) {
-        repository.deleteById(id);
-    }
-
-    // 다건 저장
+    // 기존 saveBatch 유지
     public void saveBatch(UserIngredientBatchRequestDto batchDto) {
         Long userId = Long.valueOf(batchDto.getUserId());
         List<UserIngredient> entities = batchDto.getIngredients().stream().map(item -> {
@@ -129,7 +173,7 @@ public class UserIngredientService {
         repository.saveAll(entities);
     }
 
-    // 재료 수정
+    // 이하 기존 메서드 유지
     public void updateUserIngredient(Long id, UserIngredientUpdateRequestDto dto) {
         UserIngredient entity = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 재료입니다."));
@@ -148,7 +192,6 @@ public class UserIngredientService {
         repository.save(entity);
     }
 
-    // 단건 상세 조회
     public UserIngredientResponseDto getUserIngredientDetail(Long id) {
         UserIngredient entity = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 재료입니다."));
@@ -161,7 +204,6 @@ public class UserIngredientService {
         return new UserIngredientResponseDto(entity, name, category);
     }
 
-    // 냉동 여부만 수정
     @Transactional
     public void updateFrozenStatus(Long id, boolean isFrozen) {
         UserIngredient ingredient = repository.findById(id)
@@ -170,7 +212,6 @@ public class UserIngredientService {
         repository.save(ingredient);
     }
 
-    // 날짜만 수정
     public void updateDates(Long id, LocalDate purchaseDate, LocalDate expiryDate) {
         UserIngredient ingredient = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("재료를 찾을 수 없습니다."));
@@ -179,35 +220,7 @@ public class UserIngredientService {
         repository.save(ingredient);
     }
 
-    // 기준 재료 여러 개 추가
-    public void addIngredients(Long userId, List<UserIngredientBatchRequestDto.UserIngredientItem> items) {
-        List<UserIngredient> entities = items.stream()
-                .map(item -> {
-                    if ((item.getIngredientId() == null && item.getCustomName() == null) ||
-                            (item.getIngredientId() != null && item.getCustomName() != null)) {
-                        throw new IllegalArgumentException("ingredientId 또는 customName 중 하나만 입력해야 합니다.");
-                    }
-
-                    Ingredient ingredient = item.getIngredientId() != null
-                            ? ingredientRepository.findById(item.getIngredientId()).orElse(null)
-                            : null;
-
-                    return UserIngredient.builder()
-                            .userId(userId)
-                            .ingredient(ingredient)
-                            .customName(item.getCustomName())
-                            .purchaseDate(item.getPurchaseDate())
-                            .expiryDate(item.getExpiryDate())
-                            .isFrozen(item.isFrozen())
-                            .build();
-                }).collect(Collectors.toList());
-
-        repository.saveAll(entities);
-    }
-
-    public void saveBatchWithUser(UserIngredientBatchRequestDto dto, Long userId) {
-        // userId를 dto에 넣거나 서비스 로직에 맞게 처리
-        dto.setUserId(userId); // 만약 dto에 userId 필드가 있다면
-        saveBatch(dto);        // 기존 saveBatch 메서드 재활용
+    public void deleteUserIngredient(Long id) {
+        repository.deleteById(id);
     }
 }
