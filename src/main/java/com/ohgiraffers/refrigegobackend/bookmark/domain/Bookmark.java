@@ -17,7 +17,7 @@ public class Bookmark {
 
     // 찜한 레시피
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recipe_id", referencedColumnName = "rcpSeq")
+    @JoinColumn(name = "recipe_id", referencedColumnName = "rcp_seq")
     private Recipe recipe;
 
     @ManyToOne(fetch = FetchType.LAZY)
