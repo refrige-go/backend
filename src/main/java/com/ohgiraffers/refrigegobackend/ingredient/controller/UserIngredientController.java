@@ -2,9 +2,12 @@ package com.ohgiraffers.refrigegobackend.ingredient.controller;
 
 import com.ohgiraffers.refrigegobackend.ingredient.dto.*;
 import com.ohgiraffers.refrigegobackend.ingredient.service.UserIngredientService;
+import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
@@ -34,7 +37,7 @@ public class UserIngredientController {
      * GET /user-ingredients?userId=uuid-be-001
      */
     @GetMapping
-    public ResponseEntity<List<UserIngredientResponseDto>> getUserIngredients(@RequestParam String userId) {
+    public ResponseEntity<List<UserIngredientResponseDto>> getUserIngredients(@RequestParam Long userId) {
         List<UserIngredientResponseDto> list = service.getUserIngredients(userId);
         return ResponseEntity.ok(list);
     }
@@ -102,5 +105,31 @@ public class UserIngredientController {
         userIngredientService.updateDates(id, dto.getPurchaseDate(), dto.getExpiryDate());
         return ResponseEntity.ok().build();
     }
+
+//    @PostMapping("/batch-add")
+//    public ResponseEntity<?> addUserIngredients(
+//            @RequestBody IngredientAddRequestDto requestDto,
+//            @AuthenticationPrincipal CustomUserDetails user
+//    ) {
+//        userIngredientService.addIngredients(
+//                user.getId(),
+//                requestDto.getIngredientIds()
+//        );
+//        return ResponseEntity.ok().build();
+//    }
+
+    @PostMapping("/batch-add")
+    public ResponseEntity<String> addUserIngredients(@RequestBody UserIngredientBatchRequestDto requestDto) {
+        userIngredientService.addIngredients(requestDto.getUserId(), requestDto.getIngredientIds());
+        return ResponseEntity.ok("재료가 일괄 등록되었습니다.");
+    }
+
+    @PostMapping(value = "", consumes = "multipart/form-data")
+    public ResponseEntity<String> addUserIngredientWithImage(@ModelAttribute UserIngredientCreateDto dto) {
+        service.addUserIngredientWithImage(dto);
+        return ResponseEntity.ok("이미지 포함 재료 등록 완료");
+    }
+
+
 
 }

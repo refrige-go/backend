@@ -1,9 +1,13 @@
 package com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository;
 
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
+import com.ohgiraffers.refrigegobackend.recipe.dto.response.RecipeApiResponseDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Recipe 엔티티에 대한 JPA Repository 인터페이스
@@ -18,6 +22,8 @@ public interface RecipeRepository extends JpaRepository<Recipe, String> {
     // 요리 종류가 같은 레시피 조회 (찜한 레시피는 제외)
     List<Recipe> findByCuisineTypeInAndRcpSeqNotIn(List<String> cuisineTypes, List<String> excludedRcpSeqs);
 
-    List<Recipe> findByCategory(String category);
+    Page<Recipe> findByRcpCategory(String rcpCategory, Pageable pageable);
+
+    Optional<Recipe> findByRcpSeq(String rcpSeq);
 
 }
