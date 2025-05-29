@@ -2,7 +2,6 @@ package com.ohgiraffers.refrigegobackend.recommendation.controller;
 
 import com.ohgiraffers.refrigegobackend.recommendation.dto.LocationDTO;
 import com.ohgiraffers.refrigegobackend.recommendation.service.WeatherRecommendationService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
