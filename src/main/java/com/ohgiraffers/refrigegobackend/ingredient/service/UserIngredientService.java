@@ -180,17 +180,34 @@ public class UserIngredientService {
     }
 
     // 기준 재료 여러 개 추가
-    public void addIngredients(Long userId, List<Long> ingredientIds) {
-        List<UserIngredient> entities = ingredientIds.stream()
-                .map(id -> UserIngredient.builder()
-                        .userId(userId)
-                        .ingredient(ingredientRepository.findById(id).orElse(null))
-                        .purchaseDate(LocalDate.now())
-                        .expiryDate(LocalDate.now().plusDays(7))
-                        .isFrozen(false)
-                        .build())
-                .collect(Collectors.toList());
+    public void addIngredients(Long userId, List<UserIngredientBatchRequestDto.UserIngredientItem> items) {
+        List<UserIngredient> entities = items.stream()
+                .map(item -> {
+                    if ((item.getIngredientId() == null && item.getCustomName() == null) ||
+                            (item.getIngredientId() != null && item.getCustomName() != null)) {
+                        throw new IllegalArgumentException("ingredientId 또는 customName 중 하나만 입력해야 합니다.");
+                    }
+
+                    Ingredient ingredient = item.getIngredientId() != null
+                            ? ingredientRepository.findById(item.getIngredientId()).orElse(null)
+                            : null;
+
+                    return UserIngredient.builder()
+                            .userId(userId)
+                            .ingredient(ingredient)
+                            .customName(item.getCustomName())
+                            .purchaseDate(item.getPurchaseDate())
+                            .expiryDate(item.getExpiryDate())
+                            .isFrozen(item.isFrozen())
+                            .build();
+                }).collect(Collectors.toList());
 
         repository.saveAll(entities);
+    }
+
+    public void saveBatchWithUser(UserIngredientBatchRequestDto dto, Long userId) {
+        // userId를 dto에 넣거나 서비스 로직에 맞게 처리
+        dto.setUserId(userId); // 만약 dto에 userId 필드가 있다면
+        saveBatch(dto);        // 기존 saveBatch 메서드 재활용
     }
 }
