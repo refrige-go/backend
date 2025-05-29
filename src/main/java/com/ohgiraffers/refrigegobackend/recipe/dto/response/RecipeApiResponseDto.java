@@ -114,6 +114,9 @@ public class RecipeApiResponseDto {
         @JsonProperty("RCP_NA_TIP")
         private String rcpNaTip;        // 조리 팁 (Recipe Tip)
 
+        @JsonProperty("RCP_CATEGORY")
+        private String rcpCategory;
+
         // 필요시 추가 필드 넣으면 됨
     }
 }
