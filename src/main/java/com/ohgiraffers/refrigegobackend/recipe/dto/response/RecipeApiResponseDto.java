@@ -63,48 +63,6 @@ public class RecipeApiResponseDto {
         @JsonProperty("MANUAL06")
         private String manual06;        // 조리 방법 6 (Cooking Manual Step 6)
 
-        @JsonProperty("MANUAL07")
-        private String manual07;        // 조리 방법 7 (Cooking Manual Step 7)
-
-        @JsonProperty("MANUAL08")
-        private String manual08;        // 조리 방법 8 (Cooking Manual Step 8)
-
-        @JsonProperty("MANUAL09")
-        private String manual09;        // 조리 방법 9 (Cooking Manual Step 9)
-
-        @JsonProperty("MANUAL10")
-        private String manual10;        // 조리 방법 10 (Cooking Manual Step 10)
-
-        @JsonProperty("MANUAL11")
-        private String manual11;        // 조리 방법 11 (Cooking Manual Step 11)
-
-        @JsonProperty("MANUAL12")
-        private String manual12;        // 조리 방법 12 (Cooking Manual Step 12)
-
-        @JsonProperty("MANUAL13")
-        private String manual13;        // 조리 방법 13 (Cooking Manual Step 13)
-
-        @JsonProperty("MANUAL14")
-        private String manual14;        // 조리 방법 14 (Cooking Manual Step 14)
-
-        @JsonProperty("MANUAL15")
-        private String manual15;        // 조리 방법 15 (Cooking Manual Step 15)
-
-        @JsonProperty("MANUAL16")
-        private String manual16;        // 조리 방법 16 (Cooking Manual Step 16)
-
-        @JsonProperty("MANUAL17")
-        private String manual17;        // 조리 방법 17 (Cooking Manual Step 17)
-
-        @JsonProperty("MANUAL18")
-        private String manual18;        // 조리 방법 18 (Cooking Manual Step 18)
-
-        @JsonProperty("MANUAL19")
-        private String manual19;        // 조리 방법 19 (Cooking Manual Step 19)
-
-        @JsonProperty("MANUAL20")
-        private String manual20;        // 조리 방법 20 (Cooking Manual Step 20)
-
         @JsonProperty("MANUAL_IMG01")
         private String manualImg01;     // 조리 방법 1 이미지 (Image for Step 1)
 
@@ -155,6 +113,9 @@ public class RecipeApiResponseDto {
 
         @JsonProperty("RCP_NA_TIP")
         private String rcpNaTip;        // 조리 팁 (Recipe Tip)
+
+        @JsonProperty("RCP_CATEGORY")
+        private String rcpCategory;
 
         // 필요시 추가 필드 넣으면 됨
     }
