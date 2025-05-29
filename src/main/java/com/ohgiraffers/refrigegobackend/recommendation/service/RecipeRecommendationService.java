@@ -1,23 +1,24 @@
 package com.ohgiraffers.refrigegobackend.recommendation.service;
 
+import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
+import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationRequestDto;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationResponseDto;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecommendedRecipeDto;
+import com.ohgiraffers.refrigegobackend.recommendation.infrastructure.repository.RecipeIngredientRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * 레시피 추천 서비스
- * - 사용자가 선택한 재료를 기반으로 레시피를 추천
+ * - RecipeIngredient 매핑 테이블을 활용한 정확한 추천
  */
 @Service
 @RequiredArgsConstructor
@@ -25,10 +26,14 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class RecipeRecommendationService {
 
+    private final RecipeIngredientRepository recipeIngredientRepository;
+    private final IngredientRepository ingredientRepository;
     private final RecipeRepository recipeRepository;
 
     /**
      * 사용자가 선택한 재료를 기반으로 레시피 추천
+     * - 매핑 테이블을 활용한 정확한 매칭
+     * - DB 레벨에서 매칭 비율 계산
      * 
      * @param requestDto 추천 요청 정보 (선택한 재료들)
      * @return 추천된 레시피 목록
@@ -36,17 +41,24 @@ public class RecipeRecommendationService {
     public RecipeRecommendationResponseDto recommendRecipes(RecipeRecommendationRequestDto requestDto) {
         log.info("레시피 추천 시작 - 선택한 재료: {}", requestDto.getSelectedIngredients());
 
-        // 1. 모든 레시피 조회
-        List<Recipe> allRecipes = recipeRepository.findAll();
+        // 1. 재료명 → 재료 ID 변환
+        List<Long> ingredientIds = convertIngredientNamesToIds(requestDto.getSelectedIngredients());
+        
+        if (ingredientIds.isEmpty()) {
+            log.warn("매칭되는 표준 재료가 없습니다: {}", requestDto.getSelectedIngredients());
+            return new RecipeRecommendationResponseDto(List.of(), 0, requestDto.getSelectedIngredients());
+        }
 
-        // 2. 각 레시피에 대해 매칭 점수 계산 및 추천 레시피 생성
-        List<RecommendedRecipeDto> recommendedRecipes = allRecipes.stream()
-                .map(recipe -> calculateMatchScore(recipe, requestDto.getSelectedIngredients()))
-                .filter(dto -> dto.getMatchedIngredientCount() > 0) // 최소 1개 이상 매칭된 레시피만
-                .sorted(Comparator
-                        .comparingDouble(RecommendedRecipeDto::getMatchScore).reversed() // 매칭 점수 높은 순
-                        .thenComparingInt((RecommendedRecipeDto dto) -> dto.getMatchedIngredientCount()).reversed()) // 매칭 재료 수 많은 순
-                .limit(requestDto.getLimit() != null ? requestDto.getLimit() : 10) // 제한 개수만큼
+        log.info("변환된 재료 ID: {}", ingredientIds);
+
+        // 2. DB에서 매칭 비율 기반 레시피 조회 (최소 30% 이상 매칭)
+        List<Object[]> matchResults = recipeIngredientRepository
+                .findRecipesByIngredientsWithMatchRatio(ingredientIds, 30.0);
+
+        // 3. 결과를 DTO로 변환
+        List<RecommendedRecipeDto> recommendedRecipes = matchResults.stream()
+                .limit(requestDto.getLimit() != null ? requestDto.getLimit() : 10)
+                .map(this::convertToRecommendedRecipeDto)
                 .collect(Collectors.toList());
 
         log.info("레시피 추천 완료 - 추천된 레시피 수: {}", recommendedRecipes.size());
@@ -56,54 +68,6 @@ public class RecipeRecommendationService {
                 recommendedRecipes.size(),
                 requestDto.getSelectedIngredients()
         );
-    }
-
-    /**
-     * 특정 레시피와 선택된 재료들의 매칭 점수를 계산
-     * 
-     * @param recipe 레시피
-     * @param selectedIngredients 선택된 재료들
-     * @return 추천 레시피 DTO
-     */
-    private RecommendedRecipeDto calculateMatchScore(Recipe recipe, List<String> selectedIngredients) {
-        
-        // final로 선언하여 람다 표현식에서 사용 가능하게 함
-        final String ingredients = recipe.getRcpPartsDtls() != null ? recipe.getRcpPartsDtls() : "";
-
-        // 레시피 재료에서 선택한 재료와 매칭되는 것들 찾기
-        List<String> matchedIngredients = selectedIngredients.stream()
-                .filter(ingredient -> containsIngredient(ingredients, ingredient))
-                .collect(Collectors.toList());
-
-        int matchedCount = matchedIngredients.size();
-
-        return RecommendedRecipeDto.fromEntity(
-                recipe, 
-                matchedCount, 
-                matchedIngredients, 
-                false, // recipe_bookmarks를 사용하므로 기본값 false
-                selectedIngredients.size()
-        );
-    }
-
-    /**
-     * 레시피 재료 문자열에 특정 재료가 포함되는지 확인
-     * (대소문자 구분 없이, 공백 제거하여 비교)
-     * 
-     * @param recipeIngredients 레시피 재료 문자열
-     * @param ingredient 찾을 재료
-     * @return 포함 여부
-     */
-    private boolean containsIngredient(String recipeIngredients, String ingredient) {
-        if (recipeIngredients == null || ingredient == null) {
-            return false;
-        }
-        
-        // 공백 제거하고 소문자로 변환하여 비교
-        String normalizedRecipeIngredients = recipeIngredients.replaceAll("\\s", "").toLowerCase();
-        String normalizedIngredient = ingredient.replaceAll("\\s", "").toLowerCase();
-        
-        return normalizedRecipeIngredients.contains(normalizedIngredient);
     }
 
     /**
@@ -124,10 +88,106 @@ public class RecipeRecommendationService {
                 .ingredients(recipe.getRcpPartsDtls())
                 .cookingMethod1(recipe.getManual01())
                 .cookingMethod2(recipe.getManual02())
+                .imageUrl(recipe.getImage())
                 .matchedIngredientCount(0) // 상세 조회에서는 의미없음
                 .matchedIngredients(List.of())
-                .isFavorite(false) // recipe_bookmarks에서 관리
+                .isFavorite(false) // TODO: 북마크 서비스와 연동
                 .matchScore(0.0)
                 .build();
     }
+
+    /**
+     * 주재료 기반 추천 (더 정확한 추천)
+     * 
+     * @param ingredientNames 재료명 목록
+     * @return 주재료 기반 추천 레시피
+     */
+    public RecipeRecommendationResponseDto recommendByMainIngredients(List<String> ingredientNames) {
+        log.info("주재료 기반 추천 시작 - 재료: {}", ingredientNames);
+
+        List<Long> ingredientIds = convertIngredientNamesToIds(ingredientNames);
+        
+        if (ingredientIds.isEmpty()) {
+            return new RecipeRecommendationResponseDto(List.of(), 0, ingredientNames);
+        }
+
+        // 주재료만 매칭하는 레시피 조회
+        List<com.ohgiraffers.refrigegobackend.recommendation.domain.RecipeIngredient> mainIngredientRecipes = 
+                recipeIngredientRepository.findRecipesByMainIngredients(ingredientIds);
+
+        List<RecommendedRecipeDto> recommendations = mainIngredientRecipes.stream()
+                .map(ri -> RecommendedRecipeDto.builder()
+                        .recipeId(ri.getRecipe().getRcpSeq())
+                        .recipeName(ri.getRecipe().getRcpNm())
+                        .ingredients(ri.getRecipe().getRcpPartsDtls())
+                        .cookingMethod1(ri.getRecipe().getManual01())
+                        .cookingMethod2(ri.getRecipe().getManual02())
+                        .imageUrl(ri.getRecipe().getImage())
+                        .matchedIngredientCount(1)
+                        .matchScore(1.0) // 주재료 매칭이므로 높은 점수
+                        .isFavorite(false)
+                        .build())
+                .distinct()
+                .limit(10)
+                .collect(Collectors.toList());
+
+        log.info("주재료 기반 추천 완료 - 추천된 레시피 수: {}", recommendations.size());
+
+        return new RecipeRecommendationResponseDto(recommendations, recommendations.size(), ingredientNames);
+    }
+
+    /**
+     * 재료명을 표준 재료 ID로 변환 (개선된 버전)
+     */
+    private List<Long> convertIngredientNamesToIds(List<String> ingredientNames) {
+        // 한 번의 쿼리로 모든 재료 조회 (성능 개선)
+        List<Ingredient> ingredients = ingredientRepository.findByNameIn(ingredientNames);
+        
+        // 찾지 못한 재료들 로깅
+        List<String> foundNames = ingredients.stream()
+                .map(Ingredient::getName)
+                .collect(Collectors.toList());
+        
+        List<String> notFoundNames = ingredientNames.stream()
+                .filter(name -> !foundNames.contains(name))
+                .collect(Collectors.toList());
+        
+        if (!notFoundNames.isEmpty()) {
+            log.warn("표준 재료 테이블에서 찾을 수 없는 재료들: {}", notFoundNames);
+        }
+        
+        return ingredients.stream()
+                .map(Ingredient::getId)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * DB 쿼리 결과를 DTO로 변환
+     */
+    private RecommendedRecipeDto convertToRecommendedRecipeDto(Object[] result) {
+        String recipeId = (String) result[0];
+        String recipeName = (String) result[1];
+        Long totalIngredients = (Long) result[2];
+        Long matchedIngredients = (Long) result[3];
+        Double matchPercentage = (Double) result[4];
+
+        // 레시피 상세 정보 조회
+        Recipe recipe = recipeRepository.findById(recipeId)
+                .orElse(null);
+
+        return RecommendedRecipeDto.builder()
+                .recipeId(recipeId)
+                .recipeName(recipeName)
+                .ingredients(recipe != null ? recipe.getRcpPartsDtls() : "")
+                .cookingMethod1(recipe != null ? recipe.getManual01() : "")
+                .cookingMethod2(recipe != null ? recipe.getManual02() : "")
+                .imageUrl(recipe != null ? recipe.getImage() : "")
+                .matchedIngredientCount(matchedIngredients.intValue())
+                .matchedIngredients(List.of()) // TODO: 성능 최적화 후 구현
+                .matchScore(matchPercentage / 100.0) // 0.0 ~ 1.0 범위로 정규화
+                .isFavorite(false) // TODO: 북마크 서비스와 연동
+                .build();
+    }
+
+
 }
