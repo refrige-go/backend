@@ -85,7 +85,7 @@ public class RecipeRecommendationController {
     }
 
     /**
-     * 특정 사용자의 냉장고 재료 기반 자동 추천 API (간단 버전)
+     * 특정 사용자의 냉장고 재료 기반 자동 추천 API
      * GET /api/recommendations/auto/{userId}
      * 
      * @param userId 사용자 ID
@@ -99,8 +99,35 @@ public class RecipeRecommendationController {
         
         log.info("자동 레시피 추천 요청 - 사용자: {}, 제한: {}", userId, limit);
 
-        // TODO: 실제로는 사용자가 보유한 재료를 조회한 후 추천해야 함
-        // 현재는 예시로 임시 구현
+        // TODO: 사용자의 UserIngredient 조회 후 추천 로직 구현
         throw new RuntimeException("자동 추천 기능은 사용자 재료 관리 기능과 연동 후 구현 예정입니다.");
+    }
+
+    /**
+     * 주재료 기반 레시피 추천 API
+     * POST /api/recommendations/main-ingredients
+     * 
+     * @param requestDto 주재료 추천 요청 정보
+     * @return 주재료 기반 추천된 레시피 목록
+     */
+    @PostMapping("/main-ingredients")
+    public ResponseEntity<RecipeRecommendationResponseDto> recommendByMainIngredients(
+            @RequestBody RecipeRecommendationRequestDto requestDto) {
+        
+        try {
+            log.info("주재료 기반 레시피 추천 요청 - 선택한 재료: {}", requestDto.getSelectedIngredients());
+
+            if (requestDto.getSelectedIngredients() == null || requestDto.getSelectedIngredients().isEmpty()) {
+                throw new IllegalArgumentException("선택한 재료가 없습니다.");
+            }
+
+            RecipeRecommendationResponseDto response = recommendationService
+                    .recommendByMainIngredients(requestDto.getSelectedIngredients());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("주재료 기반 레시피 추천 중 오류 발생: ", e);
+            throw new RuntimeException("주재료 기반 레시피 추천 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 }
