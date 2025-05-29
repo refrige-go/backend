@@ -223,4 +223,27 @@ public class UserIngredientService {
     public void deleteUserIngredient(Long id) {
         repository.deleteById(id);
     }
+
+    /**
+     * 요리 완료 시 재료 소비 처리
+     * 해당 재료들을 냉장고에서 삭제
+     */
+    @Transactional
+    public void consumeIngredients(String username, List<Long> ingredientIds, String recipeId) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+
+        // 사용자의 재료인지 확인하고 삭제
+        List<UserIngredient> ingredientsToConsume = repository.findByUserIdAndIdIn(user.getId(), ingredientIds);
+        
+        if (ingredientsToConsume.size() != ingredientIds.size()) {
+            throw new RuntimeException("일부 재료를 찾을 수 없거나 권한이 없습니다.");
+        }
+
+        // 재료 소비 로그 (필요시)
+        System.out.println("사용자 " + username + "가 레시피 " + recipeId + "로 재료 " + ingredientIds.size() + "개를 소비했습니다.");
+
+        // 재료 삭제
+        repository.deleteAll(ingredientsToConsume);
+    }
 }
