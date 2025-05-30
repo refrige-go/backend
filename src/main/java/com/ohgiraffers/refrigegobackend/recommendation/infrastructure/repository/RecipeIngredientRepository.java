@@ -92,16 +92,17 @@ public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredie
     List<Recipe> findRecipesByMainIngredientIds(@Param("ingredientIds") List<Long> ingredientIds,
                                                 @Param("recipeId") String recipeId);
 
-//    // 기준 레시피의 재료 ID 목록 조회
-//    @Query("SELECT ri.ingredient.id FROM RecipeIngredient ri WHERE ri.recipe.rcpSeq = :recipeId")
-//    List<Long> findIngredientIdsByRecipeId(@Param("recipeId") String recipeId);
-//
-//    // 기준 레시피를 제외한 다른 레시피 ID 목록
-//    @Query("SELECT DISTINCT ri.recipe.rcpSeq FROM RecipeIngredient ri WHERE ri.recipe.rcpSeq <> :recipeId")
-//    List<String> findOtherRecipeIds(@Param("recipeId") String recipeId);
-//
-//    // 여러 레시피 ID들의 재료 정보 조회
-//    @Query("SELECT ri.recipe.rcpSeq, ri.ingredient.id FROM RecipeIngredient ri WHERE ri.recipe.rcpSeq IN :recipeIds")
-//    List<Object[]> findIngredientsForRecipeIds(@Param("recipeIds") List<String> recipeIds);
+    @Query("""
+    SELECT DISTINCT r
+    FROM Recipe r
+    JOIN r.ingredients ri
+    JOIN ri.ingredient i
+    WHERE i.name IN :ingredientNames
+    AND r.cuisineType IN :cookingTypes
+""")
+    List<Recipe> findByIngredientNamesAndCookingTypeIn(
+            @Param("ingredientNames") List<String> ingredientNames,
+            @Param("cookingTypes") List<String> cookingTypes
+    );
 
 }
