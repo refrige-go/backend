@@ -47,4 +47,6 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
 
     @Query("SELECT DISTINCT i.category FROM Ingredient i ORDER BY i.category")
     List<String> findDistinctCategories();
+
+    Optional<Ingredient> findByName(String name);
 }
