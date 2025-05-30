@@ -10,9 +10,10 @@ import lombok.Getter;
 @Getter
 public class IngredientResponseDto {
 
-    private final Long id;         // 재료 ID
-    private final String name;     // 재료명
-    private final String category; // 카테고리 (표시용 문자열)
+    private final Long id;                 // 재료 ID
+    private final String name;             // 재료명
+    private final String category;         // 카테고리 (표시용 문자열)
+    private final int defaultExpiryDays;   // 기본 유통기한 일수
 
     /**
      * Entity → DTO 변환 생성자
@@ -22,5 +23,7 @@ public class IngredientResponseDto {
         this.id = ingredient.getId();
         this.name = ingredient.getName();
         this.category = ingredient.getCategory().getDisplayName();
+        this.defaultExpiryDays = ingredient.getDefaultExpiryDays();
+
     }
 }
