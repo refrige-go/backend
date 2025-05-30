@@ -21,7 +21,7 @@ import java.util.List;
 @RequestMapping("/api/recommendations")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*")  // CORS 추가
+// CORS는 CorsConfig에서 전역 설정됨
 public class RecipeRecommendationController {
 
     private final RecipeRecommendationService recommendationService;
@@ -38,6 +38,11 @@ public class RecipeRecommendationController {
             @RequestBody RecipeRecommendationRequestDto requestDto) {
         
         try {
+            log.info("=== 레시피 추천 요청 시작 ===");
+            log.info("요청 DTO: {}", requestDto);
+            log.info("선택한 재료들: {}", requestDto.getSelectedIngredients());
+            log.info("요청 제한 수: {}", requestDto.getLimit());
+            
             // JWT 토큰이 있으면 사용자 정보 설정 (선택적)
             Long currentUserId = SecurityUtil.getCurrentUserId();
             if (currentUserId != null) {
@@ -49,20 +54,32 @@ public class RecipeRecommendationController {
             }
 
             // 입력 유효성 검증
-            if (requestDto.getSelectedIngredients() == null || requestDto.getSelectedIngredients().isEmpty()) {
+            if (requestDto.getSelectedIngredients() == null) {
+                log.error("선택한 재료가 null입니다.");
+                throw new IllegalArgumentException("선택한 재료가 없습니다.");
+            }
+            
+            if (requestDto.getSelectedIngredients().isEmpty()) {
+                log.error("선택한 재료 리스트가 비어있습니다.");
                 throw new IllegalArgumentException("선택한 재료가 없습니다.");
             }
             
             if (requestDto.getSelectedIngredients().size() < 1) {
+                log.error("선택한 재료 개수가 부족합니다: {}", requestDto.getSelectedIngredients().size());
                 throw new IllegalArgumentException("최소 1개 이상의 재료를 선택해주세요.");
             }
 
+            log.info("유효성 검증 통과 - 서비스 호출 시작");
             RecipeRecommendationResponseDto response = recommendationService.recommendRecipes(requestDto);
+            log.info("서비스 호출 완료 - 응답: {}", response);
             
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.error("입력 값 오류: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            log.error("레시피 추천 중 오류 발생: ", e);
-            throw new RuntimeException("레시피 추천 처리 중 오류가 발생했습니다: " + e.getMessage());
+            log.error("레시피 추천 중 예상치 못한 오류 발생: ", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -85,7 +102,7 @@ public class RecipeRecommendationController {
     }
 
     /**
-     * 특정 사용자의 냉장고 재료 기반 자동 추천 API (간단 버전)
+     * 특정 사용자의 냉장고 재료 기반 자동 추천 API
      * GET /api/recommendations/auto/{userId}
      * 
      * @param userId 사용자 ID
@@ -99,8 +116,35 @@ public class RecipeRecommendationController {
         
         log.info("자동 레시피 추천 요청 - 사용자: {}, 제한: {}", userId, limit);
 
-        // TODO: 실제로는 사용자가 보유한 재료를 조회한 후 추천해야 함
-        // 현재는 예시로 임시 구현
+        // TODO: 사용자의 UserIngredient 조회 후 추천 로직 구현
         throw new RuntimeException("자동 추천 기능은 사용자 재료 관리 기능과 연동 후 구현 예정입니다.");
+    }
+
+    /**
+     * 주재료 기반 레시피 추천 API
+     * POST /api/recommendations/main-ingredients
+     * 
+     * @param requestDto 주재료 추천 요청 정보
+     * @return 주재료 기반 추천된 레시피 목록
+     */
+    @PostMapping("/main-ingredients")
+    public ResponseEntity<RecipeRecommendationResponseDto> recommendByMainIngredients(
+            @RequestBody RecipeRecommendationRequestDto requestDto) {
+        
+        try {
+            log.info("주재료 기반 레시피 추천 요청 - 선택한 재료: {}", requestDto.getSelectedIngredients());
+
+            if (requestDto.getSelectedIngredients() == null || requestDto.getSelectedIngredients().isEmpty()) {
+                throw new IllegalArgumentException("선택한 재료가 없습니다.");
+            }
+
+            RecipeRecommendationResponseDto response = recommendationService
+                    .recommendByMainIngredients(requestDto.getSelectedIngredients());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("주재료 기반 레시피 추천 중 오류 발생: ", e);
+            throw new RuntimeException("주재료 기반 레시피 추천 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 }
