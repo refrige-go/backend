@@ -1,5 +1,10 @@
 package com.ohgiraffers.refrigegobackend.ingredient.service;
 
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.springframework.beans.factory.annotation.Value;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.ohgiraffers.refrigegobackend.config.FileStorageProperties;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.IngredientCategory;
@@ -27,34 +32,36 @@ public class UserIngredientService {
     private final UserIngredientRepository repository;
     private final IngredientRepository ingredientRepository;
     private final UserRepository userRepository; // UserRepository 추가
-    private final FileStorageProperties fileStorageProperties;
 
-    // 이미지 저장 메서드
+    private final AmazonS3 amazonS3;
+
+    @Value("${aws.s3.bucket-name}")
+    private String bucketName;
+
     private String saveImage(MultipartFile imageFile) {
         if (imageFile == null || imageFile.isEmpty()) return null;
+
         try {
-            String uploadDir = fileStorageProperties.getUploadDir();
             String originalFilename = imageFile.getOriginalFilename();
+            String safeFilename = UUID.randomUUID() + "_" + originalFilename.replaceAll("[^a-zA-Z0-9\\.]", "");
 
-            // 한글, 공백, 특수문자 제거 (영어, 숫자, .만 허용)
-            String cleanedName = originalFilename.replaceAll("[^a-zA-Z0-9\\.]", "");
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(imageFile.getSize());
+            metadata.setContentType(imageFile.getContentType());
 
-            // 빈 문자열일 경우 기본 파일명 지정
-            if (cleanedName.isEmpty()) {
-                cleanedName = "file.jpeg";  // 확장자 포함 기본명
-            }
+            // S3에 업로드 (PublicRead 권한 추가)
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, safeFilename, imageFile.getInputStream(), metadata)
+                    .withCannedAcl(CannedAccessControlList.PublicRead);
 
-            String safeFilename = UUID.randomUUID() + "_" + cleanedName;
+            amazonS3.putObject(putObjectRequest);
 
-            Path filePath = Paths.get(uploadDir, safeFilename);
-            Files.createDirectories(filePath.getParent());
-            imageFile.transferTo(filePath.toFile());
-            return "/uploads/" + safeFilename;
+            // S3에서 접근 가능한 URL 반환
+            return amazonS3.getUrl(bucketName, safeFilename).toString();
+
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패", e);
         }
     }
-
 
     // username 기준 재료 추가
     public void addUserIngredient(String username, UserIngredientRequestDto dto) {
@@ -256,17 +263,19 @@ public class UserIngredientService {
         User user = userRepository.findByUsername(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
-        // 사용자의 재료인지 확인하고 삭제
         List<UserIngredient> ingredientsToConsume = repository.findByUserIdAndIdIn(user.getId(), ingredientIds);
-        
+
         if (ingredientsToConsume.size() != ingredientIds.size()) {
             throw new RuntimeException("일부 재료를 찾을 수 없거나 권한이 없습니다.");
         }
 
-        // 재료 소비 로그 (필요시)
+        // 유통기한 기준 오름차순 정렬 (null은 가장 뒤로)
+        ingredientsToConsume.sort(Comparator.comparing(
+                ui -> Optional.ofNullable(ui.getExpiryDate()).orElse(LocalDate.MAX)
+        ));
+
         System.out.println("사용자 " + username + "가 레시피 " + recipeId + "로 재료 " + ingredientIds.size() + "개를 소비했습니다.");
 
-        // 재료 삭제
         repository.deleteAll(ingredientsToConsume);
     }
 }
