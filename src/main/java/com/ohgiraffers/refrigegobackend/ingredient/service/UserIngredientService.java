@@ -2,6 +2,7 @@ package com.ohgiraffers.refrigegobackend.ingredient.service;
 
 import com.ohgiraffers.refrigegobackend.config.FileStorageProperties;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
+import com.ohgiraffers.refrigegobackend.ingredient.domain.IngredientCategory;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
 import com.ohgiraffers.refrigegobackend.ingredient.dto.*;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
@@ -34,15 +35,26 @@ public class UserIngredientService {
         try {
             String uploadDir = fileStorageProperties.getUploadDir();
             String originalFilename = imageFile.getOriginalFilename();
-            String storedFilename = UUID.randomUUID() + "_" + originalFilename;
-            Path filePath = Paths.get(uploadDir, storedFilename);
+
+            // 한글, 공백, 특수문자 제거 (영어, 숫자, .만 허용)
+            String cleanedName = originalFilename.replaceAll("[^a-zA-Z0-9\\.]", "");
+
+            // 빈 문자열일 경우 기본 파일명 지정
+            if (cleanedName.isEmpty()) {
+                cleanedName = "file.jpeg";  // 확장자 포함 기본명
+            }
+
+            String safeFilename = UUID.randomUUID() + "_" + cleanedName;
+
+            Path filePath = Paths.get(uploadDir, safeFilename);
             Files.createDirectories(filePath.getParent());
             imageFile.transferTo(filePath.toFile());
-            return "/uploads/" + storedFilename;
+            return "/uploads/" + safeFilename;
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패", e);
         }
     }
+
 
     // username 기준 재료 추가
     public void addUserIngredient(String username, UserIngredientRequestDto dto) {
@@ -130,9 +142,20 @@ public class UserIngredientService {
 
         String imageUrl = saveImage(dto.getImage());
 
-        Ingredient ingredient = dto.getIngredientId() != null
-                ? ingredientRepository.findById(dto.getIngredientId()).orElse(null)
-                : null;
+        // 기존 재료 존재 여부 확인 (이름 기준으로)
+        Ingredient ingredient = null;
+        if (dto.getIngredientId() != null) {
+            ingredient = ingredientRepository.findById(dto.getIngredientId()).orElse(null);
+        } else if (dto.getCustomCategory() != null && dto.getCustomName() != null) {
+            ingredient = ingredientRepository.findByName(dto.getCustomName()).orElse(null);
+            if (ingredient == null) {
+                ingredient = Ingredient.builder()
+                        .name(dto.getCustomName())
+                        .category(IngredientCategory.fromDisplayName(dto.getCustomCategory()))
+                        .build();
+                ingredient = ingredientRepository.save(ingredient);
+            }
+        }
 
         UserIngredient userIngredient = UserIngredient.builder()
                 .userId(user.getId())
@@ -222,5 +245,28 @@ public class UserIngredientService {
 
     public void deleteUserIngredient(Long id) {
         repository.deleteById(id);
+    }
+
+    /**
+     * 요리 완료 시 재료 소비 처리
+     * 해당 재료들을 냉장고에서 삭제
+     */
+    @Transactional
+    public void consumeIngredients(String username, List<Long> ingredientIds, String recipeId) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+
+        // 사용자의 재료인지 확인하고 삭제
+        List<UserIngredient> ingredientsToConsume = repository.findByUserIdAndIdIn(user.getId(), ingredientIds);
+        
+        if (ingredientsToConsume.size() != ingredientIds.size()) {
+            throw new RuntimeException("일부 재료를 찾을 수 없거나 권한이 없습니다.");
+        }
+
+        // 재료 소비 로그 (필요시)
+        System.out.println("사용자 " + username + "가 레시피 " + recipeId + "로 재료 " + ingredientIds.size() + "개를 소비했습니다.");
+
+        // 재료 삭제
+        repository.deleteAll(ingredientsToConsume);
     }
 }
