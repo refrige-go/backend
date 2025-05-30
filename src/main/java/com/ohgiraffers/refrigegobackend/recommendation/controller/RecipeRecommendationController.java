@@ -1,13 +1,16 @@
 package com.ohgiraffers.refrigegobackend.recommendation.controller;
 
 import com.ohgiraffers.refrigegobackend.common.util.SecurityUtil;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationDto;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationRequestDto;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationResponseDto;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecommendedRecipeDto;
 import com.ohgiraffers.refrigegobackend.recommendation.service.RecipeRecommendationService;
+import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -147,4 +150,13 @@ public class RecipeRecommendationController {
             throw new RuntimeException("주재료 기반 레시피 추천 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
+
+    // 레시피와 비슷한 주재료를 사용한 다른 레시피 추천
+    @GetMapping("/{id}/similar-ingredients")
+    public ResponseEntity<List<RecipeRecommendationDto>> recommendSimilarIngredients(@PathVariable String id,
+                                                                                     @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        String username = customUserDetails.getUsername();
+        return ResponseEntity.ok(recommendationService.recommendSimilarByMainIngredients(username, id));
+    }
+
 }

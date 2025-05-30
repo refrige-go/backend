@@ -1,19 +1,20 @@
 package com.ohgiraffers.refrigegobackend.recommendation.service;
 
+import com.ohgiraffers.refrigegobackend.bookmark.infrastructure.repository.BookmarkRepository;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
-import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationRequestDto;
-import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationResponseDto;
-import com.ohgiraffers.refrigegobackend.recommendation.dto.RecommendedRecipeDto;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.*;
 import com.ohgiraffers.refrigegobackend.recommendation.infrastructure.repository.RecipeIngredientRepository;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
+import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +30,8 @@ public class RecipeRecommendationService {
     private final RecipeIngredientRepository recipeIngredientRepository;
     private final IngredientRepository ingredientRepository;
     private final RecipeRepository recipeRepository;
+    private final BookmarkRepository bookmarkRepository;
+    private final UserRepository userRepository;
 
     /**
      * 사용자가 선택한 재료를 기반으로 레시피 추천
@@ -189,5 +192,28 @@ public class RecipeRecommendationService {
                 .build();
     }
 
+    // 레시피와 비슷한 주재료를 사용한 다른 레시피 추천
+    public List<RecipeRecommendationDto> recommendSimilarByMainIngredients(String username, String recipeId) {
 
+        User user = userRepository.findByUsername(username);
+
+        // 1. 기준 레시피 주재료 아이디들 조회
+        List<Long> mainIngredientIds = recipeIngredientRepository.findMainIngredientIdsByRecipeId(recipeId);
+
+        if (mainIngredientIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. 기준 레시피와 다른, 동일 주재료를 사용하는 레시피들 조회
+        List<Recipe> similarRecipes = recipeIngredientRepository.findRecipesByMainIngredientIds(mainIngredientIds, recipeId);
+
+        // 3. 북마크 여부 체크 및 DTO 변환
+        return similarRecipes.stream()
+                .map(recipe -> {
+                    boolean bookmarked = bookmarkRepository.existsByUserIdAndRecipeRcpSeq(user.getId(), recipe.getRcpSeq());
+                    return new SimilarIngredientRecipeDTO(recipe, bookmarked).toResponseDto();
+                })
+                .limit(10)  // 최대 10개 추천
+                .collect(Collectors.toList());
+    }
 }
