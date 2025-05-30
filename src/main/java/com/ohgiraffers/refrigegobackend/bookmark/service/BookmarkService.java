@@ -108,16 +108,28 @@ public class BookmarkService {
 
         List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
 
+        // 사용자 재료명 추출 (customName과 표준 재료명 둘 다 고려)
         List<String> fridgeIngredientNames = userIngredients.stream()
-                .map(UserIngredient::getCustomName)
+                .map(userIngredient -> {
+                    // customName이 있으면 customName, 없으면 표준 재료명
+                    if (userIngredient.getCustomName() != null && !userIngredient.getCustomName().trim().isEmpty()) {
+                        return userIngredient.getCustomName().trim();
+                    } else if (userIngredient.getIngredient() != null) {
+                        return userIngredient.getIngredient().getName().trim();
+                    }
+                    return null;
+                })
                 .filter(Objects::nonNull)
-                .map(String::trim)
-                .toList();
+                .collect(Collectors.toList());
+
+        System.out.println("🧊 사용자 냉장고 재료: " + fridgeIngredientNames);
 
         List<Bookmark> bookmarks = bookmarkRepository.findByUserId(user.getId());
         List<Recipe> likedRecipes = bookmarks.stream()
                 .map(Bookmark::getRecipe)
                 .toList();
+
+        System.out.println("⭐ 찜한 레시피 수: " + likedRecipes.size());
 
         List<Recipe> matchedRecipes = likedRecipes.stream()
                 .filter(recipe -> {
@@ -131,16 +143,26 @@ public class BookmarkService {
                             .filter(s -> !s.isBlank())
                             .toList();
 
-                    return recipeIngredients.stream().anyMatch(
-                            ri -> fridgeIngredientNames.stream().anyMatch(ri::contains)
+                    boolean hasMatch = recipeIngredients.stream().anyMatch(
+                            ri -> fridgeIngredientNames.stream().anyMatch(fi -> 
+                                ri.contains(fi) || fi.contains(ri) // 양방향 체크
+                            )
                     );
+
+                    if (hasMatch) {
+                        System.out.println("✅ 매칭된 레시피: " + recipe.getRcpNm());
+                    }
+
+                    return hasMatch;
                 })
-                .toList();
+                .collect(Collectors.toList());
+
+        System.out.println("🍳 최종 매칭된 레시피 수: " + matchedRecipes.size());
 
         // 여기서 bookmarked=true를 명확히 전달
         return matchedRecipes.stream()
                 .map(recipe -> new UserIngredientRecipeResponseDTO(recipe, true))
-                .toList();
+                .collect(Collectors.toList());
     }
 
 }
