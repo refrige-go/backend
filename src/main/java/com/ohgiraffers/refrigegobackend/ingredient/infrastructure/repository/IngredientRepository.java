@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 기준 재료(ingredients) 테이블에 접근하는 JPA Repository
@@ -25,4 +26,6 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
 
     @Query("SELECT DISTINCT i.category FROM Ingredient i ORDER BY i.category")
     List<String> findDistinctCategories();
+
+    Optional<Ingredient> findByName(String name);
 }
