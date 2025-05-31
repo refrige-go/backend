@@ -12,6 +12,7 @@ public class CorsConfig implements WebMvcConfigurer {
         corsRegistry.addMapping("/**")
                 .allowedOrigins("https://www.refrige.shop", "https://refrige.shop", "http://localhost:3000")
                 .allowedMethods("*")
+                .allowedHeaders("*")
                 .allowCredentials(true)
                 .exposedHeaders("access", "Authorization");
     }
