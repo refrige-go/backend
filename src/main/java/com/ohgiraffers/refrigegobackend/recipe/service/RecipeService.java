@@ -31,10 +31,14 @@ public class RecipeService {
         this.bookmarkRepository = bookmarkRepository;
     }
 
+    /**
+     * 카테고리별 레시피 조회 (북마크 포함 여부까지 DTO에 포함)
+     */
     @Transactional
     public Page<RecipeByCategoryDTO> findByCategory(String category, Pageable pageable, String username) {
         Set<String> bookmarkedRecipeIds;
 
+        // 사용자 인증 여부에 따라 북마크 처리
         if (username != null) {
             User user = userRepository.findByUsername(username);
             List<Bookmark> bookmarks = bookmarkRepository.findAllByUserId(user.getId());
@@ -45,15 +49,17 @@ public class RecipeService {
             bookmarkedRecipeIds = Collections.emptySet();
         }
 
-        Page<Recipe> recipePage = recipeRepository.findByCategory(category, pageable);
+        // 카테고리 기반 레시피 검색
+        Page<Recipe> recipePage = recipeRepository.findByRcpCategory(category, pageable);
 
+        // 레시피 + 북마크 여부 → DTO로 매핑
         return recipePage.map(recipe -> {
             boolean isBookmarked = bookmarkedRecipeIds.contains(recipe.getRcpSeq());
 
             return new RecipeByCategoryDTO(
                     recipe.getRcpNm(),
                     recipe.getRcpSeq(),
-                    recipe.getCategory(),
+                    recipe.getRcpCategory(),   // ✅ 여기 수정됨
                     recipe.getImage(),
                     recipe.getRcpPartsDtls(),
                     recipe.getCuisineType(),
@@ -63,6 +69,9 @@ public class RecipeService {
         });
     }
 
+    /**
+     * 단일 레시피 조회
+     */
     public RecipeApiResponseDto.Recipe getRecipeById(String id) {
         Recipe recipe = recipeRepository.findByRcpSeq(id)
                 .orElseThrow(() -> new RuntimeException("레시피를 찾을 수 없습니다."));
@@ -70,6 +79,9 @@ public class RecipeService {
         return convertToResponseDto(recipe);
     }
 
+    /**
+     * Entity → DTO 변환
+     */
     private RecipeApiResponseDto.Recipe convertToResponseDto(Recipe recipe) {
         RecipeApiResponseDto.Recipe responseDto = new RecipeApiResponseDto.Recipe();
 
@@ -77,12 +89,12 @@ public class RecipeService {
         responseDto.setRcpNm(recipe.getRcpNm());
         responseDto.setRcpPartsDtls(recipe.getRcpPartsDtls());
         responseDto.setCuisineType(recipe.getCuisineType());
+        responseDto.setRcpCategory(recipe.getRcpCategory());
         responseDto.setRcpWay2(recipe.getRcpWay2());
         responseDto.setAttFileNoMain(recipe.getImage());
         responseDto.setAttFileNoMk(recipe.getThumbnail());
         responseDto.setHashTag(recipe.getHashTag());
 
-        // 조리 방법 설정
         responseDto.setManual01(recipe.getManual01());
         responseDto.setManual02(recipe.getManual02());
         responseDto.setManual03(recipe.getManual03());
@@ -90,7 +102,6 @@ public class RecipeService {
         responseDto.setManual05(recipe.getManual05());
         responseDto.setManual06(recipe.getManual06());
 
-        // 영양 정보 설정
         responseDto.setInfoEng(recipe.getInfoEng());
         responseDto.setInfoCar(recipe.getInfoCar());
         responseDto.setInfoPro(recipe.getInfoPro());
