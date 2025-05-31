@@ -50,8 +50,7 @@ public class UserIngredientService {
             metadata.setContentType(imageFile.getContentType());
 
             // S3에 업로드 (PublicRead 권한 추가)
-            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, safeFilename, imageFile.getInputStream(), metadata)
-                    .withCannedAcl(CannedAccessControlList.PublicRead);
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, safeFilename, imageFile.getInputStream(), metadata);
 
             amazonS3.putObject(putObjectRequest);
 
