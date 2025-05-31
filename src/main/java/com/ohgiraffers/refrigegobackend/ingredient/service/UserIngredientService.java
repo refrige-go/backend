@@ -43,7 +43,7 @@ public class UserIngredientService {
 
         try {
             String originalFilename = imageFile.getOriginalFilename();
-            String safeFilename = UUID.randomUUID() + "_" + originalFilename.replaceAll("[^a-zA-Z0-9\\.]", "");
+            String safeFilename = "images/" + UUID.randomUUID() + "_" + originalFilename.replaceAll("[^a-zA-Z0-9\\.]", "");
 
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(imageFile.getSize());
