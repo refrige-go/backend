@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.util.List;
 
 /**
@@ -20,25 +19,27 @@ import java.util.List;
 public class UserIngredientController {
 
     private final UserIngredientService service;
-    private final UserIngredientService userIngredientService;
 
     /**
      * 재료 등록 API
      * POST /user-ingredients
      */
     @PostMapping
-    public ResponseEntity<String> addUserIngredient(@RequestBody UserIngredientRequestDto dto) {
-        service.addUserIngredient(dto);
+    public ResponseEntity<String> addUserIngredient(@RequestBody UserIngredientRequestDto dto,
+                                                    @AuthenticationPrincipal CustomUserDetails user) {
+        String username = user.getUsername();  // username 받아서
+        service.addUserIngredient(username, dto);  // 서비스에 username 넘김
         return ResponseEntity.ok("재료가 성공적으로 등록되었습니다.");
     }
 
     /**
      * 유저 냉장고 재료 전체 조회 API
-     * GET /user-ingredients?userId=uuid-be-001
+     * GET /user-ingredients
      */
     @GetMapping
-    public ResponseEntity<List<UserIngredientResponseDto>> getUserIngredients(@RequestParam Long userId) {
-        List<UserIngredientResponseDto> list = service.getUserIngredients(userId);
+    public ResponseEntity<List<UserIngredientResponseDto>> getUserIngredients(@AuthenticationPrincipal CustomUserDetails user) {
+        String username = user.getUsername();
+        List<UserIngredientResponseDto> list = service.getUserIngredientsByUsername(username);
         return ResponseEntity.ok(list);
     }
 
@@ -57,23 +58,22 @@ public class UserIngredientController {
      * POST /user-ingredients/batch
      */
     @PostMapping("/batch")
-    public ResponseEntity<String> addUserIngredientsBatch(@RequestBody UserIngredientBatchRequestDto dto) {
-        service.saveBatch(dto);
+    public ResponseEntity<String> addUserIngredientsBatch(
+            @RequestBody UserIngredientBatchRequestDto dto,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        String username = user.getUsername();
+        service.saveBatchWithUsername(dto, username);
         return ResponseEntity.ok("재료가 일괄 등록되었습니다.");
     }
 
     /**
      * 유저 보유 재료 정보 수정 API
      * PUT /user-ingredients/{id}
-     *
-     * @param id 수정할 유저 재료 ID
-     * @param dto 수정할 재료 정보 DTO
-     * @return 수정 성공 메시지 반환
      */
     @PutMapping("/{id}")
     public ResponseEntity<String> updateUserIngredient(@PathVariable Long id,
                                                        @RequestBody UserIngredientUpdateRequestDto dto) {
-
         service.updateUserIngredient(id, dto);
         return ResponseEntity.ok("재료 정보가 수정되었습니다.");
     }
@@ -81,9 +81,6 @@ public class UserIngredientController {
     /**
      * 유저 보유 재료 상세 조회 API
      * GET /user-ingredients/{id}
-     *
-     * @param id 조회할 유저 재료 ID
-     * @return 상세 정보가 담긴 DTO 반환
      */
     @GetMapping("/{id}")
     public ResponseEntity<UserIngredientResponseDto> getUserIngredientDetail(@PathVariable Long id) {
@@ -96,40 +93,50 @@ public class UserIngredientController {
             @PathVariable Long id,
             @RequestBody UpdateFrozenDto dto
     ) {
-        userIngredientService.updateFrozenStatus(id, dto.getFrozen());
+        service.updateFrozenStatus(id, dto.getFrozen());
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/{id}/dates")
     public ResponseEntity<Void> updateDates(@PathVariable Long id, @RequestBody UpdateDateDto dto) {
-        userIngredientService.updateDates(id, dto.getPurchaseDate(), dto.getExpiryDate());
+        service.updateDates(id, dto.getPurchaseDate(), dto.getExpiryDate());
         return ResponseEntity.ok().build();
     }
 
-//    @PostMapping("/batch-add")
-//    public ResponseEntity<?> addUserIngredients(
-//            @RequestBody IngredientAddRequestDto requestDto,
-//            @AuthenticationPrincipal CustomUserDetails user
-//    ) {
-//        userIngredientService.addIngredients(
-//                user.getId(),
-//                requestDto.getIngredientIds()
-//        );
-//        return ResponseEntity.ok().build();
-//    }
-
     @PostMapping("/batch-add")
-    public ResponseEntity<String> addUserIngredients(@RequestBody UserIngredientBatchRequestDto requestDto) {
-        userIngredientService.addIngredients(requestDto.getUserId(), requestDto.getIngredientIds());
+    public ResponseEntity<String> addUserIngredients(
+            @RequestBody UserIngredientBatchRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        String username = user.getUsername();
+        service.addIngredientsByUsername(username, requestDto.getIngredients());
         return ResponseEntity.ok("재료가 일괄 등록되었습니다.");
     }
 
     @PostMapping(value = "", consumes = "multipart/form-data")
-    public ResponseEntity<String> addUserIngredientWithImage(@ModelAttribute UserIngredientCreateDto dto) {
-        service.addUserIngredientWithImage(dto);
+    public ResponseEntity<String> addUserIngredientWithImage(
+            @ModelAttribute UserIngredientCreateDto dto,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        if (user == null) {
+            throw new RuntimeException("JWT 토큰이 없어서 인증 실패");
+        }
+        String username = user.getUsername();
+        service.addUserIngredientWithImage(username, dto);
         return ResponseEntity.ok("이미지 포함 재료 등록 완료");
     }
 
-
-
+    /**
+     * 요리 완료 시 재료 소비 API
+     * POST /user-ingredients/consume
+     */
+    @PostMapping("/consume")
+    public ResponseEntity<String> consumeIngredients(
+            @RequestBody ConsumeIngredientsRequestDto dto,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        String username = user.getUsername();
+        service.consumeIngredients(username, dto.getIngredientIds(), dto.getRecipeId());
+        return ResponseEntity.ok("재료가 성공적으로 소비되었습니다.");
+    }
 }
