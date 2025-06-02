@@ -69,7 +69,7 @@ public class WeatherRecommendationService {
     }
 
     public WeatherRecommendResponseDTO getWeatherBasedRecipes(String username, double lat, double lon) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
 
         WeatherInfo info = weatherApiClient.getWeather(lat, lon);
         String condition = info.getConditionText();
