@@ -60,4 +60,14 @@ public class UserController {
 
         return ResponseEntity.ok("회원정보가 수정되었습니다.");
     }
+
+    // 회원 탈퇴 (자기 자신의 계정 삭제)
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<?> withdraw(Authentication authentication) {
+        String username = authentication.getName(); // JWT 인증된 사용자 아이디
+
+        userService.withdrawUser(username);
+
+        return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+    }
 }
