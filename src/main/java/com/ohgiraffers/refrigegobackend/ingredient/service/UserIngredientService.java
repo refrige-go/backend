@@ -60,7 +60,7 @@ public class UserIngredientService {
                     safeFilename,
                     imageFile.getInputStream(),
                     metadata
-            ).withCannedAcl(CannedAccessControlList.PublicRead); // 퍼블릭 URL 접근 가능하게 설정
+            );
 
             amazonS3.putObject(putObjectRequest);
 
