@@ -20,6 +20,7 @@ public class UserIngredientRequestDto {
     private String customName;    // 직접 입력한 재료명
     private LocalDate purchaseDate; // 구매일자
     private LocalDate expiryDate;   // 소비기한
+    private String customCategory; // 직접 입력한 카테고리명
 
 
     @JsonProperty("isFrozen")

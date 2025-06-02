@@ -14,4 +14,9 @@ public interface UserIngredientRepository extends JpaRepository<UserIngredient, 
      * 특정 유저의 냉장고 재료 전부 조회
      */
     List<UserIngredient> findByUserId(Long userId);
+
+    /**
+     * 특정 유저의 특정 재료들 조회 (재료 소비용)
+     */
+    List<UserIngredient> findByUserIdAndIdIn(Long userId, List<Long> ingredientIds);
 }

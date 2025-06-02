@@ -1,7 +1,13 @@
 package com.ohgiraffers.refrigegobackend.ingredient.service;
 
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.springframework.beans.factory.annotation.Value;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.ohgiraffers.refrigegobackend.config.FileStorageProperties;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
+import com.ohgiraffers.refrigegobackend.ingredient.domain.IngredientCategory;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
 import com.ohgiraffers.refrigegobackend.ingredient.dto.*;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
@@ -26,19 +32,41 @@ public class UserIngredientService {
     private final UserIngredientRepository repository;
     private final IngredientRepository ingredientRepository;
     private final UserRepository userRepository; // UserRepository 추가
-    private final FileStorageProperties fileStorageProperties;
 
-    // 이미지 저장 메서드
+    @Value("${aws.bucket-name}")
+    private String bucketName;
+
+    private final AmazonS3 amazonS3;
+
     private String saveImage(MultipartFile imageFile) {
         if (imageFile == null || imageFile.isEmpty()) return null;
+
         try {
-            String uploadDir = fileStorageProperties.getUploadDir();
+            // 1. 파일명 안전하게 생성 (UUID + 확장자 유지)
             String originalFilename = imageFile.getOriginalFilename();
-            String storedFilename = UUID.randomUUID() + "_" + originalFilename;
-            Path filePath = Paths.get(uploadDir, storedFilename);
-            Files.createDirectories(filePath.getParent());
-            imageFile.transferTo(filePath.toFile());
-            return "/uploads/" + storedFilename;
+            String extension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : "";
+            String safeFilename = "images/" + UUID.randomUUID() + extension;
+
+            // 2. 메타데이터 설정
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(imageFile.getSize());
+            metadata.setContentType(imageFile.getContentType());
+
+            // 3. S3에 업로드 + 퍼블릭 읽기 권한 부여
+            PutObjectRequest putObjectRequest = new PutObjectRequest(
+                    bucketName,
+                    safeFilename,
+                    imageFile.getInputStream(),
+                    metadata
+            ).withCannedAcl(CannedAccessControlList.PublicRead); // 퍼블릭 URL 접근 가능하게 설정
+
+            amazonS3.putObject(putObjectRequest);
+
+            // 4. 업로드된 이미지의 퍼블릭 URL 반환
+            return amazonS3.getUrl(bucketName, safeFilename).toString();
+
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패", e);
         }
@@ -130,9 +158,20 @@ public class UserIngredientService {
 
         String imageUrl = saveImage(dto.getImage());
 
-        Ingredient ingredient = dto.getIngredientId() != null
-                ? ingredientRepository.findById(dto.getIngredientId()).orElse(null)
-                : null;
+        // 기존 재료 존재 여부 확인 (이름 기준으로)
+        Ingredient ingredient = null;
+        if (dto.getIngredientId() != null) {
+            ingredient = ingredientRepository.findById(dto.getIngredientId()).orElse(null);
+        } else if (dto.getCustomCategory() != null && dto.getCustomName() != null) {
+            ingredient = ingredientRepository.findByName(dto.getCustomName()).orElse(null);
+            if (ingredient == null) {
+                ingredient = Ingredient.builder()
+                        .name(dto.getCustomName())
+                        .category(IngredientCategory.fromDisplayName(dto.getCustomCategory()))
+                        .build();
+                ingredient = ingredientRepository.save(ingredient);
+            }
+        }
 
         UserIngredient userIngredient = UserIngredient.builder()
                 .userId(user.getId())
@@ -222,5 +261,30 @@ public class UserIngredientService {
 
     public void deleteUserIngredient(Long id) {
         repository.deleteById(id);
+    }
+
+    /**
+     * 요리 완료 시 재료 소비 처리
+     * 해당 재료들을 냉장고에서 삭제
+     */
+    @Transactional
+    public void consumeIngredients(String username, List<Long> ingredientIds, String recipeId) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+
+        List<UserIngredient> ingredientsToConsume = repository.findByUserIdAndIdIn(user.getId(), ingredientIds);
+
+        if (ingredientsToConsume.size() != ingredientIds.size()) {
+            throw new RuntimeException("일부 재료를 찾을 수 없거나 권한이 없습니다.");
+        }
+
+        // 유통기한 기준 오름차순 정렬 (null은 가장 뒤로)
+        ingredientsToConsume.sort(Comparator.comparing(
+                ui -> Optional.ofNullable(ui.getExpiryDate()).orElse(LocalDate.MAX)
+        ));
+
+        System.out.println("사용자 " + username + "가 레시피 " + recipeId + "로 재료 " + ingredientIds.size() + "개를 소비했습니다.");
+
+        repository.deleteAll(ingredientsToConsume);
     }
 }

@@ -1,12 +1,7 @@
 package com.ohgiraffers.refrigegobackend.recipe.controller;
 
-import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
 import com.ohgiraffers.refrigegobackend.recipe.service.RecipeApiService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Recipe API 컨트롤러 클래스

@@ -20,6 +20,7 @@ public class UserIngredientResponseDto {
     private final String category;      // 기준 카테고리 or null
     private final LocalDate purchaseDate;
     private final LocalDate expiryDate;
+    private final String imageUrl;
 
     public UserIngredientResponseDto(UserIngredient entity, String name, String category) {
         this.id = entity.getId();
@@ -30,6 +31,7 @@ public class UserIngredientResponseDto {
         this.category = category;
         this.purchaseDate = entity.getPurchaseDate();
         this.expiryDate = entity.getExpiryDate();
+        this.imageUrl = entity.getImageUrl();
 
         if (expiryDate != null) {
             this.expiryDaysLeft = java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), expiryDate);
