@@ -1,8 +1,12 @@
 package com.ohgiraffers.refrigegobackend.recommendation.service;
 
+import com.ohgiraffers.refrigegobackend.bookmark.domain.Bookmark;
+import com.ohgiraffers.refrigegobackend.bookmark.dto.response.UserIngredientRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.infrastructure.repository.BookmarkRepository;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
+import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
+import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.UserIngredientRepository;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.*;
@@ -32,6 +36,7 @@ public class RecipeRecommendationService {
     private final RecipeRepository recipeRepository;
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
+    private final UserIngredientRepository userIngredientRepository;
 
     /**
      * 사용자가 선택한 재료를 기반으로 레시피 추천
@@ -201,7 +206,7 @@ public class RecipeRecommendationService {
      */
     public List<RecipeRecommendationDto> recommendSimilarByMainIngredients(String username, String recipeId) {
 
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
 
         // 1. 기준 레시피 주재료 아이디들 조회
         List<Long> mainIngredientIds = recipeIngredientRepository.findMainIngredientIdsByRecipeId(recipeId);
@@ -219,7 +224,57 @@ public class RecipeRecommendationService {
                     boolean bookmarked = bookmarkRepository.existsByUserIdAndRecipeRcpSeq(user.getId(), recipe.getRcpSeq());
                     return new SimilarIngredientRecipeDTO(recipe, bookmarked).toResponseDto();
                 })
-                .limit(10)  // 최대 10개 추천
+                .limit(10)
                 .collect(Collectors.toList());
     }
+
+
+    /**
+     * 보유 중인 식재료로 만들 수 있는 레시피 랜덤 1개 반환
+     * @param username 사용자 아이디
+     */
+    public Optional<UserIngredientRecipeResponseDTO> getRandomRecipeByUserIngredientExcludingBookmarks(String username) {
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
+        List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
+
+        // 사용자 보유 재료명 추출
+        List<String> fridgeIngredientNames = userIngredients.stream()
+                .map(userIngredient -> {
+                    if (userIngredient.getCustomName() != null && !userIngredient.getCustomName().trim().isEmpty()) {
+                        return userIngredient.getCustomName().trim();
+                    } else if (userIngredient.getIngredient() != null) {
+                        return userIngredient.getIngredient().getName().trim();
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        log.info("🧊 사용자 냉장고 재료: {}", fridgeIngredientNames);
+
+        // 찜한 레시피 ID 목록
+        List<Bookmark> bookmarks = bookmarkRepository.findByUserId(user.getId());
+        List<String> bookmarkedRecipeIds = bookmarks.stream()
+                .map(bookmark -> bookmark.getRecipe().getRcpSeq())
+                .collect(Collectors.toList());
+
+        log.info("🚫 제외할 찜한 레시피 ID: {}", bookmarkedRecipeIds);
+
+        // 보유 재료로 만들 수 있는 레시피 중, 찜하지 않은 레시피 조회
+        List<Recipe> matchedRecipes = recipeIngredientRepository.findRecipesByIngredientsExcludingRecipeIds(
+                fridgeIngredientNames, bookmarkedRecipeIds
+        );
+
+        log.info("✅ 찜하지 않은 매칭된 레시피 수: {}", matchedRecipes.size());
+
+        if (matchedRecipes.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // 랜덤으로 하나 선택
+        Recipe randomRecipe = matchedRecipes.get(new Random().nextInt(matchedRecipes.size()));
+
+        return Optional.of(new UserIngredientRecipeResponseDTO(randomRecipe, false));
+    }
+
 }
