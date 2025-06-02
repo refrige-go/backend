@@ -125,4 +125,18 @@ public class UserIngredientController {
         service.addUserIngredientWithImage(username, dto);
         return ResponseEntity.ok("이미지 포함 재료 등록 완료");
     }
+
+    /**
+     * 요리 완료 시 재료 소비 API
+     * POST /user-ingredients/consume
+     */
+    @PostMapping("/consume")
+    public ResponseEntity<String> consumeIngredients(
+            @RequestBody ConsumeIngredientsRequestDto dto,
+            @AuthenticationPrincipal CustomUserDetails user
+    ) {
+        String username = user.getUsername();
+        service.consumeIngredients(username, dto.getIngredientIds(), dto.getRecipeId());
+        return ResponseEntity.ok("재료가 성공적으로 소비되었습니다.");
+    }
 }

@@ -69,15 +69,15 @@ public class SecurityConfig {
                                                                 configuration.setAllowCredentials(true);
                                                                 configuration.setMaxAge(3600L);
                                                                 configuration.setExposedHeaders(Arrays.asList("access",
-                                                                                "Authorization"));
+                                                                        "Authorization"));
                                                                 // 어떤 응답 헤더를 브라우저에서 자바스크립트로 읽을 수 있게 할지
                                                                 configuration.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
-                                                                               // Collections.singletonList("*")); // 모든
-                                                                                                                 // 헤더
-                                                                                                                 // 허용
-                                                                                                                 // (프론트
-                                                                                                                 // 요청
-                                                                                                                 // 시)
+                                                                // Collections.singletonList("*")); // 모든
+                                                                // 헤더
+                                                                // 허용
+                                                                // (프론트
+                                                                // 요청
+                                                                // 시)
                                                                 return configuration;
                                                         }
                                                 })));

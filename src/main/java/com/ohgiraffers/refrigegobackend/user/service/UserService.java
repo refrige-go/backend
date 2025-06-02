@@ -30,4 +30,14 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
 
     }
+
+    @Transactional
+    public void withdrawUser(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        }
+
+        user.setDeleted(true);
+    }  // userRepository.save(user); // JPA 트랜잭션이면 save 생략 가능
 }
