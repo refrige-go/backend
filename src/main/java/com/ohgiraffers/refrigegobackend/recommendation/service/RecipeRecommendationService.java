@@ -192,7 +192,13 @@ public class RecipeRecommendationService {
                 .build();
     }
 
-    // 레시피와 비슷한 주재료를 사용한 다른 레시피 추천
+
+    /**
+     * 해당 레시피의 주재료를 사용한 다른 레시피 추천
+     * @param username 사용자 아이디
+     * @param recipeId 레시피 아이디
+     * @return
+     */
     public List<RecipeRecommendationDto> recommendSimilarByMainIngredients(String username, String recipeId) {
 
         User user = userRepository.findByUsername(username);

@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Recipe 엔티티에 대한 JPA Repository 인터페이스
@@ -27,25 +28,4 @@ public interface RecipeRepository extends JpaRepository<Recipe, String> {
     Page<Recipe> findByRcpCategory(String rcpCategory, Pageable pageable);
 
     Optional<Recipe> findByRcpSeq(String rcpSeq);
-
-    @Query("SELECT DISTINCT r FROM Recipe r " +
-            "JOIN RecipeIngredient ri ON ri.recipe.rcpSeq = r.rcpSeq " +
-            "JOIN Ingredient i ON i.id = ri.ingredient.id " +
-            "WHERE i.name IN :ingredientNames")
-    List<Recipe> findByIngredientNames(@Param("ingredientNames") List<String> ingredientNames);
-
-    @Query("""
-    SELECT DISTINCT r
-    FROM Recipe r
-    JOIN r.ingredients ri
-    JOIN ri.ingredient i
-    WHERE i.name IN :ingredientNames
-    AND r.cuisineType IN :cookingTypes
-""")
-    List<Recipe> findByIngredientNamesAndCookingTypeIn(
-            @Param("ingredientNames") List<String> ingredientNames,
-            @Param("cookingTypes") List<String> cookingTypes
-    );
-
-
 }
