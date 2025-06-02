@@ -35,7 +35,7 @@ public class UserController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         // 2. username으로 DB에서 유저 조회
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
         }
