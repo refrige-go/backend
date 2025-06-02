@@ -127,4 +127,12 @@ public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredie
             @Param("ingredientNames") List<String> ingredientNames,
             @Param("recipeIds") List<String> recipeIds);
 
+    @Query("SELECT DISTINCT ri.recipe FROM RecipeIngredient ri " +
+            "WHERE ri.ingredient.name IN :ingredientNames " +
+            "AND ri.recipe.rcpSeq NOT IN :excludedRecipeIds")
+    List<Recipe> findRecipesByIngredientsExcludingRecipeIds(
+            @Param("ingredientNames") List<String> ingredientNames,
+            @Param("excludedRecipeIds") List<String> excludedRecipeIds
+    );
+
 }
