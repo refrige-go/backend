@@ -9,8 +9,11 @@ import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.UserIngredientRepository;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
+import com.ohgiraffers.refrigegobackend.recommendation.infrastructure.repository.RecipeIngredientRepository;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,23 +24,35 @@ import java.util.stream.Collectors;
 @Service
 public class BookmarkService {
 
+    Logger log = LoggerFactory.getLogger(BookmarkService.class);
+
     private final UserRepository userRepository;
     private final BookmarkRepository bookmarkRepository;
     private final RecipeRepository recipeRepository;
     private final UserIngredientRepository userIngredientRepository;
+    private final RecipeIngredientRepository recipeIngredientRepository;
 
     @Autowired
-    public BookmarkService(UserRepository userRepository, BookmarkRepository bookmarkRepository, RecipeRepository recipeRepository, UserIngredientRepository userIngredientRepository) {
+    public BookmarkService(UserRepository userRepository,
+                           BookmarkRepository bookmarkRepository,
+                           RecipeRepository recipeRepository,
+                           UserIngredientRepository userIngredientRepository,
+                           RecipeIngredientRepository recipeIngredientRepository) {
         this.userRepository = userRepository;
         this.bookmarkRepository = bookmarkRepository;
         this.recipeRepository = recipeRepository;
         this.userIngredientRepository = userIngredientRepository;
+        this.recipeIngredientRepository = recipeIngredientRepository;
     }
 
-    // 레시피 찜하기
+
+    /**
+     * 레시피 찜 / 해제
+     * @param username
+     * @param recipeId
+     */
     public boolean toggleBookmark(String username, String recipeId) {
         User user = userRepository.findByUsername(username);
-
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new IllegalArgumentException("레시피 없음"));
 
@@ -61,20 +76,33 @@ public class BookmarkService {
         }
     }
 
-    // 찜한 레시피 목록 조회
+
+    /**
+     * 사용자의 찜한 레시피 목록 조회
+     * @param username
+     */
     public List<BookmarkRecipeResponseDTO> getBookmarkedRecipes(String username) {
         User user = userRepository.findByUsername(username);
         List<Recipe> recipes = bookmarkRepository.findRecipesByUserId(user.getId());
 
-        List<BookmarkRecipeResponseDTO> result = recipes.stream()
-                .map(BookmarkRecipeResponseDTO::new) // Recipe -> DTO
-                .collect(Collectors.toList());       // 리스트로 변환
-                
-        return result;
+        try {
+            List<BookmarkRecipeResponseDTO> result = recipes.stream()
+                    .map(BookmarkRecipeResponseDTO::new) // Recipe -> DTO
+                    .collect(Collectors.toList());       // 리스트로 변환
+
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 
-    // 찜한 레시피와 비슷한 레시피 목록 - 메인화면 (요리 종류 기준)
+    /**
+     사용자 맞춤 레시피 추천
+     * - 찜한 레시피와 요리 타입이 같은 전체 레시피 목록 조회 (ex. 끓이기, 볶기...)
+     * @param username
+     */
     public List<CuisineTypeRecipeResponseDTO> getRecommendedRecipesByBookmarked(String username) {
         User user = userRepository.findByUsername(username);
 
@@ -96,16 +124,20 @@ public class BookmarkService {
         // 3. 찜하지 않은 같은 요리 종류 레시피 조회
         List<Recipe> recommendedRecipes = recipeRepository.findByCuisineTypeInAndRcpSeqNotIn(cuisineTypes, bookmarkedRecipeIdsList);
 
-        // 4. DTO 변환 (추천 목록이니 bookmarked false or 포함 여부 체크)
+        // 4. DTO 변환
         return recommendedRecipes.stream()
                 .map(recipe -> new CuisineTypeRecipeResponseDTO(recipe, bookmarkedRecipeIds.contains(recipe.getRcpSeq())))
                 .collect(Collectors.toList());
     }
 
-    // 찜한 레시피 중 현재 만들 수 있는 레시피 목록 - 메인화면
+
+    /**
+     * 보유 중인 식재료로 만들 수 있는 찜한 레시피 조회 (링크 테이블 사용)
+     * @param username
+     * @return
+     */
     public List<UserIngredientRecipeResponseDTO> getRecommendedRecipesByUserIngredient(String username) {
         User user = userRepository.findByUsername(username);
-
         List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
 
         // 사용자 재료명 추출 (customName과 표준 재료명 둘 다 고려)
@@ -122,47 +154,34 @@ public class BookmarkService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        System.out.println("🧊 사용자 냉장고 재료: " + fridgeIngredientNames);
+        log.info("🧊 사용자 냉장고 재료 {}", fridgeIngredientNames);
 
+        // 찜한 레시피 조회
         List<Bookmark> bookmarks = bookmarkRepository.findByUserId(user.getId());
         List<Recipe> likedRecipes = bookmarks.stream()
                 .map(Bookmark::getRecipe)
                 .toList();
 
-        System.out.println("⭐ 찜한 레시피 수: " + likedRecipes.size());
+        log.info("⭐ 찜한 레시피 수 {}", likedRecipes.size());
 
-        List<Recipe> matchedRecipes = likedRecipes.stream()
-                .filter(recipe -> {
-                    String parts = recipe.getRcpPartsDtls();
-                    if (parts == null) return false;
-
-                    List<String> recipeIngredients = Arrays.stream(parts.split("[●•\\n]"))
-                            .flatMap(section -> Arrays.stream(section.split("[:,]")))
-                            .map(s -> s.trim().split(" ")[0])
-                            .map(s -> s.replaceAll("[^가-힣a-zA-Z]", "").trim())
-                            .filter(s -> !s.isBlank())
-                            .toList();
-
-                    boolean hasMatch = recipeIngredients.stream().anyMatch(
-                            ri -> fridgeIngredientNames.stream().anyMatch(fi -> 
-                                ri.contains(fi) || fi.contains(ri) // 양방향 체크
-                            )
-                    );
-
-                    if (hasMatch) {
-                        System.out.println("✅ 매칭된 레시피: " + recipe.getRcpNm());
-                    }
-
-                    return hasMatch;
-                })
+        // 찜한 레시피 ID 목록
+        List<String> likedRecipeIds = likedRecipes.stream()
+                .map(Recipe::getRcpSeq)
                 .collect(Collectors.toList());
 
-        System.out.println("🍳 최종 매칭된 레시피 수: " + matchedRecipes.size());
+        if (likedRecipeIds.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        // 여기서 bookmarked=true를 명확히 전달
+        // 링크 테이블을 사용하여 매칭되는 레시피 찾기
+        List<Recipe> matchedRecipes = recipeIngredientRepository.findRecipesByIngredientsAndRecipeIds(
+                fridgeIngredientNames, likedRecipeIds);
+
+        log.info("🍳 최종 매칭된 레시피 수 {}", matchedRecipes.size());
+
+        // 결과 DTO 변환
         return matchedRecipes.stream()
                 .map(recipe -> new UserIngredientRecipeResponseDTO(recipe, true))
                 .collect(Collectors.toList());
     }
-
 }

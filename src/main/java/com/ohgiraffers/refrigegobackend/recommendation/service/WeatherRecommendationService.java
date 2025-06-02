@@ -1,37 +1,35 @@
 package com.ohgiraffers.refrigegobackend.recommendation.service;
 
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
-import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
 import com.ohgiraffers.refrigegobackend.recommendation.client.SeasonalIngredientApiClient;
 import com.ohgiraffers.refrigegobackend.recommendation.client.WeatherApiClient;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.WeatherInfo;
+import com.ohgiraffers.refrigegobackend.recommendation.infrastructure.repository.RecipeIngredientRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class WeatherRecommendationService {
 
     Logger log = LoggerFactory.getLogger(WeatherRecommendationService.class);
+
     private final WeatherApiClient weatherApiClient;
     private final SeasonalIngredientApiClient seasonalIngredientApiClient;
-    private final RecipeRepository recipeRepository;
+    private final RecipeIngredientRepository recipeIngredientRepository;
 
     public WeatherRecommendationService(
             WeatherApiClient weatherApiClient,
             SeasonalIngredientApiClient seasonalIngredientApiClient,
-            RecipeRepository recipeRepository
+            RecipeIngredientRepository recipeIngredientRepository
     ) {
         this.weatherApiClient = weatherApiClient;
         this.seasonalIngredientApiClient = seasonalIngredientApiClient;
-        this.recipeRepository = recipeRepository;
+        this.recipeIngredientRepository = recipeIngredientRepository;
     }
 
     private List<String> mapWeatherToCookingTypes(String conditionText, double tempC) {
@@ -73,15 +71,15 @@ public class WeatherRecommendationService {
         List<String> cookingTypes = mapWeatherToCookingTypes(condition, tempC);
         log.info("🍳 추천 조리법 리스트: {}", cookingTypes);
 
-        // 레시피 조회
-        List<Recipe> recipes = recipeRepository.findByIngredientNamesAndCookingTypeIn(seasonalIngredients, cookingTypes);
+        // 링크 테이블을 통해 제철 재료를 포함하고 날씨에 맞는 조리법을 가진 레시피를 한 번에 조회
+        List<Recipe> recipes = recipeIngredientRepository.findRecipesBySeasonalIngredientsAndCookingTypes(
+                seasonalIngredients, cookingTypes);
+        
         log.info("📦 조건에 맞는 레시피 개수: {}", recipes.size());
         for (Recipe r : recipes) {
-            log.info("➡️ 레시피 이름: {}, 조리법: {}, 재료: {}", r.getRcpNm(), r.getCuisineType(), r.getIngredients());
+            log.info("➡️ 레시피 이름: {}, 조리법: {}", r.getRcpNm(), r.getCuisineType());
         }
 
         return recipes;
     }
-
-
 }
