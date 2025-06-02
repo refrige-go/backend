@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.recommendation.infrastructure.repository;
 
+import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recommendation.domain.RecipeIngredient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -70,4 +71,38 @@ public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredie
      */
     @Query("SELECT COUNT(ri) FROM RecipeIngredient ri WHERE ri.recipe.rcpSeq = :recipeId")
     Long countIngredientsByRecipeId(@Param("recipeId") String recipeId);
+
+    // 기준 레시피의 주재료 아이디 목록 조회
+    @Query("""
+        SELECT ri.ingredient.id
+        FROM RecipeIngredient ri
+        WHERE ri.recipe.rcpSeq = :recipeId
+          AND ri.isMainIngredient = true
+    """)
+    List<Long> findMainIngredientIdsByRecipeId(@Param("recipeId") String recipeId);
+
+    // 해당 주재료를 사용하는 다른 레시피 조회 (기준 레시피 제외)
+    @Query("""
+        SELECT DISTINCT ri.recipe
+        FROM RecipeIngredient ri
+        WHERE ri.isMainIngredient = true
+          AND ri.ingredient.id IN :ingredientIds
+          AND ri.recipe.rcpSeq <> :recipeId
+    """)
+    List<Recipe> findRecipesByMainIngredientIds(@Param("ingredientIds") List<Long> ingredientIds,
+                                                @Param("recipeId") String recipeId);
+
+    @Query("""
+    SELECT DISTINCT r
+    FROM Recipe r
+    JOIN r.ingredients ri
+    JOIN ri.ingredient i
+    WHERE i.name IN :ingredientNames
+    AND r.cuisineType IN :cookingTypes
+""")
+    List<Recipe> findByIngredientNamesAndCookingTypeIn(
+            @Param("ingredientNames") List<String> ingredientNames,
+            @Param("cookingTypes") List<String> cookingTypes
+    );
+
 }
