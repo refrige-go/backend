@@ -151,12 +151,16 @@ public class RecipeRecommendationController {
         }
     }
 
-    // 레시피와 비슷한 주재료를 사용한 다른 레시피 추천
+
+    /**
+     * 해당 레시피의 주재료를 사용한 다른 레시피 추천
+     * @param id 레시피 ID
+     * @param customUserDetails 로그인된 사용자 정보
+     */
     @GetMapping("/{id}/similar-ingredients")
     public ResponseEntity<List<RecipeRecommendationDto>> recommendSimilarIngredients(@PathVariable String id,
                                                                                      @AuthenticationPrincipal CustomUserDetails customUserDetails) {
         String username = customUserDetails.getUsername();
         return ResponseEntity.ok(recommendationService.recommendSimilarByMainIngredients(username, id));
     }
-
 }
