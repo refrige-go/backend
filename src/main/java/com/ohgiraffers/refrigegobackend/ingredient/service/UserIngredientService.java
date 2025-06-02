@@ -2,6 +2,7 @@ package com.ohgiraffers.refrigegobackend.ingredient.service;
 
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.ohgiraffers.refrigegobackend.notification.service.NotificationService;
 import org.springframework.beans.factory.annotation.Value;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -32,6 +33,8 @@ public class UserIngredientService {
     private final UserIngredientRepository repository;
     private final IngredientRepository ingredientRepository;
     private final UserRepository userRepository; // UserRepository 추가
+    private final UserIngredientRepository userIngredientRepository;
+    private final NotificationService notificationService;
 
     @Value("${aws.bucket-name}")
     private String bucketName;
@@ -286,5 +289,22 @@ public class UserIngredientService {
         System.out.println("사용자 " + username + "가 레시피 " + recipeId + "로 재료 " + ingredientIds.size() + "개를 소비했습니다.");
 
         repository.deleteAll(ingredientsToConsume);
+    }
+
+    public void notifyUserAboutExpiringIngredient() {
+        LocalDate today = LocalDate.now();
+        LocalDate targetDate = today.plusDays(3);
+
+        List<UserIngredient> expiringIngredient = userIngredientRepository.findExpiringIngredients(targetDate, today);
+
+        Map<Long, List<UserIngredient>> ingredientsByUser = expiringIngredient.stream()
+                .collect(Collectors.groupingBy(UserIngredient::getUserId));
+
+        for (Map.Entry<Long, List<UserIngredient>> entry : ingredientsByUser.entrySet()) {
+            Long userId = entry.getKey();
+            List<UserIngredient> userIngredients = entry.getValue();
+
+            notificationService.sendIngredientExpirationAlert(userId, userIngredients);
+        }
     }
 }

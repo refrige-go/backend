@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.notification.service;
 
+import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
 import com.ohgiraffers.refrigegobackend.notification.domain.Notification;
 import com.ohgiraffers.refrigegobackend.notification.dto.NotificationRequestDto;
 import com.ohgiraffers.refrigegobackend.notification.dto.NotificationResponseDto;
@@ -45,5 +46,13 @@ public class NotificationService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다."));
         notification.setIsRead(true);
         notificationRepository.save(notification);
+    }
+
+    public void sendIngredientExpirationAlert(Long userId, List<UserIngredient> ingredients) {
+        String names = ingredients.stream()
+                .map(UserIngredient::getIngredientName)
+                .collect(Collectors.joining(", "));
+
+        System.out.printf("🔔 [User %d] 유통기한 임박 재료: %s%n", userId, names);
     }
 }
