@@ -59,7 +59,7 @@ public class RecipeService {
             return new RecipeByCategoryDTO(
                     recipe.getRcpNm(),
                     recipe.getRcpSeq(),
-                    recipe.getRcpCategory(),   // ✅ 여기 수정됨
+                    recipe.getRcpCategory(),
                     recipe.getImage(),
                     recipe.getRcpPartsDtls(),
                     recipe.getCuisineType(),
