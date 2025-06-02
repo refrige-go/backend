@@ -103,7 +103,7 @@ public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredie
         SELECT DISTINCT ri.recipe
         FROM RecipeIngredient ri
         WHERE ri.ingredient.name IN :ingredientNames
-        AND ri.recipe.cuisineType IN :cookingTypes
+        AND ri.recipe.rcpWay2 IN :cookingTypes
         ORDER BY ri.recipe.rcpNm
     """)
     List<Recipe> findRecipesBySeasonalIngredientsAndCookingTypes(
