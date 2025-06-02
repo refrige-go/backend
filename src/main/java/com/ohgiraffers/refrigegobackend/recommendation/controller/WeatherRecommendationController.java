@@ -24,7 +24,6 @@ public class WeatherRecommendationController {
     /**
      * 사용자 위치 정보 받기
      * @param locationToAiDto
-     * @return
      */
     @PostMapping("/location")
     public ResponseEntity<List<Recipe>> receiveLocation(@RequestBody LocationToAiDTO locationToAiDto) {
