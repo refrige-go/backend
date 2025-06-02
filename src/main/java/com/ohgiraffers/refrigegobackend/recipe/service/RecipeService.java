@@ -40,7 +40,7 @@ public class RecipeService {
 
         // 사용자 인증 여부에 따라 북마크 처리
         if (username != null) {
-            User user = userRepository.findByUsername(username);
+            User user = userRepository.findByUsernameAndDeletedFalse(username);
             List<Bookmark> bookmarks = bookmarkRepository.findAllByUserId(user.getId());
             bookmarkedRecipeIds = bookmarks.stream()
                     .map(bookmark -> bookmark.getRecipe().getRcpSeq())
