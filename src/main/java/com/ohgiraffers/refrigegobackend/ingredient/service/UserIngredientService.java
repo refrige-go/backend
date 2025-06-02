@@ -33,28 +33,38 @@ public class UserIngredientService {
     private final IngredientRepository ingredientRepository;
     private final UserRepository userRepository; // UserRepository 추가
 
-    private final AmazonS3 amazonS3;
-
-    @Value("${aws.s3.bucket-name}")
+    @Value("${aws.bucket-name}")
     private String bucketName;
+
+    private final AmazonS3 amazonS3;
 
     private String saveImage(MultipartFile imageFile) {
         if (imageFile == null || imageFile.isEmpty()) return null;
 
         try {
+            // 1. 파일명 안전하게 생성 (UUID + 확장자 유지)
             String originalFilename = imageFile.getOriginalFilename();
-            String safeFilename = "images/" + UUID.randomUUID() + "_" + originalFilename.replaceAll("[^a-zA-Z0-9\\.]", "");
+            String extension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : "";
+            String safeFilename = "images/" + UUID.randomUUID() + extension;
 
+            // 2. 메타데이터 설정
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(imageFile.getSize());
             metadata.setContentType(imageFile.getContentType());
 
-            // S3에 업로드 (PublicRead 권한 추가)
-            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, safeFilename, imageFile.getInputStream(), metadata);
+            // 3. S3에 업로드 + 퍼블릭 읽기 권한 부여
+            PutObjectRequest putObjectRequest = new PutObjectRequest(
+                    bucketName,
+                    safeFilename,
+                    imageFile.getInputStream(),
+                    metadata
+            ).withCannedAcl(CannedAccessControlList.PublicRead); // 퍼블릭 URL 접근 가능하게 설정
 
             amazonS3.putObject(putObjectRequest);
 
-            // S3에서 접근 가능한 URL 반환
+            // 4. 업로드된 이미지의 퍼블릭 URL 반환
             return amazonS3.getUrl(bucketName, safeFilename).toString();
 
         } catch (IOException e) {
