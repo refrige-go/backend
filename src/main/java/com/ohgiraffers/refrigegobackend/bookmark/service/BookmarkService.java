@@ -52,7 +52,7 @@ public class BookmarkService {
      * @param recipeId
      */
     public boolean toggleBookmark(String username, String recipeId) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         Recipe recipe = recipeRepository.findById(recipeId)
                 .orElseThrow(() -> new IllegalArgumentException("레시피 없음"));
 
@@ -82,7 +82,7 @@ public class BookmarkService {
      * @param username
      */
     public List<BookmarkRecipeResponseDTO> getBookmarkedRecipes(String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         List<Recipe> recipes = bookmarkRepository.findRecipesByUserId(user.getId());
 
         try {
@@ -104,7 +104,7 @@ public class BookmarkService {
      * @param username
      */
     public List<CuisineTypeRecipeResponseDTO> getRecommendedRecipesByBookmarked(String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
 
         // 1. 유저가 찜한 레시피 ID 목록 (Set으로 변환)
         List<String> bookmarkedRecipeIdsList = bookmarkRepository.findRecipeIdsByUserId(user.getId());
@@ -137,7 +137,7 @@ public class BookmarkService {
      * @return
      */
     public List<UserIngredientRecipeResponseDTO> getRecommendedRecipesByUserIngredient(String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
 
         // 사용자 재료명 추출 (customName과 표준 재료명 둘 다 고려)

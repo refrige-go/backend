@@ -206,7 +206,7 @@ public class RecipeRecommendationService {
      */
     public List<RecipeRecommendationDto> recommendSimilarByMainIngredients(String username, String recipeId) {
 
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
 
         // 1. 기준 레시피 주재료 아이디들 조회
         List<Long> mainIngredientIds = recipeIngredientRepository.findMainIngredientIdsByRecipeId(recipeId);
@@ -234,7 +234,7 @@ public class RecipeRecommendationService {
      * @param username 사용자 아이디
      */
     public Optional<UserIngredientRecipeResponseDTO> getRandomRecipeByUserIngredientExcludingBookmarks(String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
 
         // 사용자 보유 재료명 추출
