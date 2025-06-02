@@ -26,12 +26,6 @@ public class NotificationController {
         return ResponseEntity.ok(notifications);
     }
 
-    @PostMapping
-    public ResponseEntity<Void> createNotification(@RequestBody NotificationRequestDto dto) {
-        notificationService.createNotification(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
     @PatchMapping("/{id}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable String id) {
         notificationService.markAsRead(id);
