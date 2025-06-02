@@ -100,7 +100,7 @@ public class BookmarkService {
 
     /**
      사용자 맞춤 레시피 추천
-     * - 찜한 레시피와 요리 타입이 같은 전체 레시피 목록 조회 (ex. 끓이기, 볶기...)
+     * - 찜한 레시피와 요리 타입이 같은 전체 레시피 목록 조회 (ex. 반찬, 후식...)
      * @param username
      */
     public List<CuisineTypeRecipeResponseDTO> getRecommendedRecipesByBookmarked(String username) {
