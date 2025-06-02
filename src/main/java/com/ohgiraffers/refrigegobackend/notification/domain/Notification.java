@@ -28,6 +28,9 @@ public class Notification {
     @Field("ingredientsId")
     private List<Long> ingredientsId;
 
+    @Field("recipeId")
+    private String recipeId;
+
     @Field("isRead")
     private Boolean isRead;
 
@@ -45,6 +48,7 @@ public class Notification {
         private String title;
         private String content;
         private List<Long> ingredientsId;
+        private String recipeId;
         private Boolean isRead = false;
         private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -73,6 +77,11 @@ public class Notification {
             return this;
         }
 
+        public Builder recipeId(String recipeId) {
+            this.recipeId = recipeId;
+            return this;
+        }
+
         public Builder isRead(Boolean isRead) {
             this.isRead = isRead;
             return this;
@@ -90,6 +99,7 @@ public class Notification {
             notification.title = this.title;
             notification.content = this.content;
             notification.ingredientsId = this.ingredientsId;
+            notification.recipeId = this.recipeId;
             notification.isRead = this.isRead;
             notification.createdAt = this.createdAt;
             return notification;
@@ -146,6 +156,14 @@ public class Notification {
 
     public void setIngredientsId(List<Long> ingredientsId) {
         this.ingredientsId = ingredientsId;
+    }
+
+    public String getRecipeId() {
+        return recipeId;
+    }
+
+    public void setRecipeId(String recipeId) {
+        this.recipeId = recipeId;
     }
 
     public Boolean getIsRead() {
