@@ -1,7 +1,11 @@
 package com.ohgiraffers.refrigegobackend.recipe.domain;
 
+import com.ohgiraffers.refrigegobackend.recommendation.domain.RecipeIngredient;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "recipes")
@@ -81,4 +85,7 @@ public class Recipe {
    @Lob
    @Column(name = "manual06", columnDefinition = "TEXT")
    private String manual06;
+
+   @OneToMany(mappedBy = "recipe", fetch = FetchType.LAZY)
+   private Set<RecipeIngredient> ingredients = new HashSet<>();
 }
