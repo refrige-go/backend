@@ -64,22 +64,20 @@ public class SecurityConfig {
                                                         public CorsConfiguration getCorsConfiguration(
                                                                         HttpServletRequest request) {
                                                                 CorsConfiguration configuration = new CorsConfiguration();
-                                                                configuration.setAllowedOrigins(Collections
-                                                                                .singletonList("http://localhost:3000"));
-                                                                configuration.setAllowedMethods(
-                                                                                Collections.singletonList("*"));
+                                                                configuration.setAllowedOrigins(Arrays.asList("https://www.refrige.shop", "https://refrige.shop", "http://localhost:3000"));
+                                                                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                                                                 configuration.setAllowCredentials(true);
                                                                 configuration.setMaxAge(3600L);
                                                                 configuration.setExposedHeaders(Arrays.asList("access",
-                                                                                "Authorization"));
+                                                                        "Authorization"));
                                                                 // 어떤 응답 헤더를 브라우저에서 자바스크립트로 읽을 수 있게 할지
-                                                                configuration.setAllowedHeaders(
-                                                                                Collections.singletonList("*")); // 모든
-                                                                                                                 // 헤더
-                                                                                                                 // 허용
-                                                                                                                 // (프론트
-                                                                                                                 // 요청
-                                                                                                                 // 시)
+                                                                configuration.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
+                                                                // Collections.singletonList("*")); // 모든
+                                                                // 헤더
+                                                                // 허용
+                                                                // (프론트
+                                                                // 요청
+                                                                // 시)
                                                                 return configuration;
                                                         }
                                                 })));
