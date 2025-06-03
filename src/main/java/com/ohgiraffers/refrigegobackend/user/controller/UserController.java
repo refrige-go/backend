@@ -35,7 +35,7 @@ public class UserController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         // 2. username으로 DB에서 유저 조회
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
         }
@@ -59,5 +59,15 @@ public class UserController {
         userService.updateUserInfo(username, updateUserRequest.getNickname(), updateUserRequest.getPassword());
 
         return ResponseEntity.ok("회원정보가 수정되었습니다.");
+    }
+
+    // 회원 탈퇴 (자기 자신의 계정 삭제)
+    @DeleteMapping("/withdraw")
+    public ResponseEntity<?> withdraw(Authentication authentication) {
+        String username = authentication.getName(); // JWT 인증된 사용자 아이디
+
+        userService.withdrawUser(username);
+
+        return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
     }
 }
