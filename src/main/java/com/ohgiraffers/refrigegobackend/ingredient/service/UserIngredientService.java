@@ -39,10 +39,20 @@ public class UserIngredientService {
             // 한글, 공백, 특수문자 제거 (영어, 숫자, .만 허용)
             String cleanedName = originalFilename.replaceAll("[^a-zA-Z0-9\\.]", "");
 
+<<<<<<< HEAD
             // 빈 문자열일 경우 기본 파일명 지정
             if (cleanedName.isEmpty()) {
                 cleanedName = "file.jpeg";  // 확장자 포함 기본명
             }
+=======
+            // 3. S3에 업로드 + 퍼블릭 읽기 권한 부여
+            PutObjectRequest putObjectRequest = new PutObjectRequest(
+                    bucketName,
+                    safeFilename,
+                    imageFile.getInputStream(),
+                    metadata
+            );
+>>>>>>> dev
 
             String safeFilename = UUID.randomUUID() + "_" + cleanedName;
 
@@ -58,7 +68,7 @@ public class UserIngredientService {
 
     // username 기준 재료 추가
     public void addUserIngredient(String username, UserIngredientRequestDto dto) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         if ((dto.getIngredientId() == null && dto.getCustomName() == null) ||
@@ -84,7 +94,7 @@ public class UserIngredientService {
 
     // username 기준 재료 조회
     public List<UserIngredientResponseDto> getUserIngredientsByUsername(String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         return repository.findByUserId(user.getId()).stream()
@@ -99,7 +109,7 @@ public class UserIngredientService {
 
     // username 기준 다건 저장
     public void saveBatchWithUsername(UserIngredientBatchRequestDto dto, String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         dto.setUserId(user.getId());
@@ -108,7 +118,7 @@ public class UserIngredientService {
 
     // 기준 재료 여러 개 추가 (username 기준)
     public void addIngredientsByUsername(String username, List<UserIngredientBatchRequestDto.UserIngredientItem> items) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         List<UserIngredient> entities = items.stream()
@@ -137,7 +147,7 @@ public class UserIngredientService {
 
     // 이미지 포함 재료 추가 (username 기준)
     public void addUserIngredientWithImage(String username, UserIngredientCreateDto dto) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         String imageUrl = saveImage(dto.getImage());
@@ -253,7 +263,7 @@ public class UserIngredientService {
      */
     @Transactional
     public void consumeIngredients(String username, List<Long> ingredientIds, String recipeId) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         // 사용자의 재료인지 확인하고 삭제
