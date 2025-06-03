@@ -1,37 +1,45 @@
 package com.ohgiraffers.refrigegobackend.recommendation.service;
 
+import com.ohgiraffers.refrigegobackend.bookmark.infrastructure.repository.BookmarkRepository;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
-import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
 import com.ohgiraffers.refrigegobackend.recommendation.client.SeasonalIngredientApiClient;
 import com.ohgiraffers.refrigegobackend.recommendation.client.WeatherApiClient;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationDto;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.WeatherInfo;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.WeatherRecommendResponseDTO;
+import com.ohgiraffers.refrigegobackend.recommendation.infrastructure.repository.RecipeIngredientRepository;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
+import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class WeatherRecommendationService {
 
+    private final UserRepository userRepository;
+    private final BookmarkRepository bookmarkRepository;
     Logger log = LoggerFactory.getLogger(WeatherRecommendationService.class);
+
     private final WeatherApiClient weatherApiClient;
     private final SeasonalIngredientApiClient seasonalIngredientApiClient;
-    private final RecipeRepository recipeRepository;
+    private final RecipeIngredientRepository recipeIngredientRepository;
 
     public WeatherRecommendationService(
             WeatherApiClient weatherApiClient,
             SeasonalIngredientApiClient seasonalIngredientApiClient,
-            RecipeRepository recipeRepository
-    ) {
+            RecipeIngredientRepository recipeIngredientRepository,
+            UserRepository userRepository, BookmarkRepository bookmarkRepository) {
         this.weatherApiClient = weatherApiClient;
         this.seasonalIngredientApiClient = seasonalIngredientApiClient;
-        this.recipeRepository = recipeRepository;
+        this.recipeIngredientRepository = recipeIngredientRepository;
+        this.userRepository = userRepository;
+        this.bookmarkRepository = bookmarkRepository;
     }
 
     private List<String> mapWeatherToCookingTypes(String conditionText, double tempC) {
@@ -45,7 +53,7 @@ public class WeatherRecommendationService {
         } else if (conditionText.contains("Rain") || conditionText.contains("Drizzle") || conditionText.contains("Snow")) {
             types.addAll(List.of("찌기", "끓이기"));
         } else {
-            types.add("볶기"); // fallback
+            types.add("볶기");
         }
 
         // 2. 기온 보정
@@ -60,10 +68,12 @@ public class WeatherRecommendationService {
         return types.stream().distinct().toList(); // 중복 제거
     }
 
-    public List<Recipe> getWeatherBasedRecipes(double lat, double lon) {
-        WeatherInfo info = weatherApiClient.getWeather(lat, lon); // API 호출
-        String condition = info.getConditionText(); // "Partly cloudy" 등
-        double tempC = info.getTemperature();       // 25.3℃ 등
+    public WeatherRecommendResponseDTO getWeatherBasedRecipes(String username, double lat, double lon) {
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
+
+        WeatherInfo info = weatherApiClient.getWeather(lat, lon);
+        String condition = info.getConditionText();
+        double tempC = info.getTemperature();
         log.info("🌤 날씨 condition: {}, 온도: {}", condition, tempC);
 
         int month = LocalDate.now().getMonthValue();
@@ -73,15 +83,30 @@ public class WeatherRecommendationService {
         List<String> cookingTypes = mapWeatherToCookingTypes(condition, tempC);
         log.info("🍳 추천 조리법 리스트: {}", cookingTypes);
 
-        // 레시피 조회
-        List<Recipe> recipes = recipeRepository.findByIngredientNamesAndCookingTypeIn(seasonalIngredients, cookingTypes);
+        List<Recipe> recipes = recipeIngredientRepository.findRecipesBySeasonalIngredientsAndCookingTypes(
+                seasonalIngredients, cookingTypes);
         log.info("📦 조건에 맞는 레시피 개수: {}", recipes.size());
-        for (Recipe r : recipes) {
-            log.info("➡️ 레시피 이름: {}, 조리법: {}, 재료: {}", r.getRcpNm(), r.getCuisineType(), r.getIngredients());
-        }
 
-        return recipes;
+        List<RecipeRecommendationDto> recipeDtos = recipes.stream()
+                .map(recipe -> {
+                    boolean bookmarked = bookmarkRepository.existsByUserIdAndRecipeRcpSeq(user.getId(), recipe.getRcpSeq());
+                    return new RecipeRecommendationDto(
+                            recipe.getRcpNm(),
+                            recipe.getRcpSeq(),
+                            recipe.getRcpCategory(),
+                            recipe.getImage(),
+                            recipe.getRcpPartsDtls(),
+                            recipe.getCuisineType(),
+                            recipe.getRcpWay2(),
+                            bookmarked
+                    );
+                })
+                .collect(Collectors.toList());
+
+        // 날씨 정보와 레시피 목록을 함께 반환
+        return new WeatherRecommendResponseDTO(
+                new WeatherRecommendResponseDTO.WeatherInfoDto(condition, tempC),
+                recipeDtos
+        );
     }
-
-
 }
