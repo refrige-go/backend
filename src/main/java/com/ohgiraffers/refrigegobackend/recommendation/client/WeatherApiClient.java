@@ -30,8 +30,8 @@ public class WeatherApiClient {
             Map current = (Map) body.get("current");
 
             Map conditionMap = (Map) current.get("condition");
-            String conditionText = (String) conditionMap.get("text");  // 예: "Rain", "Sunny"
-            double temperature = Double.parseDouble(current.get("temp_c").toString());  // 예: 24.3
+            String conditionText = (String) conditionMap.get("text");
+            double temperature = Double.parseDouble(current.get("temp_c").toString());
 
             return new WeatherInfo(conditionText, temperature);
         } catch (Exception e) {

@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @RestController
@@ -29,7 +30,6 @@ public class ReissueController {
 
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
-
 
         // 여기서는 controller에 작성했지만 service쪽으로 빼기!!
         //get refresh token
@@ -95,7 +95,15 @@ public class ReissueController {
         String newRefresh = jwtUtil.createJwt("refresh", username, role, 86400000L); //하루
 
         //Refresh 토큰 저장 DB에 기존의 Refresh 토큰 삭제 후 새 Refresh 토큰 저장
-        refreshRepository.deleteByRefresh(refresh); // 기존 토큰 삭제
+        // Refresh 토큰 삭제 (동시성/중복 삭제 예외 방어)
+        try {
+            refreshRepository.deleteByRefresh(refresh);
+        } catch (Exception e) {
+            System.out.println("동시성/중복 삭제 예외: " + e.getMessage());
+            // 무시, 정상 흐름 진행
+        }
+
+
         addRefreshEntity(username, newRefresh, 86400000L); // 새로운 토큰 저장
 
         //response
