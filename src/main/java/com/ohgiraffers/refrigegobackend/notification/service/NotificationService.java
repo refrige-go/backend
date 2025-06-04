@@ -7,6 +7,8 @@ import com.ohgiraffers.refrigegobackend.notification.dto.NotificationRequestDto;
 import com.ohgiraffers.refrigegobackend.notification.dto.NotificationResponseDto;
 import com.ohgiraffers.refrigegobackend.notification.infrastructure.repository.NotificationRepository;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
+import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,16 +22,27 @@ import java.util.stream.Collectors;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository) {
         this.notificationRepository = notificationRepository;
+        this.userRepository = userRepository;
     }
 
-    public List<NotificationResponseDto> getNotifications(Long userId) {
-        return notificationRepository.findByUserId(userId).stream()
-                .map(NotificationResponseDto::new)
-                .collect(Collectors.toList());
+    public List<NotificationResponseDto> getNotifications(String username) {
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
+        List<Notification> notifications = notificationRepository.findByUserId(user.getId());
+
+        try {
+            List<NotificationResponseDto> result = notifications.stream()
+                    .map(NotificationResponseDto::new)
+                    .collect(Collectors.toList());
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public void markAsRead(String id) {
@@ -55,7 +68,7 @@ public class NotificationService {
                 .userId(userId)
                 .title(title)
                 .content(content)
-                .type(NotificationType.RECIPERECOMMENDATION.name())
+                .type(NotificationType.RECIPERECOMMENDATION)
                 .recipeId(recipe.getRcpSeq())
                 .isRead(false)
                 .createdAt(LocalDateTime.now())
