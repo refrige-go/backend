@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.notification.domain;
 
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -17,7 +18,7 @@ public class Notification {
     private Long userId;
 
     @Field("type")
-    private String type;
+    private NotificationType type;
 
     @Field("title")
     private String title;
@@ -34,6 +35,7 @@ public class Notification {
     @Field("isRead")
     private Boolean isRead;
 
+    @CreatedDate
     @Field("createdAt")
     private LocalDateTime createdAt;
 
@@ -44,7 +46,7 @@ public class Notification {
 
     public static class Builder {
         private Long userId;
-        private String type;
+        private NotificationType type;
         private String title;
         private String content;
         private List<Long> ingredientsId;
@@ -57,7 +59,7 @@ public class Notification {
             return this;
         }
 
-        public Builder type(String type) {
+        public Builder type(NotificationType type) {
             this.type = type;
             return this;
         }
@@ -126,11 +128,11 @@ public class Notification {
         this.userId = userId;
     }
 
-    public String getType() {
+    public NotificationType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(NotificationType type) {
         this.type = type;
     }
 
