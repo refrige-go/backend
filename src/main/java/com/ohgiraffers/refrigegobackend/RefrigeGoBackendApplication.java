@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
-@EnableMongoAuditing
 @SpringBootApplication
 public class RefrigeGoBackendApplication {
 
