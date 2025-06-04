@@ -172,9 +172,9 @@ public class RecipeRecommendationController {
      * 보유 중인 식재료로 만들 수 있는 레시피 랜덤 1개 반환
      * @param customUserDetails 로그인된 사용자 정보
      */
-    @GetMapping("/ingredient-recommend")
-    public ResponseEntity<Optional<UserIngredientRecipeResponseDTO>> getRecommendedRecipesByUserIngredient(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
-        String username = customUserDetails.getUsername();
-        return ResponseEntity.ok(recipeRecommendationService.getRandomRecipeByUserIngredientExcludingBookmarks(username));
-    }
+//    @GetMapping("/ingredient-recommend")
+//    public ResponseEntity<Optional<UserIngredientRecipeResponseDTO>> getRecommendedRecipesByUserIngredient(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+//        String username = customUserDetails.getUsername();
+//        return ResponseEntity.ok(recipeRecommendationService.getRandomRecipeByUserIngredientExcludingBookmarks(username));
+//    }
 }
