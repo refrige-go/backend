@@ -39,6 +39,7 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
     private boolean deleted = false;
 
     @PrePersist
