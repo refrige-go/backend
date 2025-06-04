@@ -54,6 +54,11 @@ public class RecommendedRecipeDto {
     private List<String> matchedIngredients;
 
     /**
+     * 부족한 재료 목록 (AI 서버 응답용)
+     */
+    private List<String> missingIngredients;
+
+    /**
      * 찜하기 여부 (recipe_bookmarks 모듈에서 관리)
      */
     @Builder.Default
@@ -85,5 +90,15 @@ public class RecommendedRecipeDto {
                 .matchScore(score)
                 .imageUrl(recipe.getImage())
                 .build();
+    }
+    
+    /**
+     * 부족한 재료를 문자열로 반환하는 메서드 (프론트엔드 호환성)
+     */
+    public String getMissingIngredientsString() {
+        if (missingIngredients == null || missingIngredients.isEmpty()) {
+            return null;
+        }
+        return String.join(", ", missingIngredients);
     }
 }
