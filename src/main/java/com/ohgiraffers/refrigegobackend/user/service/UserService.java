@@ -19,7 +19,7 @@ public class UserService {
 
     @Transactional
     public void updateUserInfo(String username, String newNickname, String newPassword) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
 
         if (user == null) {
             throw new RuntimeException("사용자를 찾을 수 없습니다.");
@@ -33,7 +33,7 @@ public class UserService {
 
     @Transactional
     public void withdrawUser(String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) {
             throw new RuntimeException("사용자를 찾을 수 없습니다.");
         }

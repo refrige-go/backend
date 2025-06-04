@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.recommendation.controller;
 
+import com.ohgiraffers.refrigegobackend.bookmark.dto.response.UserIngredientRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.common.util.SecurityUtil;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationDto;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationRequestDto;
@@ -14,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 레시피 추천 관련 API 컨트롤러
@@ -28,6 +30,7 @@ import java.util.List;
 public class RecipeRecommendationController {
 
     private final RecipeRecommendationService recommendationService;
+    private final RecipeRecommendationService recipeRecommendationService;
 
     /**
      * 선택한 재료 기반 레시피 추천 API
@@ -151,7 +154,12 @@ public class RecipeRecommendationController {
         }
     }
 
-    // 레시피와 비슷한 주재료를 사용한 다른 레시피 추천
+
+    /**
+     * 해당 레시피의 주재료를 사용한 다른 레시피 추천
+     * @param id 레시피 ID
+     * @param customUserDetails 로그인된 사용자 정보
+     */
     @GetMapping("/{id}/similar-ingredients")
     public ResponseEntity<List<RecipeRecommendationDto>> recommendSimilarIngredients(@PathVariable String id,
                                                                                      @AuthenticationPrincipal CustomUserDetails customUserDetails) {
@@ -159,4 +167,14 @@ public class RecipeRecommendationController {
         return ResponseEntity.ok(recommendationService.recommendSimilarByMainIngredients(username, id));
     }
 
+
+    /**
+     * 보유 중인 식재료로 만들 수 있는 레시피 랜덤 1개 반환
+     * @param customUserDetails 로그인된 사용자 정보
+     */
+//    @GetMapping("/ingredient-recommend")
+//    public ResponseEntity<Optional<UserIngredientRecipeResponseDTO>> getRecommendedRecipesByUserIngredient(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+//        String username = customUserDetails.getUsername();
+//        return ResponseEntity.ok(recipeRecommendationService.getRandomRecipeByUserIngredientExcludingBookmarks(username));
+//    }
 }

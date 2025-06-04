@@ -1,8 +1,13 @@
 package com.ohgiraffers.refrigegobackend.recommendation.service;
 
+import com.ohgiraffers.refrigegobackend.bookmark.domain.Bookmark;
+import com.ohgiraffers.refrigegobackend.bookmark.dto.response.UserIngredientRecipeResponseDTO;
 import com.ohgiraffers.refrigegobackend.bookmark.infrastructure.repository.BookmarkRepository;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
+import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
+import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.UserIngredientRepository;
+import com.ohgiraffers.refrigegobackend.notification.service.NotificationService;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.*;
@@ -32,6 +37,8 @@ public class RecipeRecommendationService {
     private final RecipeRepository recipeRepository;
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
+    private final UserIngredientRepository userIngredientRepository;
+    private final NotificationService notificationService;
 
     /**
      * 사용자가 선택한 재료를 기반으로 레시피 추천
@@ -192,10 +199,16 @@ public class RecipeRecommendationService {
                 .build();
     }
 
-    // 레시피와 비슷한 주재료를 사용한 다른 레시피 추천
+
+    /**
+     * 해당 레시피의 주재료를 사용한 다른 레시피 추천
+     * @param username 사용자 아이디
+     * @param recipeId 레시피 아이디
+     * @return
+     */
     public List<RecipeRecommendationDto> recommendSimilarByMainIngredients(String username, String recipeId) {
 
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
 
         // 1. 기준 레시피 주재료 아이디들 조회
         List<Long> mainIngredientIds = recipeIngredientRepository.findMainIngredientIdsByRecipeId(recipeId);
@@ -213,7 +226,57 @@ public class RecipeRecommendationService {
                     boolean bookmarked = bookmarkRepository.existsByUserIdAndRecipeRcpSeq(user.getId(), recipe.getRcpSeq());
                     return new SimilarIngredientRecipeDTO(recipe, bookmarked).toResponseDto();
                 })
-                .limit(10)  // 최대 10개 추천
+                .limit(10)
                 .collect(Collectors.toList());
     }
+
+
+    /**
+     * 보유 중인 식재료로 만들 수 있는 레시피 랜덤 1개 반환
+     */
+    public void generateRecipeRecommendationForAllUsers() {
+        List<User> users = userRepository.findAllByDeletedFalse();
+
+        log.info("🍳 전체 사용자 수: {}", users.size());
+
+        for (User user : users) {
+            log.info("👤 [유저 {}] 추천 레시피 생성 시작", user.getUsername());
+
+            // ↓ 직접 인라인 처리
+            List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
+
+            List<String> fridgeIngredientNames = userIngredients.stream()
+                    .map(ui -> {
+                        if (ui.getCustomName() != null && !ui.getCustomName().trim().isEmpty()) {
+                            return ui.getCustomName().trim();
+                        } else if (ui.getIngredient() != null) {
+                            return ui.getIngredient().getName().trim();
+                        }
+                        return null;
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
+
+            List<String> bookmarkedRecipeIds = bookmarkRepository.findByUserId(user.getId()).stream()
+                    .map(b -> b.getRecipe().getRcpSeq())
+                    .toList();
+
+            List<Recipe> matched = recipeIngredientRepository.findRecipesByIngredientsExcludingRecipeIds(
+                    fridgeIngredientNames, bookmarkedRecipeIds
+            );
+
+            if (matched.isEmpty()) {
+                log.info("❌ [유저 {}] 추천 가능한 레시피 없음", user.getUsername());
+                continue;
+            }
+
+            Recipe recipe = matched.get(new Random().nextInt(matched.size()));
+
+            log.info("✅ [유저 {}] 추천 레시피: {}", user.getUsername(), recipe.getRcpNm());
+
+            notificationService.sendRecipeRecommendation(user.getId(), recipe);
+        }
+    }
+
+
 }

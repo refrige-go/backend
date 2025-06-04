@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.notification.domain;
 
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -17,7 +18,7 @@ public class Notification {
     private Long userId;
 
     @Field("type")
-    private String type;
+    private NotificationType type;
 
     @Field("title")
     private String title;
@@ -28,9 +29,13 @@ public class Notification {
     @Field("ingredientsId")
     private List<Long> ingredientsId;
 
+    @Field("recipeId")
+    private String recipeId;
+
     @Field("isRead")
     private Boolean isRead;
 
+    @CreatedDate
     @Field("createdAt")
     private LocalDateTime createdAt;
 
@@ -41,10 +46,11 @@ public class Notification {
 
     public static class Builder {
         private Long userId;
-        private String type;
+        private NotificationType type;
         private String title;
         private String content;
         private List<Long> ingredientsId;
+        private String recipeId;
         private Boolean isRead = false;
         private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -53,7 +59,7 @@ public class Notification {
             return this;
         }
 
-        public Builder type(String type) {
+        public Builder type(NotificationType type) {
             this.type = type;
             return this;
         }
@@ -70,6 +76,11 @@ public class Notification {
 
         public Builder ingredientsId(List<Long> ingredientsId) {
             this.ingredientsId = ingredientsId;
+            return this;
+        }
+
+        public Builder recipeId(String recipeId) {
+            this.recipeId = recipeId;
             return this;
         }
 
@@ -90,6 +101,7 @@ public class Notification {
             notification.title = this.title;
             notification.content = this.content;
             notification.ingredientsId = this.ingredientsId;
+            notification.recipeId = this.recipeId;
             notification.isRead = this.isRead;
             notification.createdAt = this.createdAt;
             return notification;
@@ -116,11 +128,11 @@ public class Notification {
         this.userId = userId;
     }
 
-    public String getType() {
+    public NotificationType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(NotificationType type) {
         this.type = type;
     }
 
@@ -146,6 +158,14 @@ public class Notification {
 
     public void setIngredientsId(List<Long> ingredientsId) {
         this.ingredientsId = ingredientsId;
+    }
+
+    public String getRecipeId() {
+        return recipeId;
+    }
+
+    public void setRecipeId(String recipeId) {
+        this.recipeId = recipeId;
     }
 
     public Boolean getIsRead() {
