@@ -9,5 +9,3 @@ logging:
   level:
     org.springframework.cloud.config.client: DEBUG
 
-file:
-    upload-dir: /Users/jeonwooseon/refrigego/images
