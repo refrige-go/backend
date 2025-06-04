@@ -57,7 +57,7 @@ public class UserService {
 
     // 사용자 이미지 저장
     public String updateProfileImage(String username, MultipartFile profileImage) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         String imageUrl = saveImage(profileImage);
