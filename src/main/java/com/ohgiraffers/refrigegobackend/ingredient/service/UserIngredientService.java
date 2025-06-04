@@ -2,6 +2,7 @@ package com.ohgiraffers.refrigegobackend.ingredient.service;
 
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.ohgiraffers.refrigegobackend.notification.service.NotificationService;
 import org.springframework.beans.factory.annotation.Value;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -32,6 +33,8 @@ public class UserIngredientService {
     private final UserIngredientRepository repository;
     private final IngredientRepository ingredientRepository;
     private final UserRepository userRepository; // UserRepository 추가
+    private final UserIngredientRepository userIngredientRepository;
+    private final NotificationService notificationService;
 
     @Value("${aws.bucket-name}")
     private String bucketName;
@@ -60,7 +63,7 @@ public class UserIngredientService {
                     safeFilename,
                     imageFile.getInputStream(),
                     metadata
-            ).withCannedAcl(CannedAccessControlList.PublicRead); // 퍼블릭 URL 접근 가능하게 설정
+            );
 
             amazonS3.putObject(putObjectRequest);
 
@@ -74,7 +77,7 @@ public class UserIngredientService {
 
     // username 기준 재료 추가
     public void addUserIngredient(String username, UserIngredientRequestDto dto) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         if ((dto.getIngredientId() == null && dto.getCustomName() == null) ||
@@ -100,7 +103,7 @@ public class UserIngredientService {
 
     // username 기준 재료 조회
     public List<UserIngredientResponseDto> getUserIngredientsByUsername(String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         return repository.findByUserId(user.getId()).stream()
@@ -115,7 +118,7 @@ public class UserIngredientService {
 
     // username 기준 다건 저장
     public void saveBatchWithUsername(UserIngredientBatchRequestDto dto, String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         dto.setUserId(user.getId());
@@ -124,7 +127,7 @@ public class UserIngredientService {
 
     // 기준 재료 여러 개 추가 (username 기준)
     public void addIngredientsByUsername(String username, List<UserIngredientBatchRequestDto.UserIngredientItem> items) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         List<UserIngredient> entities = items.stream()
@@ -153,7 +156,7 @@ public class UserIngredientService {
 
     // 이미지 포함 재료 추가 (username 기준)
     public void addUserIngredientWithImage(String username, UserIngredientCreateDto dto) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         String imageUrl = saveImage(dto.getImage());
@@ -269,7 +272,7 @@ public class UserIngredientService {
      */
     @Transactional
     public void consumeIngredients(String username, List<Long> ingredientIds, String recipeId) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
         if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         List<UserIngredient> ingredientsToConsume = repository.findByUserIdAndIdIn(user.getId(), ingredientIds);
@@ -286,5 +289,22 @@ public class UserIngredientService {
         System.out.println("사용자 " + username + "가 레시피 " + recipeId + "로 재료 " + ingredientIds.size() + "개를 소비했습니다.");
 
         repository.deleteAll(ingredientsToConsume);
+    }
+
+    public void notifyUserAboutExpiringIngredient() {
+        LocalDate today = LocalDate.now();
+        LocalDate targetDate = today.plusDays(3);
+
+        List<UserIngredient> expiringIngredient = userIngredientRepository.findExpiringIngredients(targetDate, today);
+
+        Map<Long, List<UserIngredient>> ingredientsByUser = expiringIngredient.stream()
+                .collect(Collectors.groupingBy(UserIngredient::getUserId));
+
+        for (Map.Entry<Long, List<UserIngredient>> entry : ingredientsByUser.entrySet()) {
+            Long userId = entry.getKey();
+            List<UserIngredient> userIngredients = entry.getValue();
+
+            notificationService.sendIngredientExpirationAlert(userId, userIngredients);
+        }
     }
 }
