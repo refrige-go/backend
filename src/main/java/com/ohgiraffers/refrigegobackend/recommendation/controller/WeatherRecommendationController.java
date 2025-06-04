@@ -1,8 +1,6 @@
 package com.ohgiraffers.refrigegobackend.recommendation.controller;
 
-import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.LocationToAiDTO;
-import com.ohgiraffers.refrigegobackend.recommendation.dto.RecipeRecommendationDto;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.WeatherRecommendResponseDTO;
 import com.ohgiraffers.refrigegobackend.recommendation.service.WeatherRecommendationService;
 import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
@@ -11,12 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/weather")
 @Slf4j
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+//@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class WeatherRecommendationController {
 
     private final WeatherRecommendationService weatherRecommendationService;
