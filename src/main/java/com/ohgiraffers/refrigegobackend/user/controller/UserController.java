@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class UserController {
         Map<String, String> result = new HashMap<>();
         result.put("nickname", user.getNickname());
         result.put("username", user.getUsername());
+        result.put("profileImageUrl", user.getProfileImageUrl() != null ? user.getProfileImageUrl() : ""); //
 
         return ResponseEntity.ok(result);
     }
@@ -69,5 +71,18 @@ public class UserController {
         userService.withdrawUser(username);
 
         return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+    }
+
+    //회원 프로필 이미지 수정
+    @PostMapping("/profile-image")
+    public ResponseEntity<?> updateProfileImage(
+            @RequestParam("profileImage") MultipartFile profileImage
+    ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        String imageUrl = userService.updateProfileImage(username, profileImage);
+
+        return ResponseEntity.ok().body(imageUrl);
     }
 }
