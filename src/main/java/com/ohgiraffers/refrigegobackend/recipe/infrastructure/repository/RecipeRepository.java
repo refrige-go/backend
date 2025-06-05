@@ -28,4 +28,11 @@ public interface RecipeRepository extends JpaRepository<Recipe, String> {
     Page<Recipe> findByRcpCategory(String rcpCategory, Pageable pageable);
 
     Optional<Recipe> findByRcpSeq(String rcpSeq);
+    
+    /**
+     * AI 서버 검색 결과의 이미지 정보 보강용
+     * rcpSeq 목록으로 이미지 정보만 조회
+     */
+    @Query("SELECT r.rcpSeq, r.image, r.thumbnail FROM Recipe r WHERE r.rcpSeq IN :rcpSeqs")
+    List<Object[]> findImagesByRcpSeqIn(@Param("rcpSeqs") List<String> rcpSeqs);
 }

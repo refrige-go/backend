@@ -42,6 +42,9 @@ public class User {
     @Column(nullable = false)
     private boolean deleted = false;
 
+    @Column
+    private String profileImageUrl;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

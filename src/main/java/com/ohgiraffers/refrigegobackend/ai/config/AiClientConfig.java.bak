@@ -1,0 +1,12 @@
+package com.ohgiraffers.refrigegobackend.ai.config;
+
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * AI 서버 통신을 위한 설정
+ * RestTemplate은 AppConfig에서 이미 정의되어 있으므로 별도 정의하지 않음
+ */
+@Configuration
+public class AiClientConfig {
+    // RestTemplate은 AppConfig에서 정의된 것을 사용
+}
