@@ -74,6 +74,7 @@ public class SecurityConfig {
                         .httpBasic(basic -> basic.disable())
                         .authorizeHttpRequests(auth -> auth
                                 .requestMatchers("/login", "/join", "/reissue", "/", "/api/recipe/**").permitAll()
+                                .requestMatchers("/api/recommendations/**").permitAll()  // 레시피 추천 API 허용
                                 .requestMatchers("/api/bookmark/**").hasAnyAuthority("ROLE_USER")
                                 .requestMatchers("/admin").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

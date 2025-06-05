@@ -11,6 +11,7 @@ import com.ohgiraffers.refrigegobackend.notification.service.NotificationService
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
 import com.ohgiraffers.refrigegobackend.recipe.infrastructure.repository.RecipeRepository;
 import com.ohgiraffers.refrigegobackend.recommendation.dto.*;
+import java.util.Arrays;
 import com.ohgiraffers.refrigegobackend.recommendation.infrastructure.repository.RecipeIngredientRepository;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
@@ -230,6 +231,309 @@ public class RecipeRecommendationService {
                 .collect(Collectors.toList());
     }
 
+
+    /**
+     * 스마트 레시피 추천 (유통기한 고려)
+     */
+    public SmartRecommendationResponseDto recommendRecipesSmart(SmartRecommendationRequestDto requestDto) {
+        log.info("스마트 레시피 추천 시작 - 사용자: {}, 선택한 재료: {}", 
+                requestDto.getUserId(), requestDto.getSelectedIngredients());
+
+        // 1. 기본 추천 받기
+        RecipeRecommendationRequestDto basicRequest = new RecipeRecommendationRequestDto(
+                requestDto.getSelectedIngredients(),
+                50 // 더 많은 후보 확보
+        );
+        basicRequest.setUserId(requestDto.getUserId());
+        
+        RecipeRecommendationResponseDto basicResponse = recommendRecipes(basicRequest);
+        
+        // 2. 사용자 냉장고 재료 정보 조회
+        List<SmartRecommendationRequestDto.UserIngredientInfo> userIngredients = 
+                getUserIngredientInfos(requestDto.getUserId(), requestDto.getSelectedIngredients());
+        
+        // 3. 스마트 분류 및 정렬
+        return categorizeAndSortRecipesSmart(basicResponse.getRecommendedRecipes(), 
+                userIngredients, requestDto.getSelectedIngredients());
+    }
+    
+    private List<SmartRecommendationRequestDto.UserIngredientInfo> getUserIngredientInfos(
+            String userId, List<String> selectedIngredients) {
+        
+        if (userId == null) {
+            // 비회원의 경우 기본값 반환
+            return selectedIngredients.stream()
+                    .map(ingredient -> {
+                        SmartRecommendationRequestDto.UserIngredientInfo info = 
+                            new SmartRecommendationRequestDto.UserIngredientInfo();
+                        info.setName(ingredient);
+                        info.setExpiryDaysLeft(7); // 기본 7일
+                        info.setFrozen(false);
+                        info.setCategory("기타");
+                        return info;
+                    })
+                    .collect(Collectors.toList());
+        }
+        
+        try {
+            User user = userRepository.findByUsernameAndDeletedFalse(userId);
+            if (user == null) {
+                return Collections.emptyList();
+            }
+            
+            List<UserIngredient> userIngredients = userIngredientRepository.findByUserId(user.getId());
+            
+            return userIngredients.stream()
+                    .filter(ui -> {
+                        String ingredientName = ui.getCustomName() != null && !ui.getCustomName().trim().isEmpty() 
+                                ? ui.getCustomName().trim() 
+                                : (ui.getIngredient() != null ? ui.getIngredient().getName() : "");
+                        return selectedIngredients.contains(ingredientName);
+                    })
+                    .map(ui -> {
+                        SmartRecommendationRequestDto.UserIngredientInfo info = 
+                            new SmartRecommendationRequestDto.UserIngredientInfo();
+                        info.setName(ui.getCustomName() != null && !ui.getCustomName().trim().isEmpty() 
+                                ? ui.getCustomName().trim() 
+                                : ui.getIngredient().getName());
+                        // 유통기한 계산 - null 체크 없이 직접 계산
+                        long expiryDays = ui.getExpiryDaysLeft();
+                        info.setExpiryDaysLeft(expiryDays == Long.MAX_VALUE ? null : (int) expiryDays);
+                        info.setFrozen(ui.getIsFrozen() != null ? ui.getIsFrozen() : false);
+                        info.setCategory(ui.getIngredient() != null && ui.getIngredient().getCategory() != null 
+                                ? ui.getIngredient().getCategory().name() : "기타");
+                        info.setCustomName(ui.getCustomName());
+                        return info;
+                    })
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("사용자 재료 정보 조회 실패: {}", e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+    
+    private SmartRecommendationResponseDto categorizeAndSortRecipesSmart(
+            List<RecommendedRecipeDto> recipes,
+            List<SmartRecommendationRequestDto.UserIngredientInfo> userIngredients,
+            List<String> selectedIngredients) {
+        
+        List<SmartRecommendedRecipeDto> perfectMatches = new ArrayList<>();
+        List<SmartRecommendedRecipeDto> oneMissingMatches = new ArrayList<>();
+        List<SmartRecommendedRecipeDto> twoMissingMatches = new ArrayList<>();
+        List<SmartRecommendedRecipeDto> otherMatches = new ArrayList<>();
+        
+        for (RecommendedRecipeDto recipe : recipes) {
+            SmartRecommendedRecipeDto smartRecipe = convertToSmartRecipe(recipe, userIngredients, selectedIngredients);
+            
+            switch (smartRecipe.getMatchStatus()) {
+                case "PERFECT":
+                    perfectMatches.add(smartRecipe);
+                    break;
+                case "MISSING_1":
+                    oneMissingMatches.add(smartRecipe);
+                    break;
+                case "MISSING_2":
+                    twoMissingMatches.add(smartRecipe);
+                    break;
+                default:
+                    otherMatches.add(smartRecipe);
+                    break;
+            }
+        }
+        
+        // 각 카테고리 내에서 긴급도 순으로 정렬
+        sortByUrgency(perfectMatches);
+        sortByUrgency(oneMissingMatches);
+        sortByUrgency(twoMissingMatches);
+        
+        // 최종 결과 조합
+        List<SmartRecommendedRecipeDto> finalRecipes = new ArrayList<>();
+        finalRecipes.addAll(perfectMatches.subList(0, Math.min(perfectMatches.size(), 5)));
+        finalRecipes.addAll(oneMissingMatches.subList(0, Math.min(oneMissingMatches.size(), 3)));
+        finalRecipes.addAll(twoMissingMatches.subList(0, Math.min(twoMissingMatches.size(), 2)));
+        
+        // 긴급 재료 추출
+        List<String> urgentIngredients = userIngredients.stream()
+                .filter(ui -> ui.getExpiryDaysLeft() != null && ui.getExpiryDaysLeft() <= 2 && !ui.getFrozen())
+                .map(SmartRecommendationRequestDto.UserIngredientInfo::getName)
+                .collect(Collectors.toList());
+        
+        SmartRecommendationResponseDto response = new SmartRecommendationResponseDto();
+        response.setRecommendedRecipes(finalRecipes);
+        response.setTotalCount(finalRecipes.size());
+        response.setSelectedIngredients(selectedIngredients);
+        
+        SmartRecommendationResponseDto.SmartCategoryInfo categoryInfo = 
+            new SmartRecommendationResponseDto.SmartCategoryInfo();
+        categoryInfo.setPerfectMatches(perfectMatches.size());
+        categoryInfo.setOneMissingMatches(oneMissingMatches.size());
+        categoryInfo.setTwoMissingMatches(twoMissingMatches.size());
+        categoryInfo.setOtherMatches(otherMatches.size());
+        
+        response.setCategoryInfo(categoryInfo);
+        response.setUrgentIngredients(urgentIngredients);
+        
+        return response;
+    }
+    
+    private SmartRecommendedRecipeDto convertToSmartRecipe(
+            RecommendedRecipeDto recipe,
+            List<SmartRecommendationRequestDto.UserIngredientInfo> userIngredients,
+            List<String> selectedIngredients) {
+        
+        // 레시피 필요 재료 분석
+        List<String> recipeIngredients = parseRecipeIngredients(recipe.getIngredients());
+        
+        // 매칭 분석
+        List<String> matchedIngredients = new ArrayList<>();
+        List<String> missingIngredients = new ArrayList<>();
+        List<String> urgentIngredientsForRecipe = new ArrayList<>();
+        
+        for (String recipeIng : recipeIngredients) {
+            boolean found = false;
+            for (String selectedIng : selectedIngredients) {
+                if (isIngredientMatch(recipeIng, selectedIng)) {
+                    matchedIngredients.add(selectedIng);
+                    
+                    // 긴급도 체크
+                    userIngredients.stream()
+                            .filter(ui -> ui.getName().equals(selectedIng))
+                            .filter(ui -> ui.getExpiryDaysLeft() != null && ui.getExpiryDaysLeft() <= 2 && !ui.getFrozen())
+                            .findFirst()
+                            .ifPresent(ui -> urgentIngredientsForRecipe.add(ui.getName()));
+                    
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                missingIngredients.add(recipeIng);
+            }
+        }
+        
+        // 상태 결정
+        String matchStatus;
+        int missingCount = missingIngredients.size();
+        if (missingCount == 0) {
+            matchStatus = "PERFECT";
+        } else if (missingCount == 1) {
+            matchStatus = "MISSING_1";
+        } else if (missingCount == 2) {
+            matchStatus = "MISSING_2";
+        } else {
+            matchStatus = "OTHER";
+        }
+        
+        // 긴급도 점수 계산
+        int urgencyScore = calculateUrgencyScore(matchedIngredients, userIngredients);
+        
+        // 추천 이유 생성
+        String recommendReason = generateRecommendReason(urgentIngredientsForRecipe, missingIngredients, matchStatus);
+        
+        return new SmartRecommendedRecipeDto(
+                recipe.getRecipeId(),
+                recipe.getRecipeName(),
+                recipe.getIngredients(),
+                recipe.getCookingMethod1(),
+                recipe.getCookingMethod2(),
+                recipe.getImageUrl(),
+                matchedIngredients.size(),
+                matchedIngredients,
+                missingIngredients,
+                recipe.getMatchScore(),
+                recipe.isFavorite(),
+                matchStatus,
+                urgencyScore,
+                urgentIngredientsForRecipe,
+                recommendReason
+        );
+    }
+    
+    private List<String> parseRecipeIngredients(String ingredientsText) {
+        if (ingredientsText == null || ingredientsText.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        return Arrays.stream(ingredientsText.split(",|\\|"))  
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .limit(10) // 최대 10개만
+                .collect(Collectors.toList());
+    }
+    
+    private boolean isIngredientMatch(String recipeIngredient, String userIngredient) {
+        String recipe = recipeIngredient.toLowerCase().trim();
+        String user = userIngredient.toLowerCase().trim();
+        
+        // 정확 매칭
+        if (recipe.equals(user)) return true;
+        
+        // 포함 관계
+        if (recipe.contains(user) || user.contains(recipe)) return true;
+        
+        // 동의어 사전 (간단한 버전)
+        Map<String, List<String>> synonyms = Map.of(
+                "파프리카", List.of("피망", "빨간피망", "노란피망"),
+                "피망", List.of("파프리카"),
+                "양배추", List.of("배추", "캐비지"),
+                "배추", List.of("양배추"),
+                "대파", List.of("파", "쪽파"),
+                "파", List.of("대파", "쪽파"),
+                "삼겹살", List.of("돼지고기", "돼지삼겹살"),
+                "돼지고기", List.of("삼겹살"),
+                "고춧가루", List.of("고추가루"),
+                "고추가루", List.of("고춧가루")
+        );
+        
+        return synonyms.getOrDefault(user, Collections.emptyList()).contains(recipe) ||
+               synonyms.getOrDefault(recipe, Collections.emptyList()).contains(user);
+    }
+    
+    private int calculateUrgencyScore(List<String> matchedIngredients, 
+            List<SmartRecommendationRequestDto.UserIngredientInfo> userIngredients) {
+        
+        return matchedIngredients.stream()
+                .mapToInt(ingredient -> 
+                        userIngredients.stream()
+                                .filter(ui -> ui.getName().equals(ingredient))
+                                .mapToInt(ui -> ui.getExpiryDaysLeft() != null ? ui.getExpiryDaysLeft() : 999)
+                                .min()
+                                .orElse(999))
+                .min()
+                .orElse(999);
+    }
+    
+    private String generateRecommendReason(List<String> urgentIngredients, List<String> missingIngredients, String matchStatus) {
+        // 긴급 재료가 있으면 우선 표시
+        if (!urgentIngredients.isEmpty()) {
+            return String.format("%s이(가) 곧 만료되니 빨리 사용하세요!", String.join(", ", urgentIngredients));
+        }
+        
+        // 매칭 상태에 따른 메시지
+        switch (matchStatus) {
+            case "PERFECT":
+                return "모든 재료가 준비되어 있어요! 바로 만들 수 있어요.";
+            case "MISSING_1":
+            case "MISSING_2":
+                if (!missingIngredients.isEmpty()) {
+                    return String.format("💡 %s만 더 있으면 완성!", String.join(", ", missingIngredients));
+                }
+                break;
+        }
+        
+        return "추천 레시피에요!";
+    }
+    
+    private void sortByUrgency(List<SmartRecommendedRecipeDto> recipes) {
+        recipes.sort((r1, r2) -> {
+            // 1차: 매칭 점수 (높을수록 우선) - 점수 우선순위!
+            int scoreCompare = Double.compare(r2.getMatchScore(), r1.getMatchScore());
+            if (scoreCompare != 0) return scoreCompare;
+            
+            // 2차: 긴급도 (낮을수록 우선) - 동점일 때만 고려
+            return Integer.compare(r1.getUrgencyScore(), r2.getUrgencyScore());
+        });
+    }
 
     /**
      * 보유 중인 식재료로 만들 수 있는 레시피 랜덤 1개 반환
