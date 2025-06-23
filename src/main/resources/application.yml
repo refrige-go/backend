@@ -2,7 +2,6 @@ spring:
   application:
     name: backend-service
 
-// cicd테스트 진행
   config:
     import: optional:configserver:http://43.203.226.189:8888/
 
