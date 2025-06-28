@@ -23,11 +23,15 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final NotificationPushService notificationPushService;
 
     @Autowired
-    public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository) {
+    public NotificationService(NotificationRepository notificationRepository, 
+                             UserRepository userRepository,
+                             NotificationPushService notificationPushService) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
+        this.notificationPushService = notificationPushService;
     }
 
     public List<NotificationResponseDto> getNotifications(String username) {
@@ -58,6 +62,28 @@ public class NotificationService {
                 .collect(Collectors.joining(", "));
 
         System.out.printf("🔔 [User %d] 유통기한 임박 재료: %s%n", userId, names);
+
+        // 실제 알림 생성 및 FCM 푸시 전송
+        String title = "유통기한 임박 알림";
+        String content = names + "의 유통기한이 곧 만료됩니다!";
+
+        Notification notification = Notification.builder()
+                .userId(userId)
+                .title(title)
+                .content(content)
+                .type(NotificationType.EXPIRINGINGREDIENT)
+                .ingredientsId(ingredients.stream()
+                        .map(UserIngredient::getId)
+                        .collect(Collectors.toList()))
+                .isRead(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        // DB에 알림 저장
+        notificationRepository.save(notification);
+        
+        // FCM 푸시 알림 전송
+        notificationPushService.sendNotificationPushAsync(notification);
     }
 
     public void sendRecipeRecommendation(Long userId, Recipe recipe) {
@@ -74,6 +100,10 @@ public class NotificationService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
+        // DB에 알림 저장
         notificationRepository.save(notification);
+        
+        // FCM 푸시 알림 전송
+        notificationPushService.sendNotificationPushAsync(notification);
     }
 }

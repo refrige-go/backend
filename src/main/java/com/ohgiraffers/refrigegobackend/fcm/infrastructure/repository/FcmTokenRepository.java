@@ -1,4 +1,4 @@
-package com.ohgiraffers.refrigegobackend.fcm.repository;
+package com.ohgiraffers.refrigegobackend.fcm.infrastructure.repository;
 
 import com.ohgiraffers.refrigegobackend.fcm.domain.FcmToken;
 import org.springframework.data.jpa.repository.JpaRepository;

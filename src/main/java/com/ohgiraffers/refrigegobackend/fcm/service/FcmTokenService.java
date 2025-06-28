@@ -3,7 +3,7 @@ package com.ohgiraffers.refrigegobackend.fcm.service;
 import com.ohgiraffers.refrigegobackend.fcm.domain.FcmToken;
 import com.ohgiraffers.refrigegobackend.fcm.dto.FcmTokenRequest;
 import com.ohgiraffers.refrigegobackend.fcm.dto.FcmTokenResponse;
-import com.ohgiraffers.refrigegobackend.fcm.repository.FcmTokenRepository;
+import com.ohgiraffers.refrigegobackend.fcm.infrastructure.repository.FcmTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
