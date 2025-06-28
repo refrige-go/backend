@@ -1,4 +1,4 @@
-package com.ohgiraffers.refrigegobackend.fcm.config;
+package com.ohgiraffers.refrigegobackend.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
