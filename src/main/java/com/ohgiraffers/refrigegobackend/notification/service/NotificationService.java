@@ -18,8 +18,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class NotificationService {
+
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
@@ -87,23 +92,39 @@ public class NotificationService {
     }
 
     public void sendRecipeRecommendation(Long userId, Recipe recipe) {
-        String title = "오늘의 추천 레시피";
-        String content = recipe.getRcpNm() + " 어때요? 냉장고 재료로 만들 수 있어요!";
+        try {
+            log.info("📱 레시피 추천 알림 생성 시작 - 사용자 ID: {}, 레시피: {}", userId, recipe.getRcpNm());
+            
+            String title = "오늘의 추천 레시피";
+            String content = recipe.getRcpNm() + " 어때요? 냉장고 재료로 만들 수 있어요!";
 
-        Notification notification = Notification.builder()
-                .userId(userId)
-                .title(title)
-                .content(content)
-                .type(NotificationType.RECIPERECOMMENDATION)
-                .recipeId(recipe.getRcpSeq())
-                .isRead(false)
-                .createdAt(LocalDateTime.now())
-                .build();
+            log.info("📝 알림 내용 - 제목: {}, 내용: {}", title, content);
 
-        // DB에 알림 저장
-        notificationRepository.save(notification);
-        
-        // FCM 푸시 알림 전송
-        notificationPushService.sendNotificationPushAsync(notification);
+            Notification notification = Notification.builder()
+                    .userId(userId)
+                    .title(title)
+                    .content(content)
+                    .type(NotificationType.RECIPERECOMMENDATION)
+                    .recipeId(recipe.getRcpSeq())
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            log.info("🏗️ 알림 객체 생성 완료 - ID: {}, 생성시간: {}", notification.getId(), notification.getCreatedAt());
+
+            // DB에 알림 저장
+            log.info("💾 MongoDB에 알림 저장 시도...");
+            Notification savedNotification = notificationRepository.save(notification);
+            log.info("✅ MongoDB 저장 완료 - 저장된 알림 ID: {}", savedNotification.getId());
+            
+            // FCM 푸시 알림 전송
+            log.info("📲 FCM 푸시 알림 전송 시도...");
+            notificationPushService.sendNotificationPushAsync(savedNotification);
+            log.info("✅ FCM 푸시 알림 전송 완료");
+            
+        } catch (Exception e) {
+            log.error("❌ 레시피 추천 알림 생성 중 에러 발생 - 사용자 ID: {}, 레시피: {}", userId, recipe.getRcpNm(), e);
+            throw e;
+        }
     }
 }
