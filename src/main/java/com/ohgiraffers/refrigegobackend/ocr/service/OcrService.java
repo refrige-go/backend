@@ -1,6 +1,8 @@
 package com.ohgiraffers.refrigegobackend.ocr.service;
 
+import com.ohgiraffers.refrigegobackend.ingredient.domain.Ingredient;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.UserIngredient;
+import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.IngredientRepository;
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.UserIngredientRepository;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
@@ -25,10 +27,12 @@ public class OcrService {
 
     private final UserIngredientRepository userIngredientRepository;
     private final UserRepository userRepository;
+    private final IngredientRepository ingredientRepository;
 
-    public OcrService(UserIngredientRepository userIngredientRepository,UserRepository userRepository) {
+    public OcrService(UserIngredientRepository userIngredientRepository,UserRepository userRepository, IngredientRepository ingredientRepository) {
         this.userIngredientRepository = userIngredientRepository;
         this.userRepository = userRepository;
+        this.ingredientRepository = ingredientRepository;
     }
 
     public String sendImageToAiServer(MultipartFile image) throws IOException {
@@ -91,9 +95,22 @@ public class OcrService {
                 // 기본값으로 구매일 + 7일 설정
                 expiryDate = purchaseDate.plusDays(7);
             }
+            /*ingredient_id DB에 저장*/
+            Long ingredientId = ingredient.get("ingredient_id") != null ? Long.valueOf(ingredient.get("ingredient_id").toString()) : null;
+
+            System.out.println("ingredient_id: " + ingredientId);
+
+            Ingredient ingredientEntity = null;
+            if(ingredientId != null){
+                ingredientEntity = ingredientRepository.findById(ingredientId)
+                        .orElse(null);
+            }
+
+            System.out.println("ingredientEntity: " + ingredientEntity);
 
             UserIngredient userIngredient = UserIngredient.builder()
                     .userId(userId)
+                    .ingredient(ingredientEntity)
                     .customName((String) ingredient.get("name"))  // OCR로 인식된 이름을 customName으로 저장
                     .purchaseDate(purchaseDate)
                     .expiryDate(expiryDate)
