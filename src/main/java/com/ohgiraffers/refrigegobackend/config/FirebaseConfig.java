@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +17,7 @@ import java.io.InputStream;
 @Slf4j
 public class FirebaseConfig {
 
-    @Value("${firebase.service-account.path:firebase-service-account.json}")
+    @Value("${firebase.service-account.path:/home/ec2-user/secrets/firebase-service-account.json}")
     private String serviceAccountPath;
 
     @Value("${firebase.project-id}")
@@ -27,12 +27,12 @@ public class FirebaseConfig {
     public FirebaseApp firebaseApp() throws IOException {
         if (FirebaseApp.getApps().isEmpty()) {
             try {
-                InputStream serviceAccount = new ClassPathResource(serviceAccountPath).getInputStream();
-                
+                InputStream serviceAccount = new FileSystemResource(serviceAccountPath).getInputStream();
+
                 FirebaseOptions options = FirebaseOptions.builder()
-                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .setProjectId(projectId)
-                        .build();
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .setProjectId(projectId)
+                    .build();
 
                 FirebaseApp app = FirebaseApp.initializeApp(options);
                 log.info("Firebase Admin SDK 초기화 완료 - Project ID: {}", projectId);
