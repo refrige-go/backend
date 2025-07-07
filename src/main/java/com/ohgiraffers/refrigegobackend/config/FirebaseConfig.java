@@ -17,7 +17,7 @@ import java.io.InputStream;
 @Slf4j
 public class FirebaseConfig {
 
-    @Value("${firebase.service-account.path:/home/ec2-user/secrets/firebase-service-account.json}")
+    @Value("${firebase.service-account.path:/home/ec2-user/firebase-service-account.json}")
     private String serviceAccountPath;
 
     @Value("${firebase.project-id}")
