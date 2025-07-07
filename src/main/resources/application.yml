@@ -7,7 +7,7 @@ spring:
 
 firebase:
   service-account:
-    path: /home/ec2-user/firebase-service-account.json
+    path: /app/credentials/firebase-service-account.json
   project-id: refrige-go-7963b
 
 logging:
