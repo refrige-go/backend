@@ -60,6 +60,11 @@ firebase:
     path: /app/credentials/firebase-service-account.json
   project-id: refrige-go-7963b
 
+firebase:
+  service-account:
+    path: /home/ec2-user/firebase-service-account.json
+  project-id: refrige-go-7963b
+
 logging:
   level:
     org.springframework.cloud.config.client: DEBUG
