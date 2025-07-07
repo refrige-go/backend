@@ -5,6 +5,11 @@ spring:
   config:
     import: optional:configserver:http://43.203.226.189:8888/
 
+firebase:
+  service-account:
+    path: /home/ec2-user/firebase-service-account.json
+  project-id: refrige-go-7963b
+
 logging:
   level:
     org.springframework.cloud.config.client: DEBUG
