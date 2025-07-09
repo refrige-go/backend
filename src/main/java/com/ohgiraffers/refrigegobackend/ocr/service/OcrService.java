@@ -6,6 +6,7 @@ import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.Ing
 import com.ohgiraffers.refrigegobackend.ingredient.infrastructure.repository.UserIngredientRepository;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,9 @@ import java.util.Map;
 @Service
 public class OcrService {
 
+    @Value("${ai-server.base-url}")
+    private String aiServerBaseUrl;
+
     private final UserIngredientRepository userIngredientRepository;
     private final UserRepository userRepository;
     private final IngredientRepository ingredientRepository;
@@ -37,8 +41,7 @@ public class OcrService {
 
     public String sendImageToAiServer(MultipartFile image) throws IOException {
 
-        String aiUrl = "http://localhost:8000/api/v1/ocr/process";
-
+        String aiUrl = aiServerBaseUrl + "/api/v1/ocr/process";
         ByteArrayResource imageResource = new ByteArrayResource(image.getBytes()) {
             @Override
             public String getFilename() {
