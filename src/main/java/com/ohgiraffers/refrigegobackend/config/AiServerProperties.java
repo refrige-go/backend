@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "ai-server")
 public class AiServerProperties {
     
-    private String baseUrl = "http://localhost:8000";
+    private String baseUrl = "${ai-server.base-url}";
     private int timeout = 30000;
     private Endpoints endpoints = new Endpoints();
     
