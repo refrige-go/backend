@@ -3,6 +3,7 @@ package com.ohgiraffers.refrigegobackend.user.controller;
 
 import com.ohgiraffers.refrigegobackend.user.dto.JoinDTO;
 import com.ohgiraffers.refrigegobackend.user.service.JoinService;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,7 +21,7 @@ public class JoinController {
     }
 
     @PostMapping("/join")
-    public String joinProcess(@RequestBody JoinDTO joinDTO) {
+    public String joinProcess(@Valid @RequestBody JoinDTO joinDTO) {
 
         joinService.joinProcess(joinDTO);
 
