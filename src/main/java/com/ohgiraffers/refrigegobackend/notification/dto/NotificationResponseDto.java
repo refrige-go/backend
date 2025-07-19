@@ -10,6 +10,7 @@ public class NotificationResponseDto {
     private String content;
     private Boolean isRead;
     private LocalDateTime createdAt;
+    private String recipeId;
 
 
     public NotificationResponseDto(Notification notification) {
@@ -18,6 +19,7 @@ public class NotificationResponseDto {
         this.content = notification.getContent();
         this.isRead = notification.getIsRead();
         this.createdAt = notification.getCreatedAt();
+        this.recipeId = notification.getRecipeId();
     }
 
     public NotificationResponseDto() {
@@ -61,5 +63,13 @@ public class NotificationResponseDto {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getRecipeId() {
+        return recipeId;
+    }
+
+    public void setRecipeId(String recipeId) {
+        this.recipeId = recipeId;
     }
 }
