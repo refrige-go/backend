@@ -39,6 +39,9 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Column(nullable = false)
     private boolean deleted = false;
 
@@ -54,6 +57,12 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+
+
+        if (deleted && deletedAt == null) {
+            deletedAt = LocalDateTime.now();
+        }
+
     }
 }
 

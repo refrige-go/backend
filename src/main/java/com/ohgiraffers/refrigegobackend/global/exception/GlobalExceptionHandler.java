@@ -3,8 +3,14 @@ package com.ohgiraffers.refrigegobackend.global.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 /**
  * 전역 예외 처리 핸들러
@@ -12,6 +18,21 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    /**
+     * @Valid 유효성 검사 실패 시 처리
+     * */
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        List<String> errorMessages = ex.getBindingResult().getAllErrors().stream()
+                .map(ObjectError::getDefaultMessage)
+                .collect(Collectors.toList());
+
+        String result = String.join("\n", errorMessages); //여러 개의 오류 메시지 줄바꿈으로 구분
+
+        return ResponseEntity.badRequest().body(result);
+    }
 
     /**
      * IllegalArgumentException 처리
@@ -42,7 +63,9 @@ public class GlobalExceptionHandler {
                 .body("예상치 못한 오류가 발생했습니다.");
     }
 
-    /* username 중복처리 */
+    /**
+     *  username 중복처리
+     */
     // 발생한 예외를 HTTP 응답으로 변환
     @ExceptionHandler(UsernameDuplicateException.class)
     public ResponseEntity<String> handleUsernameDuplicate(UsernameDuplicateException e) {
@@ -55,4 +78,7 @@ public class GlobalExceptionHandler {
             super(message);
         }
     }
+
+
+
 }
