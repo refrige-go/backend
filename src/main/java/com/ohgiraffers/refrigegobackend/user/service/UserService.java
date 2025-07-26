@@ -4,6 +4,8 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.ohgiraffers.refrigegobackend.user.dto.UserResponseDTO;
+import com.ohgiraffers.refrigegobackend.user.dto.UserUpdateRequestDTO;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -13,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -100,5 +104,82 @@ public class UserService {
         } catch (IOException e) {
             throw new RuntimeException("이미지 업로드 실패", e);
         }
+    }
+
+
+    // ==== 관리자용 API ==== //
+
+    //모든 회원 조회
+    public List<UserResponseDTO> getALlUsers(){
+
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(user -> {
+                    UserResponseDTO dto = new UserResponseDTO();
+                    dto.setId(user.getId());
+                    dto.setUsername(user.getUsername());
+                    dto.setNickname(user.getNickname());
+                    dto.setRole(user.getRole());
+                    dto.setCreatedAt(user.getCreatedAt());
+                    dto.setDeletedAt(user.getDeletedAt());
+                    dto.setDeleted(user.isDeleted());
+                    dto.setProfileImageUrl(user.getProfileImageUrl());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    //특정 회원 조회
+    public UserResponseDTO getUserById(Long id){
+        User user = userRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setNickname(user.getNickname());
+        dto.setRole(user.getRole());
+        dto.setCreatedAt(user.getCreatedAt());
+        dto.setUpdatedAt(user.getUpdatedAt());
+        dto.setDeletedAt(user.getDeletedAt());
+        dto.setDeleted(user.isDeleted());
+        dto.setProfileImageUrl(user.getProfileImageUrl());
+        return dto;
+
+    }
+
+    //회원 수정 (관리자용)
+   public UserResponseDTO updateUser(Long id, UserUpdateRequestDTO request){
+        User user = userRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(()-> new RuntimeException("회원을 찾을 수 없습니다."));
+
+        user.setNickname(request.getNickname());
+        user.setRole(request.getRole());
+        user.setProfileImageUrl(request.getProfileImageUrl());
+
+        User savedUser = userRepository.save(user);
+
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setId(savedUser.getId());
+        dto.setUsername(savedUser.getUsername());
+        dto.setNickname(savedUser.getNickname());
+        dto.setRole(savedUser.getRole());
+        dto.setUpdatedAt(savedUser.getUpdatedAt());
+        dto.setDeletedAt(savedUser.getDeletedAt());
+        dto.setDeleted(savedUser.isDeleted());
+        dto.setProfileImageUrl(savedUser.getProfileImageUrl());
+        return dto;
+   }
+
+    //회원 삭제 (관리자용)
+    public void deleteUser(Long id){
+        User user = userRepository.findById(id)
+                .orElseThrow(()-> new RuntimeException("회원을 찾을 수 없습니다."));
+
+        if(user.isDeleted()){
+            throw new RuntimeException("삭제된 회원입니다.");
+        }
+        user.setDeleted(true);
+        userRepository.save(user);
     }
 }
