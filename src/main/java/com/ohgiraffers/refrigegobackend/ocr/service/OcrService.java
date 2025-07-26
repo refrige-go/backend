@@ -9,6 +9,7 @@ import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import jakarta.annotation.PostConstruct;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -29,6 +34,7 @@ public class OcrService {
     @Value("${ai-server.base-url}")
     private String aiServerBaseUrl;
 
+    private static final Logger log = LoggerFactory.getLogger(OcrService.class);
     private final UserIngredientRepository userIngredientRepository;
     private final UserRepository userRepository;
     private final IngredientRepository ingredientRepository;
@@ -42,6 +48,9 @@ public class OcrService {
     public String sendImageToAiServer(MultipartFile image) throws IOException {
 
         String aiUrl = aiServerBaseUrl + "/api/v1/ocr/process";
+
+        log.info("OCR 요청 시작 - AI 서버 URL: {}", aiUrl);
+
         ByteArrayResource imageResource = new ByteArrayResource(image.getBytes()) {
             @Override
             public String getFilename() {
@@ -58,7 +67,16 @@ public class OcrService {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         RestTemplate restTemplate = new RestTemplate();
+
+        // 타임아웃 설정
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(15000);  // 15초 연결 타임아웃
+        factory.setReadTimeout(50000);     // 50초 읽기 타임아웃
+        restTemplate.setRequestFactory(factory);
+
+        log.info("AI 서버로 요청 전송 중...");
         ResponseEntity<String> aiResponse = restTemplate.postForEntity(aiUrl, requestEntity, String.class);
+        log.info("AI 서버 응답 수신 완료");
 
         return aiResponse.getBody(); // AI 서버의 응답(JSON 등)
     }
@@ -122,6 +140,7 @@ public class OcrService {
 
             // DB에 저장
             userIngredientRepository.save(userIngredient);
+
 
         }
     }
