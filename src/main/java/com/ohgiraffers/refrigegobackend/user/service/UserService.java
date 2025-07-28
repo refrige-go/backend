@@ -9,6 +9,7 @@ import com.ohgiraffers.refrigegobackend.user.dto.UserUpdateRequestDTO;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -43,12 +45,30 @@ public class UserService {
             throw new RuntimeException("사용자를 찾을 수 없습니다.");
         }
 
-        // 닉네임, 비밀번호 수정
-        user.setNickname(newNickname);
-        user.setPassword(passwordEncoder.encode(newPassword));
+        log.info("수정 전 정보: 닉네임 '{}'", user.getNickname());
 
+        // 수정 전 정보 저장
+        String oldNickname = user.getNickname();
+        boolean passwordChanged = false;
+
+        // 닉네임 수정
+        if (!oldNickname.equals(newNickname)){
+            user.setNickname(newNickname);
+            log.info("사용자에 의해 닉네임 수정: '{}' → '{}'", oldNickname, newNickname);
+        }
+
+        // 비밀번호 수정
+        if (newPassword != null && !newPassword.trim().isEmpty()){
+            user.setPassword(passwordEncoder.encode(newPassword));
+            passwordChanged = true;
+            log.info("비밀번호 변경됨 - 사용자: {}", username); // 비밀번호 변경 여부만 로깅
+        }
+
+        log.info("수정 내용: 닉네임 변경={}, 비밀번호 변경={}",
+                !oldNickname.equals(newNickname), passwordChanged);
     }
 
+    // 회원탈퇴
     @Transactional
     public void withdrawUser(String username) {
         User user = userRepository.findByUsernameAndDeletedFalse(username);
@@ -56,7 +76,12 @@ public class UserService {
             throw new RuntimeException("사용자를 찾을 수 없습니다.");
         }
 
+        log.info("탈퇴 대상: {} (닉네임: {})", user.getUsername(), user.getNickname());
+
         user.setDeleted(true);
+
+        log.info("사용자에 의해 회원 탈퇴 완료: {} (닉네임: {})", user.getUsername(), user.getNickname());
+        // 로그로 회원 탈퇴라고 남기고 시간을 찍어준다던가
     }  // userRepository.save(user); // JPA 트랜잭션이면 save 생략 가능
 
     // 사용자 이미지 저장
@@ -131,7 +156,7 @@ public class UserService {
 
     //특정 회원 조회
     public UserResponseDTO getUserById(Long id){
-        User user = userRepository.findByIdAndDeletedFalse(id)
+        User user = userRepository.findById(id) //삭제 여부와 상관 없이 조회
                 .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
 
         UserResponseDTO dto = new UserResponseDTO();
@@ -153,11 +178,22 @@ public class UserService {
         User user = userRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(()-> new RuntimeException("회원을 찾을 수 없습니다."));
 
-        user.setNickname(request.getNickname());
+       log.info("관리자에 의한 수정 전 회원 정보: {} (닉네임: {}, 권한: {})",
+               user.getUsername(), user.getNickname(), user.getRole());
+
+       // 수정 전 정보 저장
+       String oldNickname = user.getNickname();
+       String oldRole = user.getRole();
+       String oldProfileImage = user.getProfileImageUrl();
+
+       // user.setNickname(request.getNickname());
         user.setRole(request.getRole());
         user.setProfileImageUrl(request.getProfileImageUrl());
 
         User savedUser = userRepository.save(user);
+
+       log.info("관리자에 의해 수정 완료: 닉네임 '{}' → '{}', 권한 '{}' → '{}'",
+               oldNickname, request.getNickname(), oldRole, request.getRole());
 
         UserResponseDTO dto = new UserResponseDTO();
         dto.setId(savedUser.getId());
@@ -176,10 +212,14 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("회원을 찾을 수 없습니다."));
 
+        log.info("관리자에 의한 탈퇴 대상 회원: {} (닉네임: {})", user.getUsername(), user.getNickname());
+
         if(user.isDeleted()){
             throw new RuntimeException("삭제된 회원입니다.");
         }
         user.setDeleted(true);
         userRepository.save(user);
+
+        log.info("관리자에 의해 회원 탈퇴 완료: {} (닉네임: {})", user.getUsername(), user.getNickname());
     }
 }

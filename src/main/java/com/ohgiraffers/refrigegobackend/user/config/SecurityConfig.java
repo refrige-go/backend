@@ -80,6 +80,8 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers("/api/ocr/**").permitAll()
                                 .requestMatchers("/user/**").permitAll()
+                                .requestMatchers("/api/ingredients/**").permitAll()
+                                .requestMatchers("/ingredients/**").permitAll()
                                 .anyRequest().authenticated()
                         )
                         .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class)

@@ -106,7 +106,7 @@ public class UserController {
     }
 
     //회원 수정 (관리자용)
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long id, @RequestBody UserUpdateRequestDTO request){
         UserResponseDTO user = userService.updateUser(id, request);
         return ResponseEntity.ok(user);
