@@ -50,22 +50,26 @@ public class UserService {
         // 수정 전 정보 저장
         String oldNickname = user.getNickname();
         boolean passwordChanged = false;
+        boolean nicknameChanged = false;
 
-        // 닉네임 수정
-        if (!oldNickname.equals(newNickname)){
-            user.setNickname(newNickname);
-            log.info("사용자에 의해 닉네임 수정: '{}' → '{}'", oldNickname, newNickname);
+        // 닉네임 수정 (null이 아니고 빈 값이 아닌 경우)
+        if (newNickname != null && !newNickname.trim().isEmpty() && !oldNickname.equals(newNickname.trim())){
+            user.setNickname(newNickname.trim());
+            nicknameChanged = true;
+            log.info("사용자에 의해 닉네임 수정: '{}' → '{}'", oldNickname, newNickname.trim());
         }
 
-        // 비밀번호 수정
+        // 비밀번호 수정 (null이 아니고 빈 값이 아닌 경우)
         if (newPassword != null && !newPassword.trim().isEmpty()){
-            user.setPassword(passwordEncoder.encode(newPassword));
+            user.setPassword(passwordEncoder.encode(newPassword.trim()));
             passwordChanged = true;
             log.info("비밀번호 변경됨 - 사용자: {}", username); // 비밀번호 변경 여부만 로깅
         }
-
+        if(!nicknameChanged && !passwordChanged) {
+            throw  new RuntimeException("변경할 내용이 없습니다.");
+        }
         log.info("수정 내용: 닉네임 변경={}, 비밀번호 변경={}",
-                !oldNickname.equals(newNickname), passwordChanged);
+                nicknameChanged, passwordChanged);
     }
 
     // 회원탈퇴
