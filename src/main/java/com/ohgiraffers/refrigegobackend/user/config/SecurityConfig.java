@@ -5,6 +5,7 @@ import com.ohgiraffers.refrigegobackend.user.jwt.JWTFilter;
 import com.ohgiraffers.refrigegobackend.user.jwt.JWTUtil;
 import com.ohgiraffers.refrigegobackend.user.jwt.LoginFilter;
 import com.ohgiraffers.refrigegobackend.user.repository.RefreshRepository;
+import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,12 +32,14 @@ public class SecurityConfig {
         private final AuthenticationConfiguration authenticationConfiguration;
         private final JWTUtil jwtUtil;
         private final RefreshRepository refreshRepository;
+        private final UserRepository userRepository;
 
         public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,
-                              RefreshRepository refreshRepository) {
+                              RefreshRepository refreshRepository, UserRepository userRepository) {
                 this.authenticationConfiguration = authenticationConfiguration;
                 this.jwtUtil = jwtUtil;
                 this.refreshRepository = refreshRepository;
+                this.userRepository = userRepository;
         }
 
         @Bean
@@ -85,7 +88,7 @@ public class SecurityConfig {
                                 .anyRequest().authenticated()
                         )
                         .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class)
-                        .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository), UsernamePasswordAuthenticationFilter.class)
+                        .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository, userRepository), UsernamePasswordAuthenticationFilter.class)
                         .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository), LogoutFilter.class)
                         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
