@@ -1,3 +1,7 @@
+server:
+  address: 0.0.0.0
+  port: 8080
+
 spring:
   application:
     name: backend-service
@@ -14,3 +18,12 @@ logging:
   level:
     org.springframework.cloud.config.client: DEBUG
     com.ohgiraffers.refrigegobackend.fcm: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      show-details: always
