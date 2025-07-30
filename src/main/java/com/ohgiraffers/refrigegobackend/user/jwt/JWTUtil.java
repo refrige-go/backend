@@ -55,8 +55,10 @@ public class JWTUtil {
     // createJwt – 토큰 발급
     public String createJwt(String category, String username, String role, Long expiredMs) {
 
-        System.out.println("발급시간: " + new Date(System.currentTimeMillis()));
-        System.out.println("만료시간: " + new Date(System.currentTimeMillis() + expiredMs));
+      if ("access".equals(category)) {
+          System.out.println("발급시간: " + new Date(System.currentTimeMillis()));
+          System.out.println("만료시간: " + new Date(System.currentTimeMillis() + expiredMs));
+      }
 
         return Jwts.builder()
                 .claim("category", category)
