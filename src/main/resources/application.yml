@@ -1,79 +1,16 @@
-server:
-  address: 0.0.0.0
-  port: 8080
-
 spring:
-  cloud:
-    config:
-      enabled: false # Spring Cloud Config Client 기능을 비활성화
-
   application:
     name: backend-service
-  jwt:
-    secret: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb
-  datasource:
-    url: jdbc:mysql://refrige-go-db.c9qa8oew47ux.ap-northeast-2.rds.amazonaws.com:3306/refrige_go?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-    username: nonameteam
-    password: nonameteam8080
-    driver-class-name: com.mysql.cj.jdbc.Driver
 
-    # 시간이랑 갯수설정
-    hikari:
-      connection-timeout: 30000
-      maximum-pool-size: 30
-      minimum-idle: 5
-  data:
-    mongodb:
-      uri: mongodb://nonameteam:nonameteam8080@3.36.127.163/refrige_go?authSource=refrige_go
-  jpa:
-    database: mysql
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
-
-  flyway:
-    enabled: false
-    locations: classpath:db/migration
-
-# AI 서버 설정
-ai-server:
-  base-url: http://43.200.254.252:8000  #http://localhost:8000
-  timeout: 30000
-  endpoints:
-    semantic-search: /api/search/semantic
-    vector-search: /api/search/vector
-    recipe-search: /api/search/recipes
-    ingredient-search: /api/search/ingredients
-    spell-check: /api/spell/spell-check
+  config:
+    import: optional:configserver:http://43.203.226.189:8888/
 
 firebase:
   service-account:
-    path: /app/credentials/firebase-service-account.json
+    path: firebase-service-account.json
   project-id: refrige-go-7963b
 
 logging:
   level:
     org.springframework.cloud.config.client: DEBUG
-    com.ohgiraffers.refrigegobackend.search: DEBUG
-api:
-  foodsafety:
-    key: "7e83da5958f743008422"
-
-aws:
-  region: ap-northeast-2
-  bucket-name: refrige-go-ingredients-imgs
-
-weatherapi:
-  key: ecc75627ded947b7aae45641252805
-
-seasonapi:
-  key: 6e32af623b20c04c61e511265b617828ba615d714537a5de5bec76189144818c
+    com.ohgiraffers.refrigegobackend.fcm: DEBUG
