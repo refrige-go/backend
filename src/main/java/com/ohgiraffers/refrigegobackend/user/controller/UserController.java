@@ -63,6 +63,15 @@ public class UserController {
         return ResponseEntity.ok("회원정보가 수정되었습니다.");
     }
 
+    //닉네임 중복 검사
+    @GetMapping("/check-nickname")
+    public ResponseEntity<Map<String, Boolean>> checkNicknameDuplicate(@RequestParam String nickname){
+        boolean isDuplicate = userService.existsByNickname(nickname);
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("isDuplicate", isDuplicate);
+            return ResponseEntity.ok(response);
+    }
+
     // 회원 탈퇴 (자기 자신의 계정 삭제)
     @DeleteMapping("/withdraw")
     public ResponseEntity<?> withdraw(Authentication authentication) {
@@ -85,4 +94,5 @@ public class UserController {
 
         return ResponseEntity.ok().body(imageUrl);
     }
+
 }
