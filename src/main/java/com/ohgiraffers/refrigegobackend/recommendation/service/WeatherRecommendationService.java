@@ -50,7 +50,8 @@ public class WeatherRecommendationService {
             types.addAll(List.of("굽기", "볶기"));
         } else if (conditionText.contains("Cloudy") || conditionText.contains("Overcast")) {
             types.addAll(List.of("찌기", "끓이기"));
-        } else if (conditionText.contains("Rain") || conditionText.contains("Drizzle") || conditionText.contains("Snow")) {
+        } else if (conditionText.contains("Rain") || conditionText.contains("Drizzle")
+                || conditionText.contains("Snow")) {
             types.addAll(List.of("찌기", "끓이기"));
         } else {
             types.add("볶기");
@@ -87,9 +88,13 @@ public class WeatherRecommendationService {
                 seasonalIngredients, cookingTypes);
         log.info("📦 조건에 맞는 레시피 개수: {}", recipes.size());
 
+        // 북마크된 레시피 ID를 한 번에 조회하여 N+1 쿼리 방지
+        List<String> bookmarkedRecipeIds = bookmarkRepository.findRecipeIdsByUserId(user.getId());
+
         List<RecipeRecommendationDto> recipeDtos = recipes.stream()
+                .limit(7) // 7개로 제한
                 .map(recipe -> {
-                    boolean bookmarked = bookmarkRepository.existsByUserIdAndRecipeRcpSeq(user.getId(), recipe.getRcpSeq());
+                    boolean bookmarked = bookmarkedRecipeIds.contains(recipe.getRcpSeq());
                     return new RecipeRecommendationDto(
                             recipe.getRcpNm(),
                             recipe.getRcpSeq(),
@@ -98,15 +103,13 @@ public class WeatherRecommendationService {
                             recipe.getRcpPartsDtls(),
                             recipe.getCuisineType(),
                             recipe.getRcpWay2(),
-                            bookmarked
-                    );
+                            bookmarked);
                 })
                 .collect(Collectors.toList());
 
         // 날씨 정보와 레시피 목록을 함께 반환
         return new WeatherRecommendResponseDTO(
                 new WeatherRecommendResponseDTO.WeatherInfoDto(condition, tempC),
-                recipeDtos
-        );
+                recipeDtos);
     }
 }
