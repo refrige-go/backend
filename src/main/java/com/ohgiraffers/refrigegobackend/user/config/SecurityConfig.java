@@ -38,7 +38,7 @@ public class SecurityConfig {
         private final UserRepository userRepository;
 
         public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,
-                              RefreshRepository refreshRepository, UserRepository userRepository) {
+            RefreshRepository refreshRepository, UserRepository userRepository) {
                 this.authenticationConfiguration = authenticationConfiguration;
                 this.jwtUtil = jwtUtil;
                 this.refreshRepository = refreshRepository;
@@ -103,9 +103,9 @@ public class SecurityConfig {
         @Order(1)
         public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
                 http
-                        .securityMatcher(new AntPathRequestMatcher("/actuator/**"))
-                        .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
-                        .csrf(csrf -> csrf.disable());
+                    .securityMatcher(new AntPathRequestMatcher("/actuator/**"))
+                    .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
+                    .csrf(csrf -> csrf.disable());
                 return http.build();
         }
 
