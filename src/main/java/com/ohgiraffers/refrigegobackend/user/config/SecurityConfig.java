@@ -78,6 +78,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/bookmark/**").hasAnyAuthority("ROLE_USER")
                                 .requestMatchers("/admin").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers("/actuator/**").permitAll()  // 액추에이터 엔드포인트 허용
                                 .anyRequest().authenticated()
                         )
                         .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class)

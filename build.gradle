@@ -35,12 +35,13 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
-    implementation 'org.flywaydb:flyway-core'
+   implementation 'org.flywaydb:flyway-core'
 
     implementation 'com.amazonaws:aws-java-sdk-s3:1.12.540'
     
     // FCM dependencies
     implementation 'com.google.firebase:firebase-admin:9.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -50,6 +51,7 @@ dependencies {
     // Test dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'com.h2database:h2'  // H2 for testing
 }
