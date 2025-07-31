@@ -1,6 +1,19 @@
 version: '3.8'
 
 services:
+  refrige-backend:
+    image: "${IMAGE_TAG}"
+    container_name: refrige-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - AI_SERVER_BASE_URL=http://43.200.254.252:8000
+    volumes:
+      - /home/ec2-user/firebase-service-account.json:/opt/app/firebase-service-account.json
+    networks:
+      - monitor-net
+
+
   prometheus:
     image: prom/prometheus
     container_name: prometheus
