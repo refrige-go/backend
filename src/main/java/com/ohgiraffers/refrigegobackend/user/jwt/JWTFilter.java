@@ -43,45 +43,93 @@ public class JWTFilter extends OncePerRequestFilter {
 
         // Authorization 헤더에서 access 토큰을 꺼내는 코드
         String header = request.getHeader("Authorization");
+
+        System.out.println("=== JWTFilter 토큰 검증 시작 ===");
+        System.out.println("원본 Authorization 헤더: '" + header + "'");
+
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
         String accessToken = header.substring(7); // "Bearer " 이후 토큰 값만 추출
+        System.out.println("추출된 토큰 (정리 전): '" + accessToken + "' (길이: " + accessToken.length() + ")");
+
+        // 중복 "Bearer " 제거
+        if (accessToken.startsWith("Bearer ")) {
+            accessToken = accessToken.substring(7);
+            System.out.println("중복 Bearer 제거 후: '" + accessToken + "' (길이: " + accessToken.length() + ")");
+        }
+
+        // 토큰 정리 (제어 문자 제거)
+        String cleanToken = accessToken.replaceAll("[\\x00-\\x1F\\x7F-\\x9F]", "").trim();
+        System.out.println("정리된 토큰: '" + cleanToken + "' (길이: " + cleanToken.length() + ")");
 
         // 토큰 만료 여부 확인, 만료시 다음 필터로 넘기지 않음
         try {
-            jwtUtil.isExpired(accessToken);
+            jwtUtil.isExpired(cleanToken);
         } catch (ExpiredJwtException e) {
+            System.out.println("토큰 만료: " + e.getMessage());
 
-            // response body
-            PrintWriter writer = response.getWriter();
-            writer.print("access token이 만료되었습니다");
-
-            // response status code
-            // 응답은 401이나 400으로 설정가능
+            // JSON 응답으로 변경
+            response.setContentType("application/json;charset=UTF-8");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+            PrintWriter writer = response.getWriter();
+            writer.print("{\"error\":\"토큰이 만료되었습니다.\",\"code\":\"TOKEN_EXPIRED\"}");
+            return;
+        } catch (Exception e) {
+            System.out.println("JWT 토큰 파싱 오류: " + e.getMessage());
+
+            response.setContentType("application/json;charset=UTF-8");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+            PrintWriter writer = response.getWriter();
+            writer.print("{\"error\":\"유효하지 않은 토큰입니다.\",\"code\":\"INVALID_TOKEN\"}");
             return;
         }
 
         // 토큰이 access인지 확인 (발급시 페이로드에 명시)
-        String category = jwtUtil.getCategory(accessToken);
+        String category;
+        try {
+            category = jwtUtil.getCategory(cleanToken); // cleanToken 사용
+        } catch (Exception e) {
+            System.out.println("카테고리 추출 오류: " + e.getMessage());
+
+            PrintWriter writer = response.getWriter();
+            writer.print("토큰 형식이 올바르지 않습니다");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
         if (!category.equals("access")) {
+            System.out.println("잘못된 토큰 카테고리: " + category);
 
             // response body
             PrintWriter writer = response.getWriter();
             writer.print("access token이 아닙니다");
 
             // response status code
-            // 응답은 401이나 400으로 설정가능
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
         // username, role 값을 획득
-        String username = jwtUtil.getUsername(accessToken);
-        String role = jwtUtil.getRole(accessToken);
+        String username;
+        String role;
+
+        try {
+            username = jwtUtil.getUsername(cleanToken); // cleanToken 사용
+            role = jwtUtil.getRole(cleanToken); // cleanToken 사용
+
+            System.out.println("토큰 검증 성공 - username: " + username + ", role: " + role + ", category: " + category);
+        } catch (Exception e) {
+            System.out.println("사용자 정보 추출 오류: " + e.getMessage());
+
+            PrintWriter writer = response.getWriter();
+            writer.print("토큰에서 사용자 정보를 추출할 수 없습니다");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
         User user = new User();
         user.setUsername(username);
@@ -92,6 +140,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 customUserDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
+        System.out.println("=== JWTFilter 토큰 검증 완료 ===");
         filterChain.doFilter(request, response);
     }
 }

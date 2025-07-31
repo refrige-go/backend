@@ -14,6 +14,9 @@ public class IngredientResponseDto {
     private final String name;             // 재료명
     private final String category;         // 카테고리 (표시용 문자열)
     private final int defaultExpiryDays;   // 기본 유통기한 일수
+    private final String storageMethod;    // 보관 방법
+    private final String imageUrl;         // 이미지 URL
+
 
     /**
      * Entity → DTO 변환 생성자
@@ -24,6 +27,8 @@ public class IngredientResponseDto {
         this.name = ingredient.getName();
         this.category = ingredient.getCategory().getDisplayName();
         this.defaultExpiryDays = ingredient.getDefaultExpiryDays();
+        this.storageMethod = ingredient.getStorageMethod();
+        this.imageUrl = ingredient.getImageUrl();
 
     }
 }
