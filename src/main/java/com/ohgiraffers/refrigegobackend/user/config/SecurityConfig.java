@@ -6,9 +6,11 @@ import com.ohgiraffers.refrigegobackend.user.jwt.JWTUtil;
 import com.ohgiraffers.refrigegobackend.user.jwt.LoginFilter;
 import com.ohgiraffers.refrigegobackend.user.repository.RefreshRepository;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
+
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -19,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -55,7 +58,7 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://refrige.shop", "https://www.refrige.shop"));
+                config.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://refrige.shop", "https://www.refrige.shop", "https://admin-blush-psi.vercel.app"));
                 config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                 config.setAllowedHeaders(Arrays.asList("Origin", "Content-Type", "Accept", "Authorization"));
                 config.setExposedHeaders(Arrays.asList("access", "Authorization"));
@@ -79,14 +82,15 @@ public class SecurityConfig {
                                 .requestMatchers("/login", "/join", "/reissue", "/", "/api/recipe/**").permitAll()
                                 .requestMatchers("/api/recommendations/**").permitAll()  // 레시피 추천 API 허용
                                 .requestMatchers("/api/bookmark/**").hasAnyAuthority("ROLE_USER")
+                                .requestMatchers("/api/ocr/**").permitAll()
+                                .requestMatchers("/api/ingredients/").permitAll()
+                                .requestMatchers("/ingredients/").permitAll()
+                                //관리자 전용 페이지
                                 .requestMatchers("/admin").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .requestMatchers("/api/ocr/**").permitAll()
-                                .requestMatchers("/user/**").permitAll()
-                                .requestMatchers("/api/ingredients/**").permitAll()
-                                .requestMatchers("/ingredients/**").permitAll()
                                 .anyRequest().authenticated()
                         )
+
                         .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class)
                         .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository, userRepository), UsernamePasswordAuthenticationFilter.class)
                         .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository), LogoutFilter.class)
@@ -94,4 +98,16 @@ public class SecurityConfig {
 
                 return http.build();
         }
+
+        @Bean
+        @Order(1)
+        public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+                http
+                        .securityMatcher(new AntPathRequestMatcher("/actuator/**"))
+                        .authorizeHttpRequests(authz -> authz.anyRequest().permitAll())
+                        .csrf(csrf -> csrf.disable());
+                return http.build();
+        }
+
+
 }
