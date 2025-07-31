@@ -135,6 +135,10 @@ public class UserService {
         }
     }
 
+    public boolean existsByNickname(String nickname){
+        return userRepository.existsByNickname(nickname);
+    }
+
 
     // ==== 관리자용 API ==== //
 

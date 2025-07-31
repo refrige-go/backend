@@ -95,14 +95,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        //관리자 권한 검증
-        if (!"ROLE_ADMIN".equals(role)){
-            System.out.println("권한이 없는 계정으로 로그인 시도: " + username + " (권한: " + role + ")");
-            System.out.println("관리자 권한이 필요합니다. 일반 사용자는 접근할 수 없습니다.");
-
-            response.setStatus(HttpStatus.FORBIDDEN.value());
-            return;
-        }
+//        //관리자 권한 검증
+//       if (!"ROLE_ADMIN".equals(role)){
+//            System.out.println("권한이 없는 계정으로 로그인 시도: " + username + " (권한: " + role + ")");
+//            System.out.println("관리자 권한이 필요합니다. 일반 사용자는 접근할 수 없습니다.");
+//
+//            response.setStatus(HttpStatus.FORBIDDEN.value());
+//            return;
+//        }
 
         User user = userRepository.findByUsernameAndDeletedFalse(username);
                if(user == null){

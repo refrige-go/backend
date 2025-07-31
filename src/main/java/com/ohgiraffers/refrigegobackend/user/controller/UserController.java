@@ -2,8 +2,6 @@ package com.ohgiraffers.refrigegobackend.user.controller;
 
 
 import com.ohgiraffers.refrigegobackend.user.dto.RequestDTO;
-import com.ohgiraffers.refrigegobackend.user.dto.UserResponseDTO;
-import com.ohgiraffers.refrigegobackend.user.dto.UserUpdateRequestDTO;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import com.ohgiraffers.refrigegobackend.user.service.UserService;
@@ -16,9 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 
 @RestController
@@ -67,6 +63,15 @@ public class UserController {
         return ResponseEntity.ok("회원정보가 수정되었습니다.");
     }
 
+    //닉네임 중복 검사
+    @GetMapping("/check-nickname")
+    public ResponseEntity<Map<String, Boolean>> checkNicknameDuplicate(@RequestParam String nickname){
+        boolean isDuplicate = userService.existsByNickname(nickname);
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("isDuplicate", isDuplicate);
+            return ResponseEntity.ok(response);
+    }
+
     // 회원 탈퇴 (자기 자신의 계정 삭제)
     @DeleteMapping("/withdraw")
     public ResponseEntity<?> withdraw(Authentication authentication) {
@@ -90,32 +95,4 @@ public class UserController {
         return ResponseEntity.ok().body(imageUrl);
     }
 
-    // ==== 관리자용 API ==== //
-    // 모든 회원 목록 조회
-    @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers(){
-        List<UserResponseDTO> users = userService.getALlUsers();
-        return ResponseEntity.ok(users);
-    }
-
-    // 특정 회원 조회
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id){
-        UserResponseDTO user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
-    }
-
-    //회원 수정 (관리자용)
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long id, @RequestBody UserUpdateRequestDTO request){
-        UserResponseDTO user = userService.updateUser(id, request);
-        return ResponseEntity.ok(user);
-    }
-
-    //회원 삭제 (관리자용)
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id){
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
-    }
 }

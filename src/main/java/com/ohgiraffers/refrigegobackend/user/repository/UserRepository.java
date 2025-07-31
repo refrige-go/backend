@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 전체 회원 조회
     List<User> findAll();
 
+    // 닉네임 중복 검사
+    Boolean existsByNickname(String nickname);
 }

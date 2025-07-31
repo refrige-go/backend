@@ -32,35 +32,46 @@ public class JWTUtil {
     }
 
     public String getUsername(String token) {
-
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("username", String.class);
+        String cleanToken = cleanString(token);
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(cleanToken).getPayload().get("username", String.class);
     }
 
     public String getRole(String token) {
-
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("role", String.class);
+        String cleanToken = cleanString(token);
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(cleanToken).getPayload().get("role", String.class);
     }
 
     public String getCategory(String token) {
-
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("category", String.class);
+        String cleanToken = cleanString(token);
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(cleanToken).getPayload().get("category", String.class);
     }
 
     // isExpired – 만료 여부 검사
     public Boolean isExpired(String token) {
+        String cleanToken = cleanString(token);
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(cleanToken).getPayload().getExpiration().before(new Date());
+    }
 
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
+    // 문자열 정리 함수
+    private String cleanString(String input) {
+        if (input == null) return "";
+        return input.trim().replaceAll("[\\x00-\\x1F\\x7F-\\x9F]", "");
     }
 
     // createJwt – 토큰 발급
     public String createJwt(String category, String username, String role, Long expiredMs) {
 
-      if ("access".equals(category)) {
-          System.out.println("발급시간: " + new Date(System.currentTimeMillis()));
-          System.out.println("만료시간: " + new Date(System.currentTimeMillis() + expiredMs));
-      }
+        System.out.println("=== JWT 생성 시작 ===");
+        System.out.println("원본 category: '" + category + "' (길이: " + (category != null ? category.length() : 0) + ")");
+        System.out.println("원본 username: '" + username + "' (길이: " + (username != null ? username.length() : 0) + ")");
+        System.out.println("원본 role: '" + role + "' (길이: " + (role != null ? role.length() : 0) + ")");
 
-        return Jwts.builder()
+        if ("access".equals(category)) {
+            System.out.println("발급시간: " + new Date(System.currentTimeMillis()));
+            System.out.println("만료시간: " + new Date(System.currentTimeMillis() + expiredMs));
+        }
+
+        String token = Jwts.builder()
                 .claim("category", category)
                 .claim("username", username)
                 .claim("role", role)
@@ -68,8 +79,14 @@ public class JWTUtil {
                 .expiration(new Date(System.currentTimeMillis() + expiredMs))
                 .signWith(secretKey)
                 .compact();
-    }
 
+        // 생성된 토큰 확인
+        System.out.println("생성된 토큰 길이: " + token.length());
+        System.out.println("토큰 시작 부분: " + token.substring(0, Math.min(50, token.length())));
+        System.out.println("=== JWT 생성 완료 ===");
+
+        return token;
+    }
     /*
      * claim("username", username): 사용자 이름을 토큰에 담음
      *   claim("role", role): 역할(권한)을 토큰에 담음
