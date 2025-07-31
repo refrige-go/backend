@@ -2,6 +2,7 @@ package com.ohgiraffers.refrigegobackend.bookmark.infrastructure.repository;
 
 import com.ohgiraffers.refrigegobackend.bookmark.domain.Bookmark;
 import com.ohgiraffers.refrigegobackend.recipe.domain.Recipe;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +13,7 @@ import java.util.Optional;
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     Optional<Bookmark> findByUserIdAndRecipeRcpSeq(Long userId, String rcpSeq);
 
+    @Cacheable(value = "bookmarks", key = "#userId")
     @Query("SELECT l.recipe.rcpSeq FROM Bookmark l WHERE l.user.id = :userId")
     List<String> findRecipeIdsByUserId(@Param("userId") Long userId);
 

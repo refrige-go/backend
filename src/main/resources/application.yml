@@ -1,19 +1,6 @@
-spring:
-  application:
-    name: backend-service
-
-  config:
-    import: optional:configserver:http://43.203.226.189:8888/
-
-firebase:
-  service-account:
-    path: firebase-service-account.json
-  project-id: refrige-go-7963b
-
-logging:
-  level:
-    org.springframework.cloud.config.client: DEBUG
-    com.ohgiraffers.refrigegobackend.fcm: DEBUG
+server:
+  address: 0.0.0.0
+  port: 8080
 
 management:
   endpoints:
