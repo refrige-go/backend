@@ -4,7 +4,9 @@ package com.ohgiraffers.refrigegobackend.user.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ohgiraffers.refrigegobackend.user.dto.LoginDTO;
 import com.ohgiraffers.refrigegobackend.user.entity.RefreshToken;
+import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.RefreshRepository;
+import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.Cookie;
@@ -35,13 +37,15 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
-    private RefreshRepository refreshRepository;
+    private final RefreshRepository refreshRepository;
+    private final UserRepository userRepository;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshRepository refreshRepository) {
+    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshRepository refreshRepository, UserRepository userRepository) {
 
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.refreshRepository = refreshRepository;
+        this.userRepository = userRepository;
     }
 
     // 메서드는 사용자가 /login으로 보낸 요청에서 아이디/비밀번호를 꺼내고,
@@ -91,8 +95,23 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
+//        //관리자 권한 검증
+//       if (!"ROLE_ADMIN".equals(role)){
+//            System.out.println("권한이 없는 계정으로 로그인 시도: " + username + " (권한: " + role + ")");
+//            System.out.println("관리자 권한이 필요합니다. 일반 사용자는 접근할 수 없습니다.");
+//
+//            response.setStatus(HttpStatus.FORBIDDEN.value());
+//            return;
+//        }
+
+        User user = userRepository.findByUsernameAndDeletedFalse(username);
+               if(user == null){
+                   throw new RuntimeException("사용자를 찾을 수 없습니다.");
+               }
+
+
         //토큰 생성
-        String access = jwtUtil.createJwt("access", username, role, 600000L); //10분
+        String access = jwtUtil.createJwt("access", username, role, 60000000L); //1000분
         String refresh = jwtUtil.createJwt("refresh", username, role, 86400000L); //24시간
 
         //Refresh 토큰 저장 메서드 (아래에 있음)
@@ -103,9 +122,17 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.addCookie(createCookie("refresh", refresh));
         response.setStatus(HttpStatus.OK.value());
 
+        // 응답 바디
+        response.setContentType("application/json;charset=UTF-8");
+        try {
+            String jsonResponse = "{\"message\":\"로그인 성공\",\"username\":\"" + username + "\",\"role\":\"" + role + "\"}";
+            response.getWriter().write(jsonResponse);
+        }catch (IOException e) {
+         //로그인 성공
+        }
 
         System.out.println("access 토큰과 refresh 토큰 생성 후 저장");
-
+        System.out.println("로그인 성공: " + username + " (권한: " + role + ")");
 
     }
 

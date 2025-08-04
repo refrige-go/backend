@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.user.controller;
 
 
+import com.ohgiraffers.refrigegobackend.oauth2.infrastructure.SocialUserRepository;
 import com.ohgiraffers.refrigegobackend.user.dto.RequestDTO;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
@@ -23,10 +24,12 @@ public class UserController {
 
     private final UserService userService;
     private final UserRepository userRepository;
+    private final SocialUserRepository socialUserRepository;
 
-    public UserController(UserRepository userRepository, UserService userService ) {
+    public UserController(UserRepository userRepository, UserService userService, SocialUserRepository socialUserRepository ) {
         this.userRepository = userRepository;
         this.userService = userService;
+        this.socialUserRepository = socialUserRepository;
     }
 
     // 로그인한 유저 정보조회
@@ -50,6 +53,8 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 
+
+
     // 회원정보 수정 API
     @PutMapping("/mypage-update")
     public ResponseEntity<?> updateMyPage(@RequestBody RequestDTO updateUserRequest,
@@ -61,6 +66,15 @@ public class UserController {
         userService.updateUserInfo(username, updateUserRequest.getNickname(), updateUserRequest.getPassword());
 
         return ResponseEntity.ok("회원정보가 수정되었습니다.");
+    }
+
+    //닉네임 중복 검사
+    @GetMapping("/check-nickname")
+    public ResponseEntity<Map<String, Boolean>> checkNicknameDuplicate(@RequestParam String nickname){
+        boolean isDuplicate = userService.existsByNickname(nickname);
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("isDuplicate", isDuplicate);
+            return ResponseEntity.ok(response);
     }
 
     // 회원 탈퇴 (자기 자신의 계정 삭제)
@@ -85,4 +99,5 @@ public class UserController {
 
         return ResponseEntity.ok().body(imageUrl);
     }
+
 }

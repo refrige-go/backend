@@ -1,5 +1,6 @@
 package com.ohgiraffers.refrigegobackend.user.entity;
 
+import com.ohgiraffers.refrigegobackend.user.dto.UserResponseDTO;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -64,6 +65,7 @@ public class User {
         }
 
     }
+
 }
 
 

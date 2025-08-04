@@ -15,10 +15,20 @@ public class JoinService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    // 영어 소문자만 허용하는 정규식
+    private static final String USERNAME_PATTERN = "^[a-z0-9]+$";
+
     public JoinService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
 
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    }
+
+    // 아이디 형식 검증 메서드
+    private void validateUsernameFormat(String username){
+        if(username == null || !username.matches(USERNAME_PATTERN)){
+            throw new GlobalExceptionHandler.UsernameDuplicateException("아이디는 영어 소문자와 숫자만 사용이 가능합니다.");
+        }
     }
 
     // 회원가입
@@ -28,6 +38,8 @@ public class JoinService {
         String password = joinDTO.getPassword();
         String nickname = joinDTO.getNickname();
         String role = joinDTO.getRole();
+
+        validateUsernameFormat(username);
 
         Boolean isExist = userRepository.existsByUsername(username);
         if (isExist) {
