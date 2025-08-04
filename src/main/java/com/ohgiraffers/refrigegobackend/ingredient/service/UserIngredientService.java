@@ -42,7 +42,8 @@ public class UserIngredientService {
     private final AmazonS3 amazonS3;
 
     private String saveImage(MultipartFile imageFile) {
-        if (imageFile == null || imageFile.isEmpty()) return null;
+        if (imageFile == null || imageFile.isEmpty())
+            return null;
 
         try {
             // 1. 파일명 안전하게 생성 (UUID + 확장자 유지)
@@ -62,8 +63,7 @@ public class UserIngredientService {
                     bucketName,
                     safeFilename,
                     imageFile.getInputStream(),
-                    metadata
-            );
+                    metadata);
 
             amazonS3.putObject(putObjectRequest);
 
@@ -78,7 +78,8 @@ public class UserIngredientService {
     // username 기준 재료 추가
     public void addUserIngredient(String username, UserIngredientRequestDto dto) {
         User user = userRepository.findByUsernameAndDeletedFalse(username);
-        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        if (user == null)
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         if ((dto.getIngredientId() == null && dto.getCustomName() == null) ||
                 (dto.getIngredientId() != null && dto.getCustomName() != null)) {
@@ -104,7 +105,8 @@ public class UserIngredientService {
     // username 기준 재료 조회
     public List<UserIngredientResponseDto> getUserIngredientsByUsername(String username) {
         User user = userRepository.findByUsernameAndDeletedFalse(username);
-        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        if (user == null)
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         return repository.findByUserId(user.getId()).stream()
                 .map(ui -> {
@@ -119,16 +121,19 @@ public class UserIngredientService {
     // username 기준 다건 저장
     public void saveBatchWithUsername(UserIngredientBatchRequestDto dto, String username) {
         User user = userRepository.findByUsernameAndDeletedFalse(username);
-        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        if (user == null)
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         dto.setUserId(user.getId());
         saveBatch(dto);
     }
 
     // 기준 재료 여러 개 추가 (username 기준)
-    public void addIngredientsByUsername(String username, List<UserIngredientBatchRequestDto.UserIngredientItem> items) {
+    public void addIngredientsByUsername(String username,
+            List<UserIngredientBatchRequestDto.UserIngredientItem> items) {
         User user = userRepository.findByUsernameAndDeletedFalse(username);
-        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        if (user == null)
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         List<UserIngredient> entities = items.stream()
                 .map(item -> {
@@ -157,7 +162,8 @@ public class UserIngredientService {
     // 이미지 포함 재료 추가 (username 기준)
     public void addUserIngredientWithImage(String username, UserIngredientCreateDto dto) {
         User user = userRepository.findByUsernameAndDeletedFalse(username);
-        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        if (user == null)
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         String imageUrl = saveImage(dto.getImage());
 
@@ -273,7 +279,8 @@ public class UserIngredientService {
     @Transactional
     public void consumeIngredients(String username, List<Long> ingredientIds, String recipeId) {
         User user = userRepository.findByUsernameAndDeletedFalse(username);
-        if (user == null) throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        if (user == null)
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
 
         List<UserIngredient> ingredientsToConsume = repository.findByUserIdAndIdIn(user.getId(), ingredientIds);
 
@@ -283,8 +290,7 @@ public class UserIngredientService {
 
         // 유통기한 기준 오름차순 정렬 (null은 가장 뒤로)
         ingredientsToConsume.sort(Comparator.comparing(
-                ui -> Optional.ofNullable(ui.getExpiryDate()).orElse(LocalDate.MAX)
-        ));
+                ui -> Optional.ofNullable(ui.getExpiryDate()).orElse(LocalDate.MAX)));
 
         System.out.println("사용자 " + username + "가 레시피 " + recipeId + "로 재료 " + ingredientIds.size() + "개를 소비했습니다.");
 

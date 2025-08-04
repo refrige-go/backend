@@ -2,6 +2,8 @@ package com.ohgiraffers.refrigegobackend.bookmark.controller;
 
 import com.ohgiraffers.refrigegobackend.bookmark.dto.response.*;
 import com.ohgiraffers.refrigegobackend.bookmark.service.BookmarkService;
+import com.ohgiraffers.refrigegobackend.recommendation.dto.RecommendedRecipeDto;
+import com.ohgiraffers.refrigegobackend.search.dto.response.RecipeSearchResultDTO;
 import com.ohgiraffers.refrigegobackend.user.dto.CustomUserDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bookmark")
@@ -24,16 +27,16 @@ public class BookmarkController {
         this.bookmarkService = bookmarkService;
     }
 
-
     /**
      * 레시피 찜(북마크) 토글
      * - 레시피를 찜하거나 취소할 수 있음
+     * 
      * @param userDetails 로그인된 사용자 정보
-     * @param recipeId 레시피 아이디
+     * @param recipeId    레시피 아이디
      */
     @PostMapping("/toggle")
     public ResponseEntity<BookmarkResponseDTO> toggleFavorite(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                                              @RequestParam String recipeId) {
+            @RequestParam String recipeId) {
         String username = userDetails.getUsername();
         boolean isBookmarked = bookmarkService.toggleBookmark(username, recipeId);
 
@@ -46,9 +49,9 @@ public class BookmarkController {
         return ResponseEntity.ok(response);
     }
 
-
     /**
      * 사용자의 찜한 레시피 목록 조회
+     * 
      * @param userDetails 로그인된 사용자 정보
      */
     @GetMapping("/list")
@@ -63,10 +66,10 @@ public class BookmarkController {
         return ResponseEntity.ok(bookmarkedRecipes);
     }
 
-
     /**
      * 사용자 맞춤 레시피 추천
      * - 찜한 레시피와 요리 타입이 같은 전체 레시피 목록 조회 (ex. 끓이기, 볶기...)
+     * 
      * @param userDetails 로그인된 사용자 정보
      */
     @GetMapping("/bookmark-recommend")
@@ -80,9 +83,9 @@ public class BookmarkController {
         return ResponseEntity.ok(recommendations);
     }
 
-
     /**
      * 보유 중인 식재료로 만들 수 있는 찜한 레시피 조회
+     * 
      * @param userDetails 로그인된 사용자 정보
      */
     @GetMapping("/ingredient-recommend")
@@ -94,5 +97,71 @@ public class BookmarkController {
         List<UserIngredientRecipeResponseDTO> recommendedRecipes = bookmarkService
                 .getRecommendedRecipesByUserIngredient(username);
         return ResponseEntity.ok(recommendedRecipes);
+    }
+
+    /**
+     * 찜한 레시피 기반 AI 추천 조회
+     * 
+     * @param userDetails 로그인된 사용자 정보
+     * @param limit       추천 개수 제한 (기본값: 10)
+     */
+    @GetMapping("/ai-recommend")
+    public ResponseEntity<List<RecommendedRecipeDto>> getAiRecommendationsByBookmarks(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        String username = userDetails.getUsername();
+        log.info("AI 추천 요청 - 사용자: {}, 제한: {}", username, limit);
+
+        List<RecommendedRecipeDto> recommendations = bookmarkService.getAiRecommendedRecipesByBookmarks(username,
+                limit);
+
+        return ResponseEntity.ok(recommendations);
+    }
+
+    /**
+     * 찜한 레시피 기반 벡터 검색 결과 조회
+     * 
+     * @param userDetails 로그인된 사용자 정보
+     * @param limit       검색 결과 개수 제한 (기본값: 10)
+     */
+    @GetMapping("/vector-search")
+    public ResponseEntity<List<RecipeSearchResultDTO>> getVectorSearchByBookmarks(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        String username = userDetails.getUsername();
+        log.info("벡터 검색 요청 - 사용자: {}, 제한: {}", username, limit);
+
+        List<RecipeSearchResultDTO> searchResults = bookmarkService.getVectorSearchByBookmarks(username, limit);
+
+        return ResponseEntity.ok(searchResults);
+    }
+
+    /**
+     * AI 서버 상태 확인
+     * 
+     * @param userDetails 로그인된 사용자 정보
+     */
+    @GetMapping("/ai-status")
+    public ResponseEntity<Object> getAiServerStatus(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
+        boolean aiServerAvailable = bookmarkService.isAiServerAvailable();
+        boolean searchServiceAvailable = bookmarkService.isSearchServiceAvailable();
+
+        return ResponseEntity.ok(Map.of(
+                "aiServerAvailable", aiServerAvailable,
+                "searchServiceAvailable", searchServiceAvailable));
     }
 }

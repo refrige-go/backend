@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@NamedEntityGraph(name = "Ingredient.withCategory", attributeNodes = {
+        @NamedAttributeNode("category")
+})
 public class Ingredient {
 
     // 기본 키 (자동 증가)

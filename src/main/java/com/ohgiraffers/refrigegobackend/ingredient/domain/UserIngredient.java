@@ -17,11 +17,18 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@NamedEntityGraph(name = "UserIngredient.withIngredientAndCategory", attributeNodes = {
+        @NamedAttributeNode(value = "ingredient", subgraph = "ingredient.category")
+}, subgraphs = {
+        @NamedSubgraph(name = "ingredient.category", attributeNodes = {
+                @NamedAttributeNode("category")
+        })
+})
 public class UserIngredient {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;  // 고유 ID
+    private Long id; // 고유 ID
 
     @Column(name = "user_id", nullable = false)
     private Long userId; // 유저 ID
@@ -31,17 +38,17 @@ public class UserIngredient {
     private Ingredient ingredient; // 기준 재료 엔티티
 
     @Column(name = "custom_name")
-    private String customName;  // 직접 입력한 재료명
+    private String customName; // 직접 입력한 재료명
 
     @Column(name = "purchase_date", nullable = false)
-    private LocalDate purchaseDate;  // 구매일자
+    private LocalDate purchaseDate; // 구매일자
 
     @Column(name = "expiry_date", nullable = false)
-    private LocalDate expiryDate;    // 소비기한
+    private LocalDate expiryDate; // 소비기한
 
     @Column(name = "is_frozen", nullable = false)
     @Builder.Default
-    private Boolean isFrozen = false;  // 냉동 여부
+    private Boolean isFrozen = false; // 냉동 여부
 
     @Column(name = "image_url", length = 500)
     private String imageUrl; // 이미지 URL

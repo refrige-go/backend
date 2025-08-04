@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/weather")
 @Slf4j
-//@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class WeatherRecommendationController {
 
     private final WeatherRecommendationService weatherRecommendationService;
