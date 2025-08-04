@@ -65,7 +65,7 @@ public class BookmarkService {
      * @param username
      * @param recipeId
      */
-    @CacheEvict(value = "bookmarks", key = "#user.id")
+    @CacheEvict(value = "bookmarks", key = "#username")
     public boolean toggleBookmark(String username, String recipeId) {
         User user = userRepository.findByUsernameAndDeletedFalse(username);
         Recipe recipe = recipeRepository.findById(recipeId)
