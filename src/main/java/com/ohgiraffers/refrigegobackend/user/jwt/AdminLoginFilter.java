@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
@@ -34,10 +36,12 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException{
         try{
             User user = new ObjectMapper().readValue(request.getInputStream(), User.class);
+            log.debug("관리자 로그인 시도 - 사용자: {}, IP: {}", user.getUsername(), request.getRemoteAddr());
             return authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword(),null)
             );
         }catch (IOException e){
+            log.error("관리자 로그인 시도 중 IOException 발생: {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }
@@ -47,12 +51,15 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
             String username = authResult.getName();
             String role = authResult.getAuthorities().iterator().next().getAuthority();
 
+            log.info("=== 관리자 인증 성공 - 사용자: {}, 권한: {}, IP: {} ===",
+                    username, role, request.getRemoteAddr());
+
             //관리자 권한 확인
             if (!"ROLE_ADMIN".equals(role)){
-                System.out.println("=== 관리자 로그인 실패: " + username + " (권한: " + role + ") ===");
-                System.out.println("=== 시간: " + java.time.LocalDateTime.now() + " ===");
-                System.out.println("=== IP: " + request.getRemoteAddr() + " ===");
-                System.out.println("=== User-Agent: " + request.getHeader("User-Agent") + " ==="); //로그바꾸기
+                log.warn("=== 관리자 로그인 실패: {} (권한: {}) ===", username, role);
+                log.warn("=== 시간: {} ===", java.time.LocalDateTime.now());
+                log.warn("=== IP: {} ===", request.getRemoteAddr());
+                log.warn("=== User-Agent: {} ===", request.getHeader("User-Agent"));
 
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType("application/json;charset=UTF-8");
@@ -64,12 +71,18 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
             //실제 닉네임 가져오기
         User user = userRepository.findByUsernameAndDeletedFalse(username);
             if(user == null){
+                log.error("관리자 로그인 실패 - 사용자를 찾을 수 없음: {}", username);
                 throw new RuntimeException("사용자를 찾을 수 없습니다.");
             }
 
             // JWT 토큰 생성
             String access = jwtUtil.createJwt("access", username, role, 3600000L); //1시간
             String refresh = jwtUtil.createJwt("refresh",username,role,86400000L);
+
+
+            log.info("관리자 JWT 토큰 생성 완료 - Access Token: {}, Refresh Token: {}",
+                    access.substring(0, Math.min(20, access.length())) + "...",
+                    refresh.substring(0, Math.min(20, refresh.length())) + "...");
 
             //응답 헤더에 토큰 설정
             response.addHeader("Authorization", "Bearer " + access);
@@ -85,11 +98,17 @@ public class AdminLoginFilter extends UsernamePasswordAuthenticationFilter {
             response.setContentType("application/json;charset=UTF-8");
             new ObjectMapper().writeValue(response.getOutputStream(),responseBody);
 
-            System.out.println("=== 관리자 로그인 성공: " + username + " (닉네임: " + user.getNickname() + ", 권한: " + role + ") ==="); //로그 바꾸기
+        log.info("=== 관리자 로그인 성공: {} (닉네임: {}, 권한: {}, IP: {}) ===",
+                username, user.getNickname(), role, request.getRemoteAddr());
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException{
+        log.warn("관리자 로그인 실패 - IP: {}, User-Agent: {}, 오류: {}",
+                request.getRemoteAddr(),
+                request.getHeader("User-Agent"),
+                failed.getMessage());
+
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write("{\"error\":\"아이디 또는 비밀번호가 올바르지 않습니다.\"}");

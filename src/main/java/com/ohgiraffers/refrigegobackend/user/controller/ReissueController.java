@@ -9,6 +9,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+@Slf4j
 @RestController
 public class ReissueController {
 
@@ -99,7 +101,7 @@ public class ReissueController {
         try {
             refreshRepository.deleteByRefresh(refresh);
         } catch (Exception e) {
-            System.out.println("동시성/중복 삭제 예외: " + e.getMessage());
+            log.warn("동시성/중복 삭제 예외 발생: {}", e.getMessage());
             // 무시, 정상 흐름 진행
         }
 

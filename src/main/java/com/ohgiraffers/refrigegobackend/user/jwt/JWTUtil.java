@@ -1,6 +1,7 @@
 package com.ohgiraffers.refrigegobackend.user.jwt;
 
 import io.jsonwebtoken.Jwts;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +22,7 @@ import java.util.Date;
  * JWT는 보통 로그인 후 발급되고, 이후 인증은 JWT로만 처리
  * */
 
+@Slf4j
 @Component
 public class JWTUtil {
 
@@ -61,10 +63,10 @@ public class JWTUtil {
     // createJwt – 토큰 발급
     public String createJwt(String category, String username, String role, Long expiredMs) {
 
-        System.out.println("=== JWT 생성 시작 ===");
-        System.out.println("원본 category: '" + category + "' (길이: " + (category != null ? category.length() : 0) + ")");
-        System.out.println("원본 username: '" + username + "' (길이: " + (username != null ? username.length() : 0) + ")");
-        System.out.println("원본 role: '" + role + "' (길이: " + (role != null ? role.length() : 0) + ")");
+        log.debug("=== JWT 생성 시작 ===");
+        log.debug("원본 category: '{}' (길이: {})", category, category != null ? category.length() : 0);
+        log.debug("원본 username: '{}' (길이: {})", username, username != null ? username.length() : 0);
+        log.debug("원본 role: '{}' (길이: {})", role, role != null ? role.length() : 0);
 
         if ("access".equals(category)) {
             System.out.println("발급시간: " + new Date(System.currentTimeMillis()));
@@ -81,9 +83,9 @@ public class JWTUtil {
                 .compact();
 
         // 생성된 토큰 확인
-        System.out.println("생성된 토큰 길이: " + token.length());
-        System.out.println("토큰 시작 부분: " + token.substring(0, Math.min(50, token.length())));
-        System.out.println("=== JWT 생성 완료 ===");
+        log.debug("생성된 토큰 길이: {}", token.length());
+        log.debug("토큰 시작 부분: {}", token.substring(0, Math.min(50, token.length())));
+        log.debug("=== JWT 생성 완료 ===");
 
         return token;
     }

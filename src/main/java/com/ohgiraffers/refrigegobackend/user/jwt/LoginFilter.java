@@ -12,6 +12,7 @@ import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,6 +34,7 @@ import java.util.Iterator;
 // 사용자가 /login 주소로 아이디/비밀번호를 보낼 때, 이 필터가 그 요청을 가로채서 처리
 // 인증이 성공하면 JWT 토큰을 발급해서 응답에 실어줌
 
+@Slf4j
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
@@ -62,16 +64,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
             String messageBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
             loginDTO = objectMapper.readValue(messageBody, LoginDTO.class);
         } catch (IOException e) {
+            log.error("로그인 요청 파싱 중 IOException 발생: {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }
-
-
-        System.out.println(loginDTO.getUsername());
 
         String username = loginDTO.getUsername();
         String password = loginDTO.getPassword();
 
-        System.out.println("프론트로 부터 받은 유저 아이디"+username);
+        log.debug("로그인 시도 - 사용자: {}, IP: {}", username, request.getRemoteAddr());
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
 
@@ -95,6 +95,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
+        log.info("=== 로그인 인증 성공 - 사용자: {}, 권한: {}, IP: {} ===",
+                username, role, request.getRemoteAddr());
+
 //        //관리자 권한 검증
 //       if (!"ROLE_ADMIN".equals(role)){
 //            System.out.println("권한이 없는 계정으로 로그인 시도: " + username + " (권한: " + role + ")");
@@ -106,6 +109,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         User user = userRepository.findByUsernameAndDeletedFalse(username);
                if(user == null){
+                   log.error("로그인 성공 후 사용자 조회 실패: {}", username);
                    throw new RuntimeException("사용자를 찾을 수 없습니다.");
                }
 
@@ -113,6 +117,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         //토큰 생성
         String access = jwtUtil.createJwt("access", username, role, 60000000L); //1000분
         String refresh = jwtUtil.createJwt("refresh", username, role, 86400000L); //24시간
+
+        log.info("JWT 토큰 생성 완료 - Access Token: {}, Refresh Token: {}",
+                access.substring(0, Math.min(20, access.length())) + "...",
+                refresh.substring(0, Math.min(20, refresh.length())) + "...");
 
         //Refresh 토큰 저장 메서드 (아래에 있음)
         addRefreshEntity(username, refresh, 86400000L);
@@ -128,16 +136,21 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
             String jsonResponse = "{\"message\":\"로그인 성공\",\"username\":\"" + username + "\",\"role\":\"" + role + "\"}";
             response.getWriter().write(jsonResponse);
         }catch (IOException e) {
-         //로그인 성공
+            log.error("로그인 성공 응답 작성 중 IOException 발생: {}", e.getMessage(), e);
         }
+        //로그인 성공
 
-        System.out.println("access 토큰과 refresh 토큰 생성 후 저장");
-        System.out.println("관리자 로그인 성공: " + username + " (권한: " + role + ")");
+        log.info("=== 로그인 완료 - 사용자: {} (권한: {}), 토큰 저장 완료 ===", username, role);
 
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
+
+        log.warn("로그인 실패 - IP: {}, User-Agent: {}, 오류: {}",
+                request.getRemoteAddr(),
+                request.getHeader("User-Agent"),
+                failed.getMessage());
 
         response.setStatus(401);
         // 실패했을때에는 401을 날림
@@ -155,6 +168,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         refreshToken.setExpiration(date.toString());
 
         refreshRepository.save(refreshToken);
+
+        log.debug("Refresh 토큰 DB 저장 완료 - 사용자: {}, 만료일: {}", username, date);
     }
 
     private Cookie createCookie(String key, String value) {
@@ -165,6 +180,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         cookie.setPath("/");
         cookie.setHttpOnly(true); // XSS 공격으로부터 보호
 
+        log.debug("보안 쿠키 생성 - 이름: {}, 값 길이: {}", key, value.length());
         return cookie;
     }
 }
