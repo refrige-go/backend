@@ -130,7 +130,7 @@ public class JWTFilter extends OncePerRequestFilter {
             username = jwtUtil.getUsername(cleanToken); // cleanToken 사용
             role = jwtUtil.getRole(cleanToken); // cleanToken 사용
 
-            log.info("토큰 검증 성공 - username: {}, role: {}, category: {}", username, role, category);
+            log.debug("토큰 검증 성공 - username: {}, role: {}, category: {}", username, role, category);
         } catch (Exception e) {
             log.error("사용자 정보 추출 오류: {}", e.getMessage(), e);
 
