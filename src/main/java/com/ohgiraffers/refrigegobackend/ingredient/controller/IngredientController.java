@@ -37,27 +37,27 @@ public class IngredientController {
     @GetMapping
     public ResponseEntity<List<IngredientResponseDto>> getIngredients(@RequestParam(required = false) String category) {
         try {
-            System.out.println("=== API 호출됨 ===");
+            log.info("=== 재료 조회 API 호출됨 - 카테고리: {} ===", category);
 
             List<Ingredient> ingredients = ingredientService.getIngredientsByCategory(category);
-            System.out.println("=== Service 호출 완료, 데이터 개수: " + ingredients.size() + " ===");
+            log.info("=== Service 호출 완료, 데이터 개수: {} ===", ingredients.size());
 
             List<IngredientResponseDto> dtoList = ingredients.stream()
                     .map(ingredient -> {
                         try {
                             return new IngredientResponseDto(ingredient);
                         } catch (Exception e) {
-                            System.err.println("DTO 변환 오류: " + e.getMessage());
+                            log.error("DTO 변환 오류: {}", e.getMessage(), e);
                             throw e;
                         }
                     })
                     .collect(Collectors.toList());
 
-            System.out.println("=== DTO 변환 완료 ===");
+            log.info("=== DTO 변환 완료, 응답 데이터 개수: {} ===", dtoList.size());
             return ResponseEntity.ok(dtoList);
 
         } catch (Exception e) {
-            System.err.println("=== 전체 오류: " + e.getMessage() + " ===");
+            log.error("=== 재료 조회 API 전체 오류: {} ===", e.getMessage(), e);
             e.printStackTrace();
             return ResponseEntity.status(500).build();
         }
@@ -89,18 +89,19 @@ public class IngredientController {
     public ResponseEntity<IngredientResponseDto> createIngredient(@RequestBody IngredientCreateRequestDto dto) {
         try {
             IngredientResponseDto response = ingredientService.createIngredient(dto);
+            log.info("=== 재료 등록 완료 - ID: {}, 재료명: {} ===", response.getId(), response.getName());
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             // 잘못된 입력값
-            log.warn("잘못된 입력값: {}", e.getMessage());
+            log.warn("재료 등록 실패 - 잘못된 입력값: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (DataIntegrityViolationException e) {
             // DB 제약조건 위반
-            log.warn("DB 제약조건 위반: {}", e.getMessage());
+            log.warn("재료 등록 실패 - DB 제약조건 위반: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
             // 기타 런타임 에러
-            log.error("런타임 에러: {}", e.getMessage());
+            log.error("재료 등록 실패 - 런타임 에러: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -113,18 +114,19 @@ public class IngredientController {
     public ResponseEntity<IngredientResponseDto> getIngredientById(@PathVariable Long id) {
         try {
             IngredientResponseDto response = ingredientService.getIngredientById(id);
+            log.info("=== 특정 재료 조회 완료 - ID: {}, 재료명: {} ===", id, response.getName());
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             // 잘못된 입력값
-            log.warn("잘못된 입력값: {}", e.getMessage());
+            log.warn("특정 재료 조회 실패 - 잘못된 입력값 (ID: {}): {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (DataIntegrityViolationException e) {
             // DB 제약조건 위반
-            log.warn("DB 제약조건 위반: {}", e.getMessage());
+            log.warn("특정 재료 조회 실패 - DB 제약조건 위반 (ID: {}): {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
             // 기타 런타임 에러
-            log.error("런타임 에러: {}", e.getMessage());
+            log.error("특정 재료 조회 실패 - 런타임 에러 (ID: {}): {}", id, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -142,18 +144,19 @@ public class IngredientController {
     public ResponseEntity<IngredientResponseDto> updateIngredient(@PathVariable Long id, @RequestBody IngredientUpdateRequestDto dto){
         try{
             IngredientResponseDto response = ingredientService.updateIngredient(id,dto);
+            log.info("=== 재료 수정 완료 - ID: {}, 수정된 재료명: {} ===", id, response.getName());
             return ResponseEntity.ok(response);
         }catch (IllegalArgumentException e){
             //잘못된 입력값
-            log.warn("잘못된 입력값: {}", e.getMessage());
+            log.warn("재료 수정 실패 - 잘못된 입력값 (ID: {}): {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         }catch (DataIntegrityViolationException e) {
             // DB 제약조건 위반
-            log.warn("DB 제약조건 위반: {}", e.getMessage());
+            log.warn("재료 수정 실패 - DB 제약조건 위반 (ID: {}): {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
             // 기타 런타임 에러
-            log.error("런타임 에러: {}", e.getMessage());
+            log.error("재료 수정 실패 - 런타임 에러 (ID: {}): {}", id, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -171,18 +174,19 @@ public class IngredientController {
     public ResponseEntity<Void> deleteIngredient(@PathVariable Long id){
         try{
             ingredientService.deleteIngredient(id);
+            log.info("=== 재료 삭제 완료 - ID: {} ===", id);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             // 잘못된 입력값
-            log.warn("잘못된 입력값: {}", e.getMessage());
+            log.warn("재료 삭제 실패 - 잘못된 입력값 (ID: {}): {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (DataIntegrityViolationException e) {
             // DB 제약조건 위반
-            log.warn("DB 제약조건 위반: {}", e.getMessage());
+            log.warn("재료 삭제 실패 - DB 제약조건 위반 (ID: {}): {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
             // 기타 런타임 에러
-            log.error("런타임 에러: {}", e.getMessage());
+            log.error("재료 삭제 실패 - 런타임 에러 (ID: {}): {}", id, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }

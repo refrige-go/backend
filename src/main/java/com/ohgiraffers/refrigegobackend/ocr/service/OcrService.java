@@ -119,7 +119,7 @@ public class OcrService {
             /*ingredient_id DB에 저장*/
             Long ingredientId = ingredient.get("ingredient_id") != null ? Long.valueOf(ingredient.get("ingredient_id").toString()) : null;
 
-            System.out.println("ingredient_id: " + ingredientId);
+            log.debug("재료 정보 처리 중 - ingredient_id: {}, 재료명: {}", ingredientId, ingredient.get("name"));
 
             Ingredient ingredientEntity = null;
             if(ingredientId != null){
@@ -127,7 +127,8 @@ public class OcrService {
                         .orElse(null);
             }
 
-            System.out.println("ingredientEntity: " + ingredientEntity);
+            log.debug("기준 재료 조회 결과 - ingredient_id: {}, 조회된 엔티티: {}",
+                    ingredientId, ingredientEntity != null ? ingredientEntity.getName() : "null");
 
             UserIngredient userIngredient = UserIngredient.builder()
                     .userId(userId)
@@ -141,7 +142,13 @@ public class OcrService {
             // DB에 저장
             userIngredientRepository.save(userIngredient);
 
-
+            log.info("재료 저장 완료 - 사용자: {}, 재료명: {}, 구매일: {}, 유통기한: {}, 냉동여부: {}",
+                    username,
+                    ingredient.get("name"),
+                    purchaseDate,
+                    expiryDate,
+                    "냉동".equals(ingredient.get("storageMethod")));
         }
+        log.info("=== OCR 재료 저장 완료 - 사용자: {}, 총 저장된 재료 개수: {} ===", username, ingredients.size());
     }
 }
