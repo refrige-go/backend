@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/secure") // ✅ 공통 prefix 경로
+@RequestMapping("/secure") // 공통 prefix 경로
 public class SecureController {
 
     @GetMapping("/admin")
