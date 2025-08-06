@@ -79,6 +79,18 @@ public class GlobalExceptionHandler {
         }
     }
 
+    /**
+     *  nickname 중복처리
+     */
+    @ExceptionHandler(NicknameDuplicateException.class)
+    public ResponseEntity<String> handleNicknameDuplicate(NicknameDuplicateException e){
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
 
+    public static class NicknameDuplicateException extends RuntimeException{
+        public NicknameDuplicateException(String message){
+            super(message);
+        }
+    }
 
 }

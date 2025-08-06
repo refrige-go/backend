@@ -6,6 +6,7 @@ import com.ohgiraffers.refrigegobackend.user.dto.JoinDTO;
 import com.ohgiraffers.refrigegobackend.user.entity.Role;
 import com.ohgiraffers.refrigegobackend.user.entity.User;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +47,11 @@ public class JoinService {
             throw new GlobalExceptionHandler.UsernameDuplicateException("유저 아이디가 이미 존재합니다");
         }
 
+        Boolean isNicknameExist = userRepository.existsByNickname(nickname);
+        if (isNicknameExist) {
+            throw new GlobalExceptionHandler.NicknameDuplicateException("닉네임이 이미 존재합니다");
+        }
+
         User data = new User();
 
         data.setUsername(username);
@@ -53,6 +59,16 @@ public class JoinService {
         data.setPassword(bCryptPasswordEncoder.encode(password));
         data.setRole(role);
 
-        userRepository.save(data);
+        try {
+            userRepository.save(data);
+        }catch (DataIntegrityViolationException e) {
+            if (e.getMessage().contains("username")){
+               throw new GlobalExceptionHandler.UsernameDuplicateException("유저 아이디가 이미 존재합니다");
+            }
+            if (e.getMessage().contains("nickname")){
+                throw new GlobalExceptionHandler.NicknameDuplicateException("닉네임이 이미 존재합니다");
+            }
+            throw e;
+        }
     }
 }
