@@ -3,6 +3,7 @@ package com.ohgiraffers.refrigegobackend.ingredient.service;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.ohgiraffers.refrigegobackend.notification.service.NotificationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -26,6 +27,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserIngredientService {
@@ -292,7 +294,7 @@ public class UserIngredientService {
         ingredientsToConsume.sort(Comparator.comparing(
                 ui -> Optional.ofNullable(ui.getExpiryDate()).orElse(LocalDate.MAX)));
 
-        System.out.println("사용자 " + username + "가 레시피 " + recipeId + "로 재료 " + ingredientIds.size() + "개를 소비했습니다.");
+        log.info("사용자 {}가 레시피 {}로 재료 {}개를 소비했습니다.", username, recipeId, ingredientIds.size());
 
         repository.deleteAll(ingredientsToConsume);
     }

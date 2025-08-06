@@ -3,9 +3,11 @@ package com.ohgiraffers.refrigegobackend.ingredient.dto;
 import com.ohgiraffers.refrigegobackend.ingredient.domain.IngredientCategory;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /* 도메인 페이지 - 식재료 수정용 DTO */
 
+@Slf4j
 @Getter
 @Setter
 public class IngredientUpdateRequestDto {
@@ -20,9 +22,9 @@ public class IngredientUpdateRequestDto {
         if (category == null || category.isEmpty()) {
             throw new IllegalArgumentException("카테고리는 필수입니다.");
         }
-        System.out.println("받은 카테고리: " + category);
+        log.debug("받은 카테고리: {}", category);
         IngredientCategory result = IngredientCategory.fromDisplayName(category);
-        System.out.println("변환된 카테고리: " + result);
+        log.debug("변환된 카테고리: {}", result);
 
         return result;
 //        return IngredientCategory.fromDisplayName(category);
