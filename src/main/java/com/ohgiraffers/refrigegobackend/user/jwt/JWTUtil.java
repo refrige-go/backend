@@ -69,8 +69,8 @@ public class JWTUtil {
         log.debug("원본 role: '{}' (길이: {})", role, role != null ? role.length() : 0);
 
         if ("access".equals(category)) {
-            System.out.println("발급시간: " + new Date(System.currentTimeMillis()));
-            System.out.println("만료시간: " + new Date(System.currentTimeMillis() + expiredMs));
+            log.info("발급시간: {}", new Date(System.currentTimeMillis()));
+            log.info("만료시간: {}", new Date(System.currentTimeMillis() + expiredMs));
         }
 
         String token = Jwts.builder()
