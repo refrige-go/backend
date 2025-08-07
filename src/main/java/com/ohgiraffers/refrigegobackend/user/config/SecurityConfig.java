@@ -1,10 +1,13 @@
 package com.ohgiraffers.refrigegobackend.user.config;
 
-import com.ohgiraffers.refrigegobackend.oauth2.domain.OAuth2SuccessHandler;
-import com.ohgiraffers.refrigegobackend.oauth2.service.OAuth2Service;
-import com.ohgiraffers.refrigegobackend.user.jwt.*;
+import com.ohgiraffers.refrigegobackend.user.jwt.CustomLogoutFilter;
+import com.ohgiraffers.refrigegobackend.user.jwt.JWTFilter;
+import com.ohgiraffers.refrigegobackend.user.jwt.JWTUtil;
+import com.ohgiraffers.refrigegobackend.user.jwt.LoginFilter;
 import com.ohgiraffers.refrigegobackend.user.repository.RefreshRepository;
 import com.ohgiraffers.refrigegobackend.user.repository.UserRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -33,18 +36,13 @@ public class SecurityConfig {
         private final JWTUtil jwtUtil;
         private final RefreshRepository refreshRepository;
         private final UserRepository userRepository;
-        private final OAuth2Service oAuth2Service;
-        private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
         public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,
-            RefreshRepository refreshRepository, UserRepository userRepository,OAuth2Service oAuth2Service,
-                              OAuth2SuccessHandler oAuth2SuccessHandler) {
+            RefreshRepository refreshRepository, UserRepository userRepository) {
                 this.authenticationConfiguration = authenticationConfiguration;
                 this.jwtUtil = jwtUtil;
                 this.refreshRepository = refreshRepository;
                 this.userRepository = userRepository;
-                this.oAuth2Service = oAuth2Service;
-                this.oAuth2SuccessHandler = oAuth2SuccessHandler;
         }
 
         @Bean
@@ -81,34 +79,22 @@ public class SecurityConfig {
                         .formLogin(form -> form.disable())
                         .httpBasic(basic -> basic.disable())
                         .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/oauth2/**").permitAll()
-                                .requestMatchers("/login/oauth2/code/**").permitAll()
-                                .requestMatchers("social-user/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN") // 소셜 로그인 관련
-                                .requestMatchers("/user/check-nickname").permitAll() // 닉네임 중복 검사 관련
                                 .requestMatchers("/login", "/join", "/reissue", "/", "/api/recipe/**").permitAll()
                                 .requestMatchers("/api/recommendations/**").permitAll()  // 레시피 추천 API 허용
                                 .requestMatchers("/api/bookmark/**").hasAnyAuthority("ROLE_USER")
                                 .requestMatchers("/api/ocr/**").permitAll()
                                 .requestMatchers("/api/ingredients/").permitAll()
                                 .requestMatchers("/ingredients/").permitAll()
-                                .requestMatchers("/password/**").permitAll()  // 비밀번호 변경 관련 API 허용
                                 //관리자 전용 페이지
                                 .requestMatchers("/admin").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()
                         )
 
-                        .addFilterAt(new AdminLoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class)
-                        .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository, userRepository), UsernamePasswordAuthenticationFilter.class)
                         .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class)
+                        .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshRepository, userRepository), UsernamePasswordAuthenticationFilter.class)
                         .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshRepository), LogoutFilter.class)
-                        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                        .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(oAuth2Service)
-                        )
-                        .successHandler(oAuth2SuccessHandler)
-                );
+                        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
                 return http.build();
         }
